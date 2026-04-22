@@ -4,17 +4,18 @@ CC = c++
 
 FLAGS = -Wall -Werror -Wextra -std=c++98
 
-INCLUDES = -I.
+INCLUDES = -Iinc
 
 
-SRC_DIR = .
+SRC_DIR = src
 
-OBJ_DIR = ./obj
+OBJ_DIR = obj
 
 FILES = main.cpp
 
 SRC_FILES = $(addprefix $(SRC_DIR)/, $(FILES))
 OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRC_FILES))
+DEP_FILES = $(OBJ_FILES:.o=.d)
 
 # Colors
 BOLD_PURPLE = \033[1;35m
@@ -52,5 +53,7 @@ fclean: clean
 	@printf "🗑️ $(GRAY) ./$(NAME) removed!$(DEF_COLOR)\n"
 
 re: fclean all
+
+-include $(DEP_FILES)
 
 .PHONY: all fclean clean re
