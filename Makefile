@@ -11,7 +11,8 @@ SRC_DIR = src
 
 OBJ_DIR = obj
 
-FILES = main.cpp
+FILES = main.cpp \
+		utils.cpp
 
 SRC_FILES = $(addprefix $(SRC_DIR)/, $(FILES))
 OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRC_FILES))
