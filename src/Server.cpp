@@ -2,7 +2,11 @@
 
 Server::Server() : port_(""), listener_(-1), password_("") {}
 
-Server::~Server() {}
+Server::~Server()
+{
+	if (listener_ != -1)
+		close(listener_);
+}
 
 Server::Server(const Server &other) : port_(other.port_), listener_(other.listener_), password_(other.password_) {}
 
