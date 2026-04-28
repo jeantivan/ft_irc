@@ -18,6 +18,17 @@ int main(int ac, char **av)
 		return 1;
 	}
 
-	std::cout << "WIP: Starting IRC Server on port: " << port << " with password " << password << std::endl;
+	(void)port;
+
+	try
+	{
+		Server irc_server(av[1], av[2]);
+	}
+	catch (const std::exception &e)
+	{
+		std::cerr << "Error: " << e.what() << std::endl;
+		return 1;
+	}
+
 	return 0;
 }
