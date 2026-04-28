@@ -7,7 +7,7 @@ class Server
 {
 private:
 	int port_;
-	int socket_;
+	int listener_; // Socket fd
 	std::string password_;
 
 public:
@@ -19,7 +19,7 @@ public:
 	Server(int port, const char *pass);
 
 	int getPort() const;
-	int getSocket() const;
+	int getListener() const;
 	const std::string &getPassword() const;
 };
 
