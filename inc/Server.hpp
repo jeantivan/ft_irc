@@ -4,6 +4,7 @@
 #include <iostream>
 #include <string>
 #include <stdexcept>
+#include <vector>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netdb.h>
@@ -11,6 +12,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cerrno>
+#include <poll.h>
 
 #include "utils.hpp"
 
@@ -20,12 +22,15 @@ private:
 	std::string port_;
 	int listener_; // Socket fd
 	std::string password_;
+	std::vector<struct pollfd> poll_fds_;
 
-public:
+	// Constructors private to avoid duplication of the Server
 	Server();
 	Server(const Server &other);
-	~Server();
 	Server &operator=(const Server &other);
+
+public:
+	~Server();
 
 	Server(const char *port, const char *pass);
 
