@@ -43,17 +43,24 @@ std::string getIpStr(const struct sockaddr *sa)
 	switch (sa->sa_family)
 	{
 	case AF_INET:
+	{
 		const struct sockaddr_in *sa4 = reinterpret_cast<const struct sockaddr_in *>(sa);
 
 		inet_ntop(AF_INET, &(sa4->sin_addr), ip, sizeof(ip));
 		break;
+	}
 	case AF_INET6:
+	{
 		const struct sockaddr_in6 *sa6 = reinterpret_cast<const struct sockaddr_in6 *>(sa);
 
 		inet_ntop(AF_INET6, &(sa6->sin6_addr), ip, sizeof(ip));
 		break;
+	}
+
 	default:
+	{
 		return "";
+	}
 	}
 
 	return std::string(ip);
