@@ -5,6 +5,7 @@
 #include <string>
 #include <stdexcept>
 #include <vector>
+#include <map>
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <netdb.h>
@@ -23,6 +24,8 @@ private:
 	int listener_; // Socket fd
 	std::string password_;
 	std::vector<struct pollfd> connections_;
+	// TODO: Cambiar std::string por la futura clase Client;
+	std::map<int, std::string> clients_;
 
 	// Constructors private to avoid duplication of the Server
 	Server();
