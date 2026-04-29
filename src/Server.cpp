@@ -101,3 +101,40 @@ void Server::init()
 
 	listener_ = listener;
 }
+
+void Server::run()
+{
+	std::cout << "[ircserver]: Waiting for connections" << std::endl;
+	while (true)
+	{
+		int pool_count = poll(&connections_[0], connections_.size(), -1);
+
+		if (pool_count == -1)
+		{
+			throw std::runtime_error("poll failed " + std::string(std::strerror(errno)));
+		}
+
+		for (size_t i = 0; i < connections_.size(); i++)
+		{
+			if (connections_[i].fd == listener_)
+			{
+				acceptNewClient();
+			}
+			else
+			{
+				std::cout << "New client trying to send data" << std::endl;
+			}
+		}
+	}
+}
+
+void Server::acceptNewClient()
+{
+	std::cout << "WIP..." << std::endl;
+}
+
+void Server::receiveClientData(int client_socket)
+{
+	(void)client_socket;
+	std::cout << "WIP..." << std::endl;
+}

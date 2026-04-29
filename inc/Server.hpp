@@ -43,6 +43,15 @@ public:
 
 	// Bind listener to port
 	void init();
+
+	// Main loop to handle connections and data.
+	void run();
+
+	// Accept new client connection
+	void acceptNewClient();
+
+	// Receive data send by client
+	void receiveClientData(int client_socket);
 };
 
 #endif // SERVER_HPP

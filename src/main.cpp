@@ -23,6 +23,7 @@ int main(int ac, char **av)
 	try
 	{
 		Server irc_server(av[1], av[2]);
+		irc_server.run();
 	}
 	catch (const std::exception &e)
 	{
