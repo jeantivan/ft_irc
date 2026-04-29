@@ -24,7 +24,7 @@ Server &Server::operator=(const Server &other)
 
 Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass)
 {
-	bindToPort();
+	init();
 
 	struct pollfd listener_poll;
 	listener_poll.fd = listener_;
@@ -52,7 +52,7 @@ const std::string &Server::getPassword() const
 	return password_;
 }
 
-void Server::bindToPort()
+void Server::init()
 {
 	int listener;
 	int yes = 1;

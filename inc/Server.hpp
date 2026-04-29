@@ -42,7 +42,7 @@ public:
 	const std::string &getPassword() const;
 
 	// Bind listener to port
-	void bindToPort();
+	void init();
 };
 
 #endif // SERVER_HPP
