@@ -31,7 +31,7 @@ Server::Server(const char *port, const char *pass) : port_(port), listener_(-1),
 	listener_poll.events = POLLIN;
 	listener_poll.revents = 0;
 
-	poll_fds_.push_back(listener_poll);
+	connections_.push_back(listener_poll);
 
 	std::cout << "ft_irc: listener created with fd " << listener_ << " on port " << port_ << std::endl;
 }

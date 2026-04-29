@@ -22,7 +22,7 @@ private:
 	std::string port_;
 	int listener_; // Socket fd
 	std::string password_;
-	std::vector<struct pollfd> poll_fds_;
+	std::vector<struct pollfd> connections_;
 
 	// Constructors private to avoid duplication of the Server
 	Server();
