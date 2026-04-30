@@ -13,7 +13,8 @@ OBJ_DIR = obj
 
 FILES = main.cpp \
 		utils.cpp \
-		Server.cpp
+		Server.cpp \
+		Client.cpp
 
 SRC_FILES = $(addprefix $(SRC_DIR)/, $(FILES))
 OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRC_FILES))
