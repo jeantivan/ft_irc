@@ -2,6 +2,7 @@
 #define SERVER_HPP
 
 #include <iostream>
+#include <sstream>
 #include <string>
 #include <stdexcept>
 #include <vector>
@@ -16,6 +17,7 @@
 #include <poll.h>
 
 #include "utils.hpp"
+#include "Client.hpp"
 
 class Server
 {
@@ -24,8 +26,7 @@ private:
 	int listener_; // Socket fd
 	std::string password_;
 	std::vector<struct pollfd> connections_;
-	// TODO: Cambiar std::string por la futura clase Client;
-	std::map<int, std::string> clients_;
+	std::map<int, Client> clients_;
 
 	// Constructors private to avoid duplication of the Server
 	Server();
