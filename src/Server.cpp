@@ -113,16 +113,19 @@ void Server::run()
 		{
 			throw std::runtime_error("poll failed " + std::string(std::strerror(errno)));
 		}
-
-		for (size_t i = 0; i < connections_.size(); i++)
+		for (int i = connections_.size() - 1; i >= 0; i--)
 		{
-			if (connections_[i].fd == listener_)
+			if (connections_[i].revents & (POLLIN | POLLHUP))
 			{
-				acceptNewClient();
-			}
-			else
-			{
-				std::cout << "New client trying to send data" << std::endl;
+				if (connections_[i].fd == listener_)
+				{
+					acceptNewClient();
+				}
+				else
+				{
+					std::cout << "New client trying to send data" << std::endl;
+					receiveClientData(i);
+				}
 			}
 		}
 	}
@@ -130,11 +133,78 @@ void Server::run()
 
 void Server::acceptNewClient()
 {
-	std::cout << "WIP..." << std::endl;
+	struct sockaddr_storage remoteaddr;
+	socklen_t addrlen = sizeof(remoteaddr);
+	int new_fd;
+
+	new_fd = accept(listener_, reinterpret_cast<struct sockaddr *>(&remoteaddr), &addrlen);
+
+	if (new_fd == -1)
+	{
+		throw std::runtime_error("accept failed " + std::string(std::strerror(errno)));
+	}
+
+	struct pollfd new_connection;
+
+	new_connection.fd = new_fd;
+	new_connection.events = POLLIN;
+	new_connection.revents = 0;
+
+	connections_.push_back(new_connection);
+	std::string remoteIp = getIpStr(reinterpret_cast<struct sockaddr *>(&remoteaddr));
+
+	// TODO: Create Client object and add it to the clients_ map
+	// Client client(new_fd, remoteIp);
+	// clients_[new_fd] = client;
+
+	std::cout << "[ircserver]: New connection from " << remoteIp << " on socket " << new_fd << std::endl;
 }
 
-void Server::receiveClientData(int client_socket)
+void Server::receiveClientData(size_t client_index)
 {
-	(void)client_socket;
-	std::cout << "WIP..." << std::endl;
+	char buffer[1024];
+	std::memset(buffer, 0, sizeof(buffer));
+
+	int client_fd = connections_[client_index].fd;
+	int bytes_received = recv(client_fd, buffer, sizeof(buffer), 0);
+
+	if (bytes_received <= 0)
+	{
+		if (bytes_received == 0)
+		{
+			std::cout << "[ircserver]: Client " << client_fd << " disconnected" << std::endl;
+		}
+		else
+		{
+			std::cerr << "[ircserver]: recv failed on client " << client_fd << " " << std::strerror(errno) << std::endl;
+		}
+
+		close(client_fd);
+		connections_.erase(connections_.begin() + client_index);
+		return;
+	}
+
+	std::cout << "[ircserver]: Received " << bytes_received << " bytes from client " << client_fd << std::endl;
+
+	for (size_t i = 0; i < connections_.size();)
+	{
+		if (connections_[i].fd == client_fd || connections_[i].fd == listener_)
+		{
+			i++;
+			continue;
+		}
+
+		int bytes_sent = send(connections_[i].fd, buffer, bytes_received, 0);
+
+		if (bytes_sent == -1)
+		{
+			std::cerr << "[ircserver]: send failed on client " << connections_[i].fd << " " << std::strerror(errno) << ". Dropping them." << std::endl;
+			close(connections_[i].fd);
+			connections_.erase(connections_.begin() + i);
+		}
+		else
+		{
+			i++;
+		}
+	}
 }

@@ -51,7 +51,7 @@ public:
 	void acceptNewClient();
 
 	// Receive data send by client
-	void receiveClientData(int client_socket);
+	void receiveClientData(size_t client_index);
 };
 
 #endif // SERVER_HPP
