@@ -123,7 +123,6 @@ void Server::run()
 				}
 				else
 				{
-					std::cout << "New client trying to send data" << std::endl;
 					receiveClientData(i);
 				}
 			}
@@ -154,8 +153,8 @@ void Server::acceptNewClient()
 	std::string remoteIp = getIpStr(reinterpret_cast<struct sockaddr *>(&remoteaddr));
 
 	// TODO: Create Client object and add it to the clients_ map
-	// Client client(new_fd, remoteIp);
-	// clients_[new_fd] = client;
+	Client client(new_fd, remoteIp);
+	clients_[new_fd] = client;
 
 	std::cout << "[ircserver]: New connection from " << remoteIp << " on socket " << new_fd << std::endl;
 }
@@ -194,7 +193,12 @@ void Server::receiveClientData(size_t client_index)
 			continue;
 		}
 
-		int bytes_sent = send(connections_[i].fd, buffer, bytes_received, 0);
+		Client client = clients_[connections_[i].fd];
+
+		std::stringstream message;
+		message << "Client <" << client.getIp() << ", " << client_fd << ">: " << buffer;
+
+		int bytes_sent = send(connections_[i].fd, message.str().c_str(), message.str().size(), 0);
 
 		if (bytes_sent == -1)
 		{
