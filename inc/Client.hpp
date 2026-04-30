@@ -10,9 +10,9 @@ class Client
 private:
 	int fd;
 	std::string ip;
-	Client();
 
 public:
+	Client();
 	Client(const Client &other);
 	Client &operator=(const Client &other);
 	~Client();
