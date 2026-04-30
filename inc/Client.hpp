@@ -11,10 +11,10 @@ private:
 	int fd;
 	std::string ip;
 	Client();
-	Client(const Client &other);
-	Client &operator=(const Client &other);
 
 public:
+	Client(const Client &other);
+	Client &operator=(const Client &other);
 	~Client();
 
 	Client(int fd, const std::string &ip);
