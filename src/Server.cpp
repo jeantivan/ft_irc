@@ -203,6 +203,7 @@ void Server::receiveClientData(size_t client_index)
 
 		close(client_fd);
 		connections_.erase(connections_.begin() + client_index);
+		clients_.erase(client_fd);
 		return;
 	}
 
