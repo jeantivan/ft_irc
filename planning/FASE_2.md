@@ -1,4 +1,4 @@
-# Fase 2: Redes y Core del Servidor
+# Fase 2: Redes y Core del Servidor - DONE ✅
 
 - Manejar argumentos de entrada: Configurar el ejecutable para recibir obligatoriamente el formato ./ircserv <port> <password>
 
