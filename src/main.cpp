@@ -17,8 +17,10 @@ int main(int ac, char **av)
 		std::cerr << "Error: Invalid port value" << std::endl;
 		return 1;
 	}
-
 	(void)port;
+
+	signal(SIGINT, Server::signalHandler);
+	signal(SIGQUIT, Server::signalHandler);
 
 	try
 	{

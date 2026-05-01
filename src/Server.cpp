@@ -4,6 +4,22 @@ Server::Server() : port_(""), listener_(-1), password_("") {}
 
 Server::~Server()
 {
+	std::cout << "[ircserver]: Shutting down the server" << std::endl;
+
+	for (size_t i = 0; i < connections_.size(); i++)
+	{
+		int fd = connections_[i].fd;
+
+		if (fd != listener_)
+		{
+			std::string bye = "Error: Server is shutting down. Goodbye!\r\n";
+			send(fd, bye.c_str(), bye.size(), 0);
+			close(fd);
+
+			std::cout << "[ircserver]: Client " << fd << " disconnected gracefully." << std::endl;
+		}
+	}
+
 	if (listener_ != -1)
 		close(listener_);
 }
@@ -105,12 +121,15 @@ void Server::init()
 void Server::run()
 {
 	std::cout << "[ircserver]: Waiting for connections" << std::endl;
-	while (true)
+	while (Server::signal_received_ == false)
 	{
 		int pool_count = poll(&connections_[0], connections_.size(), -1);
 
 		if (pool_count == -1)
 		{
+			if (errno == EINTR)
+				continue;
+
 			throw std::runtime_error("poll failed " + std::string(std::strerror(errno)));
 		}
 		for (int i = connections_.size() - 1; i >= 0; i--)
@@ -211,4 +230,13 @@ void Server::receiveClientData(size_t client_index)
 			i++;
 		}
 	}
+}
+
+// TODO: Separar a otro archivo
+bool Server::signal_received_ = false;
+
+void Server::signalHandler(int signal)
+{
+	(void)signal;
+	Server::signal_received_ = true;
 }

@@ -15,6 +15,7 @@
 #include <cstring>
 #include <cerrno>
 #include <poll.h>
+#include <csignal>
 
 #include "utils.hpp"
 #include "Client.hpp"
@@ -32,6 +33,9 @@ private:
 	Server();
 	Server(const Server &other);
 	Server &operator=(const Server &other);
+
+	// Flag for a Graceful Shutdown
+	static bool signal_received_;
 
 public:
 	~Server();
@@ -53,6 +57,9 @@ public:
 
 	// Receive data send by client
 	void receiveClientData(size_t client_index);
+
+	// Static signal handler;
+	static void signalHandler(int signal);
 };
 
 #endif // SERVER_HPP
