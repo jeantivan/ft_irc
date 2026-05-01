@@ -16,6 +16,7 @@
 #include <cerrno>
 #include <poll.h>
 #include <csignal>
+#include <fcntl.h>
 
 #include "utils.hpp"
 #include "Client.hpp"

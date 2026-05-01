@@ -95,6 +95,8 @@ void Server::init()
 
 		setsockopt(listener, SOL_SOCKET, SO_REUSEADDR, &yes, sizeof(int));
 
+		fcntl(listener, F_SETFL, O_NONBLOCK);
+
 		if (bind(listener, p->ai_addr, p->ai_addrlen) < 0)
 		{
 			close(listener);
@@ -161,6 +163,8 @@ void Server::acceptNewClient()
 	{
 		throw std::runtime_error("accept failed " + std::string(std::strerror(errno)));
 	}
+
+	fcntl(new_fd, F_SETFL, O_NONBLOCK);
 
 	struct pollfd new_connection;
 
