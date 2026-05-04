@@ -222,7 +222,7 @@ void Server::disconnectClient(size_t client_index) {
 
 	close(fd);
 	connections_.erase(connections_.begin() + client_index);
-	clients_.erase(client_index);
+	clients_.erase(fd);
 }
 
 // TODO: Separar a otro archivo
