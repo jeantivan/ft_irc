@@ -29,6 +29,8 @@ public:
 
 	bool hasCompleteCommand();
 	std::string extractCommand();
+
+	void appendToReadBuf_(const char *data);
 };
 
 #endif // CLIENT_HPP
