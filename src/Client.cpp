@@ -55,6 +55,6 @@ std::string Client::extractCommand() {
 	return cmd;
 }
 
-void Client::appendToReadBuf_(const char *data) {
-	readBuf_.append(data);
+void Client::appendToReadBuf_(const char *data, size_t len) {
+	readBuf_.append(data, len);
 }
