@@ -59,6 +59,9 @@ public:
 	// Receive data send by client
 	void receiveClientData(size_t client_index);
 
+	// Disconnect Client
+	void disconnectClient(size_t client_index);
+
 	// Static signal handler;
 	static void signalHandler(int signal);
 };

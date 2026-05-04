@@ -201,9 +201,7 @@ void Server::receiveClientData(size_t client_index)
 			std::cerr << "[ircserver]: recv failed on client " << client_fd << " " << std::strerror(errno) << std::endl;
 		}
 
-		close(client_fd);
-		connections_.erase(connections_.begin() + client_index);
-		clients_.erase(client_fd);
+		disconnectClient(client_index);
 		return;
 	}
 
@@ -235,6 +233,14 @@ void Server::receiveClientData(size_t client_index)
 			i++;
 		}
 	}
+}
+
+void Server::disconnectClient(size_t client_index) {
+	Client client = clients_[client_index];
+
+	close(client.getFd());
+	connections_.erase(connections_.begin() + client_index);
+	clients_.erase(client_index);
 }
 
 // TODO: Separar a otro archivo
