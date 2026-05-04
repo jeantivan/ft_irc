@@ -188,6 +188,7 @@ void Server::receiveClientData(size_t client_index)
 	std::memset(buffer, 0, sizeof(buffer));
 
 	int client_fd = connections_[client_index].fd;
+	Client &client = clients_[client_fd];
 	int bytes_received = recv(client_fd, buffer, sizeof(buffer), 0);
 
 	if (bytes_received <= 0)
@@ -206,32 +207,12 @@ void Server::receiveClientData(size_t client_index)
 	}
 
 	std::cout << "[ircserver]: Received " << bytes_received << " bytes from client " << client_fd << std::endl;
-
-	for (size_t i = 0; i < connections_.size();)
+	client.appendToReadBuf_(buffer, bytes_received);
+	
+	if (client.hasCompleteCommand())
 	{
-		if (connections_[i].fd == client_fd || connections_[i].fd == listener_)
-		{
-			i++;
-			continue;
-		}
-
-		Client client = clients_[connections_[i].fd];
-
-		std::stringstream message;
-		message << "Client <" << client.getIp() << ", " << client_fd << ">: " << buffer;
-
-		int bytes_sent = send(connections_[i].fd, message.str().c_str(), message.str().size(), 0);
-
-		if (bytes_sent == -1)
-		{
-			std::cerr << "[ircserver]: send failed on client " << connections_[i].fd << " " << std::strerror(errno) << ". Dropping them." << std::endl;
-			close(connections_[i].fd);
-			connections_.erase(connections_.begin() + i);
-		}
-		else
-		{
-			i++;
-		}
+		std::string command = client.extractCommand();
+		std::cout << "Client <" << client.getFd() << ", " << client.getIp() << "> sent: " << command << std::endl;
 	}
 }
 
