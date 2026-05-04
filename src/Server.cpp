@@ -217,9 +217,10 @@ void Server::receiveClientData(size_t client_index)
 }
 
 void Server::disconnectClient(size_t client_index) {
-	Client client = clients_[client_index];
+	int fd = connections_[client_index].fd;
+	Client &client = clients_[fd];
 
-	close(client.getFd());
+	close(fd);
 	connections_.erase(connections_.begin() + client_index);
 	clients_.erase(client_index);
 }
