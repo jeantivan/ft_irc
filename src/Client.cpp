@@ -38,3 +38,19 @@ const std::string &Client::getReadBuf() const {
 const std::string &Client::getWriteBuf() const {
 	return writeBuf_;
 }
+
+bool Client::hasCompleteCommand() {
+	return readBuf_.find("\r\n") != std::string::npos;
+}
+
+std::string Client::extractCommand() {
+	size_t delim = readBuf_.find("\r\n");
+
+	if (delim == std::string::npos)
+		return "";
+
+	std::string cmd = readBuf_.substr(0, delim + 2);
+	readBuf_ = readBuf_.substr(delim + 2);
+
+	return cmd;
+}

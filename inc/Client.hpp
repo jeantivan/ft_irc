@@ -26,6 +26,9 @@ public:
 	const std::string &getIp() const;
 	const std::string &getReadBuf() const;
 	const std::string &getWriteBuf() const;
+
+	bool hasCompleteCommand();
+	std::string extractCommand();
 };
 
 #endif // CLIENT_HPP
