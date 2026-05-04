@@ -1,8 +1,8 @@
 #include "Client.hpp"
 
-Client::Client() : fd(-1), ip("") {}
+Client::Client() : fd(-1), ip(""), readBuf_(""), writeBuf_("") {}
 
-Client::Client(const Client &other) : fd(other.fd), ip(other.ip) {}
+Client::Client(const Client &other) : fd(other.fd), ip(other.ip), readBuf_(other.readBuf_), writeBuf_(other.writeBuf_)  {}
 
 Client &Client::operator=(const Client &other)
 {
@@ -10,6 +10,8 @@ Client &Client::operator=(const Client &other)
 	{
 		fd = other.fd;
 		ip = other.ip;
+		readBuf_ = other.readBuf_;
+		writeBuf_ = other.writeBuf_;
 	}
 
 	return *this;
@@ -17,7 +19,7 @@ Client &Client::operator=(const Client &other)
 
 Client::~Client() {}
 
-Client::Client(int fd, const std::string &ip) : fd(fd), ip(ip) {}
+Client::Client(int fd, const std::string &ip) : fd(fd), ip(ip), readBuf_(""), writeBuf_("") {}
 
 int Client::getFd() const
 {
@@ -27,4 +29,12 @@ int Client::getFd() const
 const std::string &Client::getIp() const
 {
 	return ip;
+}
+
+const std::string &Client::getReadBuf() const {
+	return readBuf_;
+}
+
+const std::string &Client::getWriteBuf() const {
+	return writeBuf_;
 }
