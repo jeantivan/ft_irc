@@ -1,4 +1,4 @@
-# Fase 4: Protocolo IRC (Autenticación)
+# Fase 4: Protocolo IRC (Autenticación) - WIP
 
 - Seleccionar cliente de referencia: Elegir un cliente IRC oficial (como irssi o hexchat) que se utilizará para todas las pruebas y evaluaciones.
 
