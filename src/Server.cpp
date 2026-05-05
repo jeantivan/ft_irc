@@ -134,7 +134,7 @@ void Server::run()
 
 			throw std::runtime_error("poll failed " + std::string(std::strerror(errno)));
 		}
-		for (int i = connections_.size() - 1; i >= 0; i--)
+		for (size_t i = connections_.size() - 1; i >= 0; i--)
 		{
 			if (connections_[i].revents & (POLLIN | POLLHUP))
 			{
@@ -147,12 +147,13 @@ void Server::run()
 					receiveClientData(i);
 				}
 			}
-			// TODO: Send the stuff
-			// else if (connections_[i].revents & POLLOUT) {
-			// 	// Send what is inside the client's writeBuf_
-			// 	// But to whom?
-			// }
-
+			else if (connections_[i].revents & POLLOUT)
+			{
+				if (!sendClientData(i)) {
+					// TODO: Mejorar mensaje de error
+					std::cerr << "Error: Not all client<" << connections_[i].fd << ", " << clients_[connections_[i].fd].getFd() << "> data could be sent" << std::endl;
+				}
+			}
 		}
 	}
 }
@@ -213,7 +214,7 @@ void Server::receiveClientData(size_t client_index)
 	}
 
 	std::cout << "[ircserver]: Received " << bytes_received << " bytes from client " << client_fd << std::endl;
-	client.appendToReadBuf_(buffer, bytes_received);
+	client.appendToReadBuf(buffer, bytes_received);
 
 	// TODO: May be this will be deleted
 	while (client.hasCompleteCommand())
@@ -230,6 +231,33 @@ void Server::disconnectClient(size_t client_index) {
 	close(fd);
 	connections_.erase(connections_.begin() + client_index);
 	clients_.erase(fd);
+}
+
+bool Server::sendClientData(size_t client_index) {
+	int fd = connections_[client_index].fd;
+	Client &client = clients_[fd];
+
+	const std::string &clientWriteBuf = client.getWriteBuf();
+
+	if (clientWriteBuf.empty()) {
+		return false;
+	}
+
+	ssize_t bytes_sent = send(fd, clientWriteBuf.c_str(), clientWriteBuf.size(), 0);
+
+	if (bytes_sent > 0)
+	{
+		client.eraseFromWriteBuf(bytes_sent);
+	} else if (bytes_sent == -1) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK)
+		{
+			return false;
+		}
+
+		return true;
+	}
+	return false;
+
 }
 
 // TODO: Separar a otro archivo

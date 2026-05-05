@@ -62,6 +62,9 @@ public:
 	// Disconnect Client
 	void disconnectClient(size_t client_index);
 
+	// Send client data
+	bool sendClientData(size_t client_index);
+
 	// Static signal handler;
 	static void signalHandler(int signal);
 };
