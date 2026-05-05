@@ -208,8 +208,9 @@ void Server::receiveClientData(size_t client_index)
 
 	std::cout << "[ircserver]: Received " << bytes_received << " bytes from client " << client_fd << std::endl;
 	client.appendToReadBuf_(buffer, bytes_received);
-	
-	if (client.hasCompleteCommand())
+
+	// TODO: May be this will be deleted
+	while (client.hasCompleteCommand())
 	{
 		std::string command = client.extractCommand();
 		std::cout << "Client <" << client.getFd() << ", " << client.getIp() << "> sent: " << command << std::endl;
