@@ -134,7 +134,7 @@ void Server::run()
 
 			throw std::runtime_error("poll failed " + std::string(std::strerror(errno)));
 		}
-		for (size_t i = connections_.size() - 1; i >= 0; i--)
+		for (int i = connections_.size() - 1; i >= 0; i--)
 		{
 			if (connections_[i].revents & (POLLIN | POLLHUP))
 			{
@@ -147,13 +147,13 @@ void Server::run()
 					receiveClientData(i);
 				}
 			}
-			else if (connections_[i].revents & POLLOUT)
-			{
-				if (!sendClientData(i)) {
-					// TODO: Mejorar mensaje de error
-					std::cerr << "Error: Not all client<" << connections_[i].fd << ", " << clients_[connections_[i].fd].getFd() << "> data could be sent" << std::endl;
-				}
-			}
+			// else if (connections_[i].revents & POLLOUT)
+			// {
+			// 	if (!sendClientData(i)) {
+			// 		// TODO: Mejorar mensaje de error
+			// 		std::cerr << "Error: Not all client<" << connections_[i].fd << ", " << clients_[connections_[i].fd].getFd() << "> data could be sent" << std::endl;
+			// 	}
+			// }
 		}
 	}
 }
@@ -226,7 +226,6 @@ void Server::receiveClientData(size_t client_index)
 
 void Server::disconnectClient(size_t client_index) {
 	int fd = connections_[client_index].fd;
-	Client &client = clients_[fd];
 
 	close(fd);
 	connections_.erase(connections_.begin() + client_index);
