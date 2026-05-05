@@ -147,6 +147,12 @@ void Server::run()
 					receiveClientData(i);
 				}
 			}
+			// TODO: Send the stuff
+			// else if (connections_[i].revents & POLLOUT) {
+			// 	// Send what is inside the client's writeBuf_
+			// 	// But to whom?
+			// }
+
 		}
 	}
 }
@@ -169,7 +175,7 @@ void Server::acceptNewClient()
 	struct pollfd new_connection;
 
 	new_connection.fd = new_fd;
-	new_connection.events = POLLIN;
+	new_connection.events = POLLIN | POLLOUT;
 	new_connection.revents = 0;
 
 	connections_.push_back(new_connection);
