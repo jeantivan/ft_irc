@@ -55,6 +55,13 @@ std::string Client::extractCommand() {
 	return cmd;
 }
 
-void Client::appendToReadBuf_(const char *data, size_t len) {
+void Client::appendToReadBuf(const char *data, size_t len) {
 	readBuf_.append(data, len);
+}
+
+void Client::eraseFromWriteBuf(size_t len) {
+	if (len >= writeBuf_.size())
+		writeBuf_.clear();
+	else
+		writeBuf_ = writeBuf_.substr(len);
 }

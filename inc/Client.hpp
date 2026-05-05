@@ -30,7 +30,8 @@ public:
 	bool hasCompleteCommand();
 	std::string extractCommand();
 
-	void appendToReadBuf_(const char *data, size_t len);
+	void appendToReadBuf(const char *data, size_t len);
+	void eraseFromWriteBuf(size_t len);
 };
 
 #endif // CLIENT_HPP
