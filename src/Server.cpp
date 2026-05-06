@@ -219,8 +219,15 @@ void Server::receiveClientData(size_t client_index)
 	// TODO: May be this will be deleted
 	while (client.hasCompleteCommand())
 	{
-		std::string command = client.extractCommand();
-		std::cout << "Client <" << client.getFd() << ", " << client.getIp() << "> sent: " << command << std::endl;
+		std::string cmd = client.extractCommand();
+
+		std::cout << "raw command: " << cmd << std::endl;
+		Command command(cmd);
+
+		std::cout << "Client <" << client.getFd() << ", " << client.getIp() << "> sent a command: " << std::endl;;
+
+		command.printCommand();
+
 	}
 }
 
