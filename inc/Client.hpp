@@ -13,6 +13,10 @@ private:
 	std::string readBuf_;
 	std::string writeBuf_;
 
+	bool isAuth_;
+	std::string nick_;
+	std::string realname_;
+
 public:
 	Client();
 	Client(const Client &other);

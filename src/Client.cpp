@@ -1,8 +1,8 @@
 #include "Client.hpp"
 
-Client::Client() : fd(-1), ip(""), readBuf_(""), writeBuf_("") {}
+Client::Client() : fd(-1), ip(""), readBuf_(""), writeBuf_(""), isAuth_(false), nick_(""), realname_(""){}
 
-Client::Client(const Client &other) : fd(other.fd), ip(other.ip), readBuf_(other.readBuf_), writeBuf_(other.writeBuf_)  {}
+Client::Client(const Client &other) : fd(other.fd), ip(other.ip), readBuf_(other.readBuf_), writeBuf_(other.writeBuf_), isAuth_(other.isAuth_), nick_(other.nick_), realname_(other.realname_) {}
 
 Client &Client::operator=(const Client &other)
 {
@@ -12,6 +12,9 @@ Client &Client::operator=(const Client &other)
 		ip = other.ip;
 		readBuf_ = other.readBuf_;
 		writeBuf_ = other.writeBuf_;
+		isAuth_ = other.isAuth_;
+		nick_ = other.nick_;
+		realname_ = other.realname_;
 	}
 
 	return *this;
