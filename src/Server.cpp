@@ -183,8 +183,7 @@ void Server::acceptNewClient()
 	std::string remoteIp = getIpStr(reinterpret_cast<struct sockaddr *>(&remoteaddr));
 
 	// TODO: Create Client object and add it to the clients_ map
-	Client client(new_fd, remoteIp);
-	clients_[new_fd] = client;
+	clients_[new_fd] = Client(new_fd, remoteIp);
 
 	std::cout << "[ircserver]: New connection from " << remoteIp << " on socket " << new_fd << std::endl;
 }
