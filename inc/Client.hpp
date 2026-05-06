@@ -30,6 +30,14 @@ public:
 	const std::string &getIp() const;
 	const std::string &getReadBuf() const;
 	const std::string &getWriteBuf() const;
+	bool isAuth() const;
+	const std::string &getNick() const;
+	const std::string &getRealname() const;
+
+	// Setters;
+	void setAuth(bool auth);
+	void setNick(const std::string &nick);
+	void setRealname(const std::string &realname);
 
 	bool hasCompleteCommand();
 	std::string extractCommand();

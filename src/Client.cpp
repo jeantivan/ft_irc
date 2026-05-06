@@ -22,7 +22,7 @@ Client &Client::operator=(const Client &other)
 
 Client::~Client() {}
 
-Client::Client(int fd, const std::string &ip) : fd(fd), ip(ip), readBuf_(""), writeBuf_("") {}
+Client::Client(int fd, const std::string &ip) : fd(fd), ip(ip), readBuf_(""), writeBuf_(""), auth_(false), nick_(""), realname_("") {}
 
 int Client::getFd() const
 {
@@ -40,6 +40,30 @@ const std::string &Client::getReadBuf() const {
 
 const std::string &Client::getWriteBuf() const {
 	return writeBuf_;
+}
+
+bool Client::isAuth() const {
+	return auth_;
+}
+
+const std::string &Client::getNick() const {
+	return nick_;
+}
+
+const std::string &Client::getRealname() const {
+	return realname_;
+}
+
+void Client::setAuth(bool auth) {
+	auth_ = auth;
+}
+
+void Client::setNick(const std::string &nick) {
+	nick_ = nick;
+}
+
+void Client::setRealname(const std::string &realname) {
+	realname_ = realname;
 }
 
 bool Client::hasCompleteCommand() {
@@ -68,3 +92,5 @@ void Client::eraseFromWriteBuf(size_t len) {
 	else
 		writeBuf_ = writeBuf_.substr(len);
 }
+
+
