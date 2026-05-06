@@ -1,27 +1,20 @@
 #ifndef COMMAND_HPP
 # define COMMAND_HPP
 
+#include <iostream>
 #include <vector>
 #include <string>
 #include <stdexcept>
 #include <sstream>
 
-enum ECommand {
-	UNDEFINED = -1,
-	PASS,
-	USER,
-	NICK
-};
-
 class Command
 {
 private:
-	void extractCommandType(std::string &raw_cmd);
-	void extractCommandParams(std::string &raw_cmd);
+	void parse(const std::string &raw_cmd);
 
 public:
 	// Props
-	ECommand type;
+	std::string type;
 	std::vector<std::string> params;
 
 
@@ -33,6 +26,8 @@ public:
 
 	// Create command from raw std::string
 	Command(std::string &raw_cmd);
+
+	void printCommand();
 };
 
 #endif // COMMAND_HPP
