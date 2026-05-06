@@ -68,6 +68,9 @@ public:
 
 	// Static signal handler;
 	static void signalHandler(int signal);
+
+	// Handle command
+	void handleCommand(size_t client_index, const Command &cmd);
 };
 
 #endif // SERVER_HPP

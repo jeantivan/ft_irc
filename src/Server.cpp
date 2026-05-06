@@ -219,14 +219,9 @@ void Server::receiveClientData(size_t client_index)
 	while (client.hasCompleteCommand())
 	{
 		std::string cmd = client.extractCommand();
-
-		std::cout << "raw command: " << cmd << std::endl;
 		Command command(cmd);
 
-		std::cout << "Client <" << client.getFd() << ", " << client.getIp() << "> sent a command: " << std::endl;;
-
-		command.printCommand();
-
+		handleCommand(client_index, command);
 	}
 }
 
@@ -263,6 +258,39 @@ bool Server::sendClientData(size_t client_index) {
 	}
 	return false;
 
+}
+
+void Server::handleCommand(size_t client_index, const Command &cmd) {
+	Client &client = clients_[connections_[client_index].fd];
+
+	std::cout << "Client <" << client.getFd() << ", " << client.getIp() << "> sent a command: " << std::endl;
+
+	if (cmd.type == "PASS")
+	{
+		if (cmd.params.size() != 1)
+		{
+			std::cerr << "Bad command: PASS" << std::endl;
+			return ;
+		}
+
+
+		if (cmd.params[0] == password_)
+		{
+			client.setAuth(true);
+			std::cout << "Client <" << client.getFd() << ", " << client.getIp() << "> is authenticated" << std::endl;
+			return ;
+		}
+		std::cerr << "Bad password, disconnecting client <" << client.getFd() << ", " << client.getIp() << ">" << std::endl;
+		disconnectClient(client_index);
+	} else if (cmd.type == "NICK")
+	{
+		std::cout << "Handle command NICK" << std::endl;
+	} else if (cmd.type == "USER")
+	{
+		std::cout << "Handle command USER" << std::endl;
+	} else {
+		std::cerr << "Unknown command: " << cmd.type << std::endl;
+	}
 }
 
 // TODO: Separar a otro archivo
