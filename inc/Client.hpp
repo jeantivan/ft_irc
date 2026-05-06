@@ -13,7 +13,7 @@ private:
 	std::string readBuf_;
 	std::string writeBuf_;
 
-	bool isAuth_;
+	bool auth_;
 	std::string nick_;
 	std::string realname_;
 
