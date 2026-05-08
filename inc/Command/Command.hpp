@@ -26,7 +26,8 @@ public:
 
 	Command(const std::string &type, const std::vector<std::string> &params);
 
-	virtual void execute(Client *client, Server *server) = 0;
+	// TODO: Convertir en Abstracta y crear las derivadas.
+	virtual void execute(Client *client, Server *server); //= 0;
 
 	void printCommand();
 };
