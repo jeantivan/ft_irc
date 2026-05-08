@@ -65,3 +65,68 @@ std::string getIpStr(const struct sockaddr *sa)
 
 	return std::string(ip);
 }
+
+bool parse(std::string &raw_cmd, std::string &type, std::vector<std::string> &params) {
+	if (raw_cmd.empty())
+		return false;
+
+	// Remove "\r\n" from the raw command
+	raw_cmd = raw_cmd.substr(0, raw_cmd.size() - 2);
+	
+	size_t pos = 0;
+
+	// Skip initial spaces 
+	while (pos < raw_cmd.size() && raw_cmd[pos] == ' ')
+		pos++;
+
+	// Handle prefix
+	if (pos < raw_cmd.size() && raw_cmd[pos] == ':')
+	{
+		pos = raw_cmd.find(' ', pos);
+
+		while (pos != std::string::npos && pos < raw_cmd.size() && raw_cmd[pos] == ' ')
+			pos++;
+	}
+
+	if (pos == std::string::npos || pos >= raw_cmd.size()) 
+		return false;
+	
+	// Extract Command type
+	size_t cmd_end = raw_cmd.find(' ', pos);
+	if (cmd_end == std::string::npos)
+	{
+		type = raw_cmd.substr(pos);
+		return true;
+	}
+
+	type = raw_cmd.substr(pos, cmd_end - pos);
+	pos = cmd_end;
+
+	// Extract Command params
+	while (pos < raw_cmd.size()) 
+	{
+
+		while (pos < raw_cmd.size() && raw_cmd[pos] == ' ')
+			pos++;
+
+		if (pos >= raw_cmd.size())
+			break ;
+
+		if (raw_cmd[pos] == ':')
+		{
+			params.push_back(raw_cmd.substr(pos + 1));
+			break ;
+		} else {
+			size_t next_space = raw_cmd.find(' ', pos);
+			if (next_space == std::string::npos)
+			{
+				params.push_back(raw_cmd.substr(pos));
+				break ;
+			} else {
+				params.push_back(raw_cmd.substr(pos, next_space - pos));
+				pos = next_space;
+			}
+		}
+	}
+	return true;
+}
