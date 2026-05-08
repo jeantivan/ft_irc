@@ -1,33 +1,48 @@
 #include "Command.hpp"
 #include <algorithm>
 
-Command::Command() : type("UNDEFINED"), params() {}
+Command::Command() : type_("UNDEFINED"), params_() {}
 
-Command::Command(const Command &other) : type(other.type), params(other.params) {}
+Command::Command(const Command &other) : type_(other.type_), params_(other.params_) {}
 
 Command::~Command() {}
 
-Command &Command::operator=(const Command &other) {
+Command &Command::operator=(const Command &other)
+{
 	if (this != &other)
 	{
-		type = other.type;
-		params = other.params;
+		type_ = other.type_;
+		params_ = other.params_;
 	}
 
 	return *this;
 }
 
-Command::Command(const std::string &type, const std::vector<std::string> &params) : type(type), params(params) {}
+Command::Command(const std::string &type, const std::vector<std::string> &params) : type_(type), params_(params) {}
 
-void Command::printCommand( ) {
-	std::cout << "type: " << type << std::endl;
+void Command::printCommand()
+{
+	std::cout << "type: " << type_ << std::endl;
 	std::cout << "params: { ";
-	if (!params.empty()) {
-		for (std::vector<std::string>::iterator it = params.begin(); it != params.end(); ++it) {
+	if (!params_.empty())
+	{
+		for (std::vector<std::string>::iterator it = params_.begin(); it != params_.end(); ++it)
+		{
 			std::cout << "\'" << *it << "\'";
-			if (it != params.end() - 1)
+			if (it != params_.end() - 1)
 				std::cout << ", ";
 		}
 	}
-	std::cout << " }, params count " << params.size() << std::endl;
+	std::cout << " }, params count " << params_.size() << std::endl;
+}
+
+// Getters
+const std::string &Command::getType() const
+{
+	return type_;
+}
+
+const std::vector<std::string> &Command::getParams() const
+{
+	return params_;
 }

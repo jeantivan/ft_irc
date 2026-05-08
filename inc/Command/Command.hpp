@@ -14,8 +14,8 @@ class Command
 {
 protected:
 	// Props
-	std::string type;
-	std::vector<std::string> params;
+	std::string type_;
+	std::vector<std::string> params_;
 
 public:
 	// Forma Canónica Ortodoxa
@@ -30,6 +30,10 @@ public:
 	virtual void execute(Client *client, Server *server); //= 0;
 
 	void printCommand();
+
+	// Getters
+	const std::string &getType() const;
+	const std::vector<std::string> &getParams() const;
 };
 
 #endif // COMMAND_HPP
