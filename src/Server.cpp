@@ -218,14 +218,23 @@ void Server::receiveClientData(size_t client_index)
 	// TODO: May be this will be deleted
 	while (client.hasCompleteCommand())
 	{
-		std::string cmd = client.extractCommand();
-		Command command(cmd);
+		std::string raw_cmd = client.extractCommand();
+		std::string type;
+		std::vector<std::string> params;
+
+		if (!parse(raw_cmd, type, params))
+		{
+			std::cerr << "Bad command" << std::endl;
+		}
+
+		Command command(type, params);
 
 		handleCommand(client_index, command);
 	}
 }
 
-void Server::disconnectClient(size_t client_index) {
+void Server::disconnectClient(size_t client_index)
+{
 	int fd = connections_[client_index].fd;
 
 	close(fd);
@@ -233,13 +242,15 @@ void Server::disconnectClient(size_t client_index) {
 	clients_.erase(fd);
 }
 
-bool Server::sendClientData(size_t client_index) {
+bool Server::sendClientData(size_t client_index)
+{
 	int fd = connections_[client_index].fd;
 	Client &client = clients_[fd];
 
 	const std::string &clientWriteBuf = client.getWriteBuf();
 
-	if (clientWriteBuf.empty()) {
+	if (clientWriteBuf.empty())
+	{
 		return false;
 	}
 
@@ -248,7 +259,10 @@ bool Server::sendClientData(size_t client_index) {
 	if (bytes_sent > 0)
 	{
 		client.eraseFromWriteBuf(bytes_sent);
-	} else if (bytes_sent == -1) {
+	}
+	else if (bytes_sent == -1)
+	{
+		//  TODO: This should not exists because the evals says so
 		if (errno == EAGAIN || errno == EWOULDBLOCK)
 		{
 			return false;
@@ -257,39 +271,42 @@ bool Server::sendClientData(size_t client_index) {
 		return true;
 	}
 	return false;
-
 }
 
-void Server::handleCommand(size_t client_index, const Command &cmd) {
+void Server::handleCommand(size_t client_index, const Command &cmd)
+{
 	Client &client = clients_[connections_[client_index].fd];
 
 	std::cout << "Client <" << client.getFd() << ", " << client.getIp() << "> sent a command: " << std::endl;
 
-	if (cmd.type == "PASS")
+	if (cmd.getType() == "PASS")
 	{
-		if (cmd.params.size() != 1)
+		if (cmd.getParams().size() != 1)
 		{
 			std::cerr << "Bad command: PASS" << std::endl;
-			return ;
+			return;
 		}
 
-
-		if (cmd.params[0] == password_)
+		if (cmd.getParams()[0] == password_)
 		{
 			client.setAuth(true);
 			std::cout << "Client <" << client.getFd() << ", " << client.getIp() << "> is authenticated" << std::endl;
-			return ;
+			return;
 		}
 		std::cerr << "Bad password, disconnecting client <" << client.getFd() << ", " << client.getIp() << ">" << std::endl;
 		disconnectClient(client_index);
-	} else if (cmd.type == "NICK")
+	}
+	else if (cmd.getType() == "NICK")
 	{
 		std::cout << "Handle command NICK" << std::endl;
-	} else if (cmd.type == "USER")
+	}
+	else if (cmd.getType() == "USER")
 	{
 		std::cout << "Handle command USER" << std::endl;
-	} else {
-		std::cerr << "Unknown command: " << cmd.type << std::endl;
+	}
+	else
+	{
+		std::cerr << "Unknown command: " << cmd.getType() << std::endl;
 	}
 }
 
