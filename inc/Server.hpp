@@ -20,7 +20,7 @@
 
 #include "utils.hpp"
 #include "Client.hpp"
-#include "Command.hpp"
+#include "Command/Command.hpp"
 
 class Server
 {
