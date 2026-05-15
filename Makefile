@@ -15,7 +15,9 @@ FILES = main.cpp \
 		utils.cpp \
 		Server.cpp \
 		Client.cpp \
-		Command.cpp
+		Command/Command.cpp \
+		Command/CommandFactory.cpp \
+		Command/PassCommand.cpp
 
 SRC_FILES = $(addprefix $(SRC_DIR)/, $(FILES))
 OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRC_FILES))
