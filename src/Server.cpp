@@ -1,4 +1,5 @@
 #include "Server.hpp"
+#include "Command/CommandFactory.hpp"
 
 Server::Server() : port_(""), listener_(-1), password_("") {}
 
@@ -227,9 +228,18 @@ void Server::receiveClientData(size_t client_index)
 			std::cerr << "Bad command" << std::endl;
 		}
 
-		Command command(type, params);
+		// WIP: Function to create different commands
+		CommandFactory factory;
 
-		handleCommand(client_index, command);
+		Command *cmd = factory.createCommand(type, params);
+		if (!cmd)
+		{
+			// TODO: Handle undefined command;
+			std::cerr << "Undefined command" << std::endl;
+			continue;
+		}
+		cmd->execute(&client, this);
+		delete cmd;
 	}
 }
 
