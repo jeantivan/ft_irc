@@ -2,6 +2,7 @@
 #define COMMAND_HPP
 
 #include <iostream>
+#include <list>
 #include <vector>
 #include <string>
 #include <stdexcept>
@@ -26,8 +27,7 @@ public:
 
 	Command(const std::string &type, const std::vector<std::string> &params);
 
-	// TODO: Convertir en Abstracta y crear las derivadas.
-	virtual void execute(Client *client, Server *server); //= 0;
+	virtual void execute(Client *client, Server *server) = 0;
 
 	void printCommand();
 
