@@ -1,4 +1,4 @@
-#include "Command.hpp"
+#include "Command/Command.hpp"
 #include <algorithm>
 
 Command::Command() : type_("UNDEFINED"), params_() {}
