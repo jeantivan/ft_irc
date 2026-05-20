@@ -5,6 +5,15 @@
 #include <string>
 #include <stdexcept>
 
+enum AuthState
+{
+	AUTH_NONE = 0,		// 0000
+	AUTH_PASS = 1 << 0, // 0001 (1)
+	AUTH_NICK = 1 << 1, // 0010 (2)
+	AUTH_USER = 1 << 2, // 0100 (4)
+	AUTH_REGISTERED = 7 // 0111 (1 | 2 | 4)
+};
+
 class Client
 {
 private:
@@ -13,6 +22,7 @@ private:
 	std::string readBuf_;
 	std::string writeBuf_;
 
+	AuthState authState_;
 	bool auth_;
 	std::string nick_;
 	std::string realname_;

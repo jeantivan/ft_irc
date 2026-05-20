@@ -1,8 +1,8 @@
 #include "Client.hpp"
 
-Client::Client() : fd(-1), ip(""), readBuf_(""), writeBuf_(""), auth_(false), nick_(""), realname_(""){}
+Client::Client() : fd(-1), ip(""), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), nick_(""), realname_("") {}
 
-Client::Client(const Client &other) : fd(other.fd), ip(other.ip), readBuf_(other.readBuf_), writeBuf_(other.writeBuf_), auth_(other.auth_), nick_(other.nick_), realname_(other.realname_) {}
+Client::Client(const Client &other) : fd(other.fd), ip(other.ip), readBuf_(other.readBuf_), writeBuf_(other.writeBuf_), authState_(other.authState_), auth_(other.auth_), nick_(other.nick_), realname_(other.realname_) {}
 
 Client &Client::operator=(const Client &other)
 {
@@ -12,6 +12,7 @@ Client &Client::operator=(const Client &other)
 		ip = other.ip;
 		readBuf_ = other.readBuf_;
 		writeBuf_ = other.writeBuf_;
+		authState_ = other.authState_;
 		auth_ = other.auth_;
 		nick_ = other.nick_;
 		realname_ = other.realname_;
@@ -22,7 +23,7 @@ Client &Client::operator=(const Client &other)
 
 Client::~Client() {}
 
-Client::Client(int fd, const std::string &ip) : fd(fd), ip(ip), readBuf_(""), writeBuf_(""), auth_(false), nick_(""), realname_("") {}
+Client::Client(int fd, const std::string &ip) : fd(fd), ip(ip), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), nick_(""), realname_("") {}
 
 int Client::getFd() const
 {
@@ -34,43 +35,53 @@ const std::string &Client::getIp() const
 	return ip;
 }
 
-const std::string &Client::getReadBuf() const {
+const std::string &Client::getReadBuf() const
+{
 	return readBuf_;
 }
 
-const std::string &Client::getWriteBuf() const {
+const std::string &Client::getWriteBuf() const
+{
 	return writeBuf_;
 }
 
-bool Client::isAuth() const {
+bool Client::isAuth() const
+{
 	return auth_;
 }
 
-const std::string &Client::getNick() const {
+const std::string &Client::getNick() const
+{
 	return nick_;
 }
 
-const std::string &Client::getRealname() const {
+const std::string &Client::getRealname() const
+{
 	return realname_;
 }
 
-void Client::setAuth(bool auth) {
+void Client::setAuth(bool auth)
+{
 	auth_ = auth;
 }
 
-void Client::setNick(const std::string &nick) {
+void Client::setNick(const std::string &nick)
+{
 	nick_ = nick;
 }
 
-void Client::setRealname(const std::string &realname) {
+void Client::setRealname(const std::string &realname)
+{
 	realname_ = realname;
 }
 
-bool Client::hasCompleteCommand() {
+bool Client::hasCompleteCommand()
+{
 	return readBuf_.find("\r\n") != std::string::npos;
 }
 
-std::string Client::extractCommand() {
+std::string Client::extractCommand()
+{
 	size_t delim = readBuf_.find("\r\n");
 
 	if (delim == std::string::npos)
@@ -82,15 +93,15 @@ std::string Client::extractCommand() {
 	return cmd;
 }
 
-void Client::appendToReadBuf(const char *data, size_t len) {
+void Client::appendToReadBuf(const char *data, size_t len)
+{
 	readBuf_.append(data, len);
 }
 
-void Client::eraseFromWriteBuf(size_t len) {
+void Client::eraseFromWriteBuf(size_t len)
+{
 	if (len >= writeBuf_.size())
 		writeBuf_.clear();
 	else
 		writeBuf_ = writeBuf_.substr(len);
 }
-
-
