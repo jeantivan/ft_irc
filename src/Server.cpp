@@ -283,6 +283,8 @@ bool Server::sendClientData(size_t client_index)
 	return false;
 }
 
+//¿Via muerta?
+/*
 void Server::handleCommand(size_t client_index, const Command &cmd)
 {
 	Client &client = clients_[connections_[client_index].fd];
@@ -318,7 +320,7 @@ void Server::handleCommand(size_t client_index, const Command &cmd)
 	{
 		std::cerr << "Unknown command: " << cmd.getType() << std::endl;
 	}
-}
+}*/
 
 // TODO: Separar a otro archivo
 bool Server::signal_received_ = false;
