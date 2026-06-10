@@ -69,6 +69,11 @@ const std::string &Server::getPassword() const
 	return password_;
 }
 
+const char *getName()
+{
+	return NAME_SERVER;
+}
+
 void Server::init()
 {
 	int listener;
