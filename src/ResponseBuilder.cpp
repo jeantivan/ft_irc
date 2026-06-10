@@ -72,7 +72,8 @@ ResponseBuilder &ResponseBuilder::numeric(int code)
 	{
 		oss << "0" << code;
 	}
-	oss << code;
+	else
+		oss << code;
 	command_ = oss.str();
 	return *this;
 }

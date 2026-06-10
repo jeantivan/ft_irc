@@ -26,6 +26,8 @@ void PassCommand::execute(Client *client, Server *server)
 	if (params_.size() != 1)
 	{
 		// TODO: Handle bad command params error, this should be wrote on the client's writeBuf_;
+		
+
 		std::cerr << "[ircserver]: Error: Bad command params." << std::endl;
 		return;
 	}
