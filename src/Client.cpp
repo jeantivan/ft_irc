@@ -105,7 +105,7 @@ void Client::appendToReadBuf(const char *data, size_t len)
 	readBuf_.append(data, len);
 }
 
-void Client::appendToWriteBuf(std::string &response)
+void Client::appendToWriteBuf(const std::string &response)
 {
 	writeBuf_ += response;
 }

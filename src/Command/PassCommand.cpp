@@ -27,18 +27,18 @@ void PassCommand::execute(Client *client, Server *server)
 
 	if (params_.empty())
 	{
-		response.prefix(server->getName()).numeric(ERR_NEEDMOREPARAMS).target(client->getNick()).params("PASS").trailing("Not enough parameters").build();
+		response.prefix(server->getName()).numeric(ERR_NEEDMOREPARAMS).target(client->getNick()).params("PASS").trailing("Not enough parameters");
 		std::cerr << "[ircserver]: Error: Bad command params." << std::endl;
 	}
 	else if (client->isAuth())
 	{
 		
-		response.prefix(server->getName()).numeric(ERR_ALREADYREGISTRED).target(client->getNick()).trailing("Unauthorized command (already registered)").build();
+		response.prefix(server->getName()).numeric(ERR_ALREADYREGISTRED).target(client->getNick()).trailing("Unauthorized command (already registered)");
 	}
 	else if (params_[0] != server->getPassword())
 	{
 
-		response.prefix(server->getName()).numeric(ERR_PASSWDMISMATCH).target(client->getNick()).trailing("Password incorrect").build();
+		response.prefix(server->getName()).numeric(ERR_PASSWDMISMATCH).target(client->getNick()).trailing("Password incorrect");
 		server->disconnectClient(client->getFd());
 	}
 	else

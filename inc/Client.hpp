@@ -54,7 +54,7 @@ public:
 	std::string extractCommand();
 
 	void appendToReadBuf(const char *data, size_t len);
-	void appendToWriteBuf(std::string &response);
+	void appendToWriteBuf(const std::string &response);
 	void eraseFromWriteBuf(size_t len);
 };
 
