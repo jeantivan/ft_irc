@@ -1,0 +1,3 @@
+CAP - Comando que negocia capacidades especiales (IRCv3). No incluidas en el subject. Clientes modernos, lo lanzan al establecer conexion y se quedan a la espera de respuesta.
+
+capturar comunicaciones servidor-cliente: sudo ngrep -d lo -W byline '' 'tcp port 6667'

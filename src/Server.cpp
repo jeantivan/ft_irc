@@ -231,7 +231,7 @@ void Server::receiveClientData(size_t client_index)
 		// WIP: Function to create different commands
 		CommandFactory factory;
 
-		Command *cmd = factory.createCommand(type, params);
+		Command *cmd = factory.createCommand(type, params); //cmd es obligatoriamente un puntero, es lo que posibilita polimorfismo.
 		if (!cmd)
 		{
 			// TODO: Handle undefined command;

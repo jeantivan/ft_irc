@@ -4,6 +4,7 @@
 CommandFactory::CommandFactory()
 {
 	creators_["PASS"] = &PassCommand::create;
+
 }
 
 CommandFactory::~CommandFactory() {}
