@@ -3,6 +3,7 @@
 
 #include <string>
 #include <sstream>
+#include "NumericReplies.hpp"
 
 class ResponseBuilder
 {

@@ -65,6 +65,13 @@ void Client::setAuth(bool auth)
 	auth_ = auth;
 }
 
+void Client::setAuthState(AuthState adding)
+{
+	authState_ = static_cast<AuthState>(
+    	static_cast<int>(authState_) | static_cast<int>(adding)
+    );
+}
+
 void Client::setNick(const std::string &nick)
 {
 	nick_ = nick;
@@ -96,6 +103,11 @@ std::string Client::extractCommand()
 void Client::appendToReadBuf(const char *data, size_t len)
 {
 	readBuf_.append(data, len);
+}
+
+void Client::appendToWriteBuf(std::string &response)
+{
+	writeBuf_ += response;
 }
 
 void Client::eraseFromWriteBuf(size_t len)

@@ -86,14 +86,14 @@ std::string ResponseBuilder::build()
 		result += prefix_ + " ";
 	result += command_;
 
-	if (target_.empty())
+	if (!target_.empty())
 		result += " " + target_;
 
 	if (!params_.empty())
 		result += " " + params_;
 
 	if (!trailing_.empty())
-		result += " :" + trailing_;
+		result += " " + trailing_;//trailing() ya introdujo ":"
 
 	result += "\r\n";
 
