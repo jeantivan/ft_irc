@@ -23,7 +23,7 @@ private:
 	std::string writeBuf_;
 
 	AuthState authState_;
-	bool auth_;
+	bool auth_; //sin uso, isAuth() hace authState- == AUTH_REGISTERED
 	std::string nick_;
 	std::string realname_;
 

@@ -47,7 +47,7 @@ const std::string &Client::getWriteBuf() const
 
 bool Client::isAuth() const
 {
-	return auth_;
+	return (authState_ == AUTH_REGISTERED);
 }
 
 const std::string &Client::getNick() const
