@@ -69,7 +69,7 @@ const std::string &Server::getPassword() const
 	return password_;
 }
 
-const char *getName()
+const char *Server::getName()
 {
 	return NAME_SERVER;
 }
