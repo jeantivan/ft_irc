@@ -31,7 +31,7 @@ ResponseBuilder &ResponseBuilder::clear()
 
 ResponseBuilder &ResponseBuilder::prefix(const std::string &pref)
 {
-	prefix_ = pref;
+	prefix_ +=  pref;
 	return *this;
 }
 
@@ -57,7 +57,7 @@ ResponseBuilder &ResponseBuilder::target(const std::string &target)
 
 ResponseBuilder &ResponseBuilder::trailing(const std::string &trailing)
 {
-	trailing_ = ":" + trailing;
+	trailing_ = trailing;
 	return *this;
 }
 
@@ -83,7 +83,7 @@ std::string ResponseBuilder::build()
 	std::string result;
 
 	if (!prefix_.empty())
-		result += prefix_ + " ";
+		result += ":" + prefix_ + " ";
 	result += command_;
 
 	if (!target_.empty())
@@ -93,7 +93,7 @@ std::string ResponseBuilder::build()
 		result += " " + params_;
 
 	if (!trailing_.empty())
-		result += " " + trailing_;//trailing() ya introdujo ":"
+		result += " :" + trailing_;//trailing() ya introdujo ":"
 
 	result += "\r\n";
 

@@ -1,8 +1,8 @@
 #include "Client.hpp"
 
-Client::Client() : fd(-1), ip(""), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), nick_(""), realname_("") {}
+Client::Client() : fd(-1), ip(""), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), nick_(""), realname_(""), toDisconnect_(false) {}
 
-Client::Client(const Client &other) : fd(other.fd), ip(other.ip), readBuf_(other.readBuf_), writeBuf_(other.writeBuf_), authState_(other.authState_), auth_(other.auth_), nick_(other.nick_), realname_(other.realname_) {}
+Client::Client(const Client &other) : fd(other.fd), ip(other.ip), readBuf_(other.readBuf_), writeBuf_(other.writeBuf_), authState_(other.authState_), auth_(other.auth_), nick_(other.nick_), realname_(other.realname_), toDisconnect_(other.toDisconnect_) {}
 
 Client &Client::operator=(const Client &other)
 {
@@ -16,6 +16,7 @@ Client &Client::operator=(const Client &other)
 		auth_ = other.auth_;
 		nick_ = other.nick_;
 		realname_ = other.realname_;
+		toDisconnect_ = other.toDisconnect_;
 	}
 
 	return *this;
@@ -23,7 +24,7 @@ Client &Client::operator=(const Client &other)
 
 Client::~Client() {}
 
-Client::Client(int fd, const std::string &ip) : fd(fd), ip(ip), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), nick_(""), realname_("") {}
+Client::Client(int fd, const std::string &ip) : fd(fd), ip(ip), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), nick_(""), realname_(""), toDisconnect_(false) {}
 
 int Client::getFd() const
 {
@@ -65,6 +66,11 @@ const std::string &Client::getRealname() const
 	return realname_;
 }
 
+bool Client::getToDisconnect() const
+{
+	return toDisconnect_;
+}
+
 void Client::setAuth(bool auth)
 {
 	auth_ = auth;
@@ -85,6 +91,11 @@ void Client::setNick(const std::string &nick)
 void Client::setRealname(const std::string &realname)
 {
 	realname_ = realname;
+}
+
+void Client::setToDisconnect()
+{
+	toDisconnect_ = true;
 }
 
 bool Client::hasCompleteCommand()

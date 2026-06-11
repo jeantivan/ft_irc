@@ -42,7 +42,7 @@ void PassCommand::execute(Client *client, Server *server)
 		response.prefix(server->getName()).numeric(ERR_PASSWDMISMATCH).target(client->getNick()).trailing("Password incorrect");
 		std::cerr<< "[ircserver]--->" << client->getFd() << " Error: Password incorrect" << std::endl;		
 		//server->disconnectClient(client->getFd());
-		//TO DO marcar cliente como pendiente de desconexion
+		client->setToDisconnect();
 	}
 	else
 	{
@@ -50,8 +50,6 @@ void PassCommand::execute(Client *client, Server *server)
 		std::cout << "[ircserver]: Client <" << client->getFd() << ", " << client->getIp() << "> is authenticated" << std::endl;
 		return;	
 	}
-	// TODO: Should I write something to respond when auth is success
-
 
 	client->appendToWriteBuf(response.build());
 	return;

@@ -267,6 +267,8 @@ bool Server::sendClientData(size_t client_index)
 
 	if (clientWriteBuf.empty())
 	{
+		if (client.getToDisconnect())
+			disconnectClient(client_index);
 		return false;
 	}
 

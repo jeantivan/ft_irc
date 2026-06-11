@@ -45,12 +45,14 @@ public:
 	AuthState getState() const;
 	const std::string &getNick() const;
 	const std::string &getRealname() const;
+	bool getToDisconnect() const;
 
 	// Setters;
 	void setAuthState(AuthState); 
 	void setAuth(bool auth);// borrar?
 	void setNick(const std::string &nick);
 	void setRealname(const std::string &realname);
+	void setToDisconnect();
 
 	bool hasCompleteCommand();
 	std::string extractCommand();
