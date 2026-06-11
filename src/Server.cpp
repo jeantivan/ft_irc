@@ -153,13 +153,14 @@ void Server::run()
 					receiveClientData(i);
 				}
 			}
-			// else if (connections_[i].revents & POLLOUT)
-			// {
-			// 	if (!sendClientData(i)) {
-			// 		// TODO: Mejorar mensaje de error
-			// 		std::cerr << "Error: Not all client<" << connections_[i].fd << ", " << clients_[connections_[i].fd].getFd() << "> data could be sent" << std::endl;
-			// 	}
-			// }
+			else if (connections_[i].revents & POLLOUT)
+			{
+			 	if (!sendClientData(i))
+				{
+			 		// TODO: Mejorar mensaje de error
+			 		//std::cerr << "Error: Not all client<" << connections_[i].fd << ", " << clients_[connections_[i].fd].getFd() << "> data could be sent" << std::endl;
+			 	}
+			}
 		}
 	}
 }

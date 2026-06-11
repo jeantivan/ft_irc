@@ -45,6 +45,11 @@ const std::string &Client::getWriteBuf() const
 	return writeBuf_;
 }
 
+AuthState Client::getState() const
+{
+	return authState_ ;
+}
+
 bool Client::isAuth() const
 {
 	return (authState_ == AUTH_REGISTERED);

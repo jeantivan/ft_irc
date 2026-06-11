@@ -26,6 +26,7 @@ private:
 	bool auth_; //sin uso, isAuth() hace authState- == AUTH_REGISTERED
 	std::string nick_;
 	std::string realname_;
+	bool toDisconnect_;
 
 public:
 	Client();
@@ -40,7 +41,8 @@ public:
 	const std::string &getIp() const;
 	const std::string &getReadBuf() const;
 	const std::string &getWriteBuf() const;
-	bool isAuth() const;
+	bool isAuth() const; //mejor nombre isRegistered()
+	AuthState getState() const;
 	const std::string &getNick() const;
 	const std::string &getRealname() const;
 
