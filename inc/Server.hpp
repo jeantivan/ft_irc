@@ -22,6 +22,9 @@
 #include "Client.hpp"
 #include "Command/Command.hpp"
 
+#define NAME_SERVER "Our_IRC_Serv"
+
+
 class Server
 {
 private:
@@ -47,6 +50,7 @@ public:
 	std::string getPort() const;
 	int getListener() const;
 	const std::string &getPassword() const;
+	static const char *getName();
 
 	// Bind listener to port
 	void init();

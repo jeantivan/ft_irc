@@ -23,7 +23,7 @@ private:
 	std::string writeBuf_;
 
 	AuthState authState_;
-	bool auth_;
+	bool auth_; //sin uso, isAuth() hace authState- == AUTH_REGISTERED
 	std::string nick_;
 	std::string realname_;
 
@@ -45,7 +45,8 @@ public:
 	const std::string &getRealname() const;
 
 	// Setters;
-	void setAuth(bool auth);
+	void setAuthState(AuthState); 
+	void setAuth(bool auth);// borrar?
 	void setNick(const std::string &nick);
 	void setRealname(const std::string &realname);
 
@@ -53,6 +54,7 @@ public:
 	std::string extractCommand();
 
 	void appendToReadBuf(const char *data, size_t len);
+	void appendToWriteBuf(const std::string &response);
 	void eraseFromWriteBuf(size_t len);
 };
 

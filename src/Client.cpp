@@ -47,7 +47,7 @@ const std::string &Client::getWriteBuf() const
 
 bool Client::isAuth() const
 {
-	return auth_;
+	return (authState_ == AUTH_REGISTERED);
 }
 
 const std::string &Client::getNick() const
@@ -63,6 +63,13 @@ const std::string &Client::getRealname() const
 void Client::setAuth(bool auth)
 {
 	auth_ = auth;
+}
+
+void Client::setAuthState(AuthState adding)
+{
+	authState_ = static_cast<AuthState>(
+    	static_cast<int>(authState_) | static_cast<int>(adding)
+    );
 }
 
 void Client::setNick(const std::string &nick)
@@ -96,6 +103,11 @@ std::string Client::extractCommand()
 void Client::appendToReadBuf(const char *data, size_t len)
 {
 	readBuf_.append(data, len);
+}
+
+void Client::appendToWriteBuf(const std::string &response)
+{
+	writeBuf_ += response;
 }
 
 void Client::eraseFromWriteBuf(size_t len)

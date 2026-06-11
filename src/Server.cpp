@@ -69,6 +69,11 @@ const std::string &Server::getPassword() const
 	return password_;
 }
 
+const char *Server::getName()
+{
+	return NAME_SERVER;
+}
+
 void Server::init()
 {
 	int listener;
@@ -231,7 +236,7 @@ void Server::receiveClientData(size_t client_index)
 		// WIP: Function to create different commands
 		CommandFactory factory;
 
-		Command *cmd = factory.createCommand(type, params);
+		Command *cmd = factory.createCommand(type, params); //cmd es obligatoriamente un puntero, es lo que posibilita polimorfismo.
 		if (!cmd)
 		{
 			// TODO: Handle undefined command;
@@ -283,6 +288,8 @@ bool Server::sendClientData(size_t client_index)
 	return false;
 }
 
+//¿Via muerta?
+/*
 void Server::handleCommand(size_t client_index, const Command &cmd)
 {
 	Client &client = clients_[connections_[client_index].fd];
@@ -318,7 +325,7 @@ void Server::handleCommand(size_t client_index, const Command &cmd)
 	{
 		std::cerr << "Unknown command: " << cmd.getType() << std::endl;
 	}
-}
+}*/
 
 // TODO: Separar a otro archivo
 bool Server::signal_received_ = false;

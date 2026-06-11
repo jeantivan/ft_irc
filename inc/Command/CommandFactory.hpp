@@ -6,6 +6,7 @@
 #include <string>
 
 // Factory
+//Puntero a funcion, explicacion detallada: https://github.com/AntOnioN77/ft_irc_resources/blob/main/ComandCreator.md
 typedef Command *(*CommandCreator)(const std::string &type, const std::vector<std::string> &params);
 
 class CommandFactory
