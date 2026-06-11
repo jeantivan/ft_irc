@@ -183,7 +183,7 @@ void Server::acceptNewClient()
 	struct pollfd new_connection;
 
 	new_connection.fd = new_fd;
-	new_connection.events = POLLIN | POLLOUT;
+	new_connection.events = POLLIN | POLLOUT;// POLLOUT aqui causa un uso de CPU 100%, cada cliente esta dispuesto a recibir la mayor parte del tiempo, y el bucle de Server::run() nunca descansa en poll()
 	new_connection.revents = 0;
 
 	connections_.push_back(new_connection);
@@ -223,7 +223,7 @@ void Server::receiveClientData(size_t client_index)
 	client.appendToReadBuf(buffer, bytes_received);
 
 	// TODO: May be this will be deleted
-	while (client.hasCompleteCommand())
+	while (client.hasCompleteCommand()  && !client.getToDisconnect()) // && !client.getToDisconnect() evita seguir ejecutando comandos acumulados en buffer de salida, cuando el cliente fué marcado toDisconnect_
 	{
 		std::string raw_cmd = client.extractCommand();
 		std::string type;
