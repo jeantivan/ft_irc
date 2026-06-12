@@ -24,7 +24,6 @@
 
 #define NAME_SERVER "Our_IRC_Serv"
 
-
 class Server
 {
 private:
@@ -65,7 +64,7 @@ public:
 	void receiveClientData(size_t client_index);
 
 	// Disconnect Client
-	void disconnectClient(size_t client_index);
+	void disconnectClient(int fd);
 
 	// Send client data
 	bool sendClientData(size_t client_index);

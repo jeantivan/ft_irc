@@ -142,6 +142,12 @@ void Server::run()
 		}
 		for (int i = connections_.size() - 1; i >= 0; i--)
 		{
+
+			if (!clients_[connections_[i].fd].getWriteBuf().empty())
+				connections_[i].events = POLLIN | POLLOUT;
+			else
+				connections_[i].events = POLLIN;
+
 			if (connections_[i].revents & (POLLIN | POLLHUP))
 			{
 				if (connections_[i].fd == listener_)
@@ -251,11 +257,18 @@ void Server::receiveClientData(size_t client_index)
 
 void Server::disconnectClient(int fd)
 {
-	int fd = connections_[client_index].fd;
-
 	close(fd);
-	connections_.erase(connections_.begin() + client_index);
+
 	clients_.erase(fd);
+
+	for (size_t i = 0; i < connections_.size(); i++)
+	{
+		if (connections_[i].fd == fd)
+		{
+			connections_.erase(connections_.begin() + i);
+			break;
+		}
+	}
 }
 
 bool Server::sendClientData(size_t client_index)
