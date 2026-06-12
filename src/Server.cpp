@@ -142,6 +142,12 @@ void Server::run()
 		}
 		for (int i = connections_.size() - 1; i >= 0; i--)
 		{
+
+			if (!clients_[connections_[i].fd].getWriteBuf().empty())
+				connections_[i].events = POLLIN | POLLOUT;
+			else
+				connections_[i].events = POLLIN;
+
 			if (connections_[i].revents & (POLLIN | POLLHUP))
 			{
 				if (connections_[i].fd == listener_)
@@ -153,13 +159,14 @@ void Server::run()
 					receiveClientData(i);
 				}
 			}
-			// else if (connections_[i].revents & POLLOUT)
-			// {
-			// 	if (!sendClientData(i)) {
-			// 		// TODO: Mejorar mensaje de error
-			// 		std::cerr << "Error: Not all client<" << connections_[i].fd << ", " << clients_[connections_[i].fd].getFd() << "> data could be sent" << std::endl;
-			// 	}
-			// }
+			else if (connections_[i].revents & POLLOUT)
+			{
+				if (!sendClientData(i))
+				{
+					// TODO: Mejorar mensaje de error
+					std::cerr << "Error: Not all client<" << connections_[i].fd << ", " << clients_[connections_[i].fd].getFd() << "> data could be sent" << std::endl;
+				}
+			}
 		}
 	}
 }
@@ -182,7 +189,7 @@ void Server::acceptNewClient()
 	struct pollfd new_connection;
 
 	new_connection.fd = new_fd;
-	new_connection.events = POLLIN | POLLOUT;
+	new_connection.events = POLLIN;
 	new_connection.revents = 0;
 
 	connections_.push_back(new_connection);
@@ -236,7 +243,7 @@ void Server::receiveClientData(size_t client_index)
 		// WIP: Function to create different commands
 		CommandFactory factory;
 
-		Command *cmd = factory.createCommand(type, params); //cmd es obligatoriamente un puntero, es lo que posibilita polimorfismo.
+		Command *cmd = factory.createCommand(type, params); // cmd es obligatoriamente un puntero, es lo que posibilita polimorfismo.
 		if (!cmd)
 		{
 			// TODO: Handle undefined command;
@@ -288,7 +295,7 @@ bool Server::sendClientData(size_t client_index)
 	return false;
 }
 
-//¿Via muerta?
+// ¿Via muerta?
 /*
 void Server::handleCommand(size_t client_index, const Command &cmd)
 {
