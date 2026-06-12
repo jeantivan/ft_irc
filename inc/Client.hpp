@@ -58,6 +58,7 @@ public:
 	std::string extractCommand();
 
 	void appendToReadBuf(const char *data, size_t len);
+	//NO USAR sin gestionar POLLOUT, puedes usar Server::queueueClientData() en su lugar
 	void appendToWriteBuf(const std::string &response);
 	void eraseFromWriteBuf(size_t len);
 };

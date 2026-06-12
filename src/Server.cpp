@@ -74,14 +74,14 @@ const char *Server::getName()
 	return NAME_SERVER;
 }
 
-size_t Server::findConnectionByFd(size_t fd) const
+size_t Server::findConnectionByFd(int fd) const
 {
-	for (int i = 0; i < connections_.size(); i++)
+	for (size_t i = 0; i < connections_.size(); i++)
 	{
 		if (connections_[i].fd == fd)
 			return i;
 	}
-	return -1;
+	return static_cast<size_t>(-1); //valor maximo, para marcar error
 }
 
 void Server::init()
@@ -362,6 +362,12 @@ void Server::signalHandler(int signal)
 void Server::queueueClientData(Client &client, const std::string &data)
 {
 	size_t id = findConnectionByFd(client.getFd());
+	if (id == static_cast<size_t>(-1))
+	{
+		std::cerr << "ERROR en findConnectionByFd" << std::endl;
+		// TODO no se si gestionar el error con un throw o como, pero seria grave que quedase asi
+		return;
+	}
 	connections_[id].events |= POLLOUT;
 	client.appendToWriteBuf(data);
 }

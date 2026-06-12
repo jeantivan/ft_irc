@@ -52,7 +52,7 @@ public:
 	static const char *getName();
 
 	// Busca a que elemento en connections_ pertenece un fd 
-	size_t findConnectionByFd(size_t fd) const;
+	size_t findConnectionByFd(int fd) const;
 
 	// Bind listener to port
 	void init();
@@ -83,3 +83,4 @@ public:
 };
 
 #endif // SERVER_HPP
+
