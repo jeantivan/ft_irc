@@ -221,7 +221,7 @@ void Server::receiveClientData(size_t client_index)
 			std::cerr << "[ircserver]: recv failed on client " << client_fd << " " << std::strerror(errno) << std::endl;
 		}
 
-		disconnectClient(client_index);
+		disconnectClient(client_fd);
 		return;
 	}
 
@@ -255,13 +255,20 @@ void Server::receiveClientData(size_t client_index)
 	}
 }
 
-void Server::disconnectClient(size_t client_index)
+void Server::disconnectClient(int fd)
 {
-	int fd = connections_[client_index].fd;
-
 	close(fd);
-	connections_.erase(connections_.begin() + client_index);
+
 	clients_.erase(fd);
+
+	for (size_t i = 0; i < connections_.size(); i++)
+	{
+		if (connections_[i].fd == fd)
+		{
+			connections_.erase(connections_.begin() + i);
+			break;
+		}
+	}
 }
 
 bool Server::sendClientData(size_t client_index)
