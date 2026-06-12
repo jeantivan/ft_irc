@@ -74,6 +74,16 @@ const char *Server::getName()
 	return NAME_SERVER;
 }
 
+size_t Server::findConnectionByFd(size_t fd) const
+{
+	for (int i = 0; i < connections_.size(); i++)
+	{
+		if (connections_[i].fd == fd)
+			return i;
+	}
+	return -1;
+}
+
 void Server::init()
 {
 	int listener;
@@ -143,10 +153,7 @@ void Server::run()
 		for (int i = connections_.size() - 1; i >= 0; i--)
 		{
 
-			if (!clients_[connections_[i].fd].getWriteBuf().empty())
-				connections_[i].events = POLLIN | POLLOUT;
-			else
-				connections_[i].events = POLLIN;
+//PLACEHOLDER bloque logica POLLOUT si o no
 
 			if (connections_[i].revents & (POLLIN | POLLHUP))
 			{
@@ -164,7 +171,7 @@ void Server::run()
 				if (!sendClientData(i))
 				{
 					// TODO: Mejorar mensaje de error
-					std::cerr << "Error: Not all client<" << connections_[i].fd << ", " << clients_[connections_[i].fd].getFd() << "> data could be sent" << std::endl;
+//comentado para test//std::cerr << "Error: Not all client<" << connections_[i].fd << ", " << clients_[connections_[i].fd].getFd() << "> data could be sent" << std::endl;
 				}
 			}
 		}
@@ -189,7 +196,7 @@ void Server::acceptNewClient()
 	struct pollfd new_connection;
 
 	new_connection.fd = new_fd;
-	new_connection.events = POLLIN;
+	new_connection.events = POLLIN | POLLOUT;// ----- Necesario??
 	new_connection.revents = 0;
 
 	connections_.push_back(new_connection);
@@ -281,7 +288,7 @@ bool Server::sendClientData(size_t client_index)
 	if (clientWriteBuf.empty())
 	{
 		if (client.getToDisconnect())
-			disconnectClient(client_index);
+			disconnectClient(fd);
 		return false;
 	}
 
@@ -351,3 +358,11 @@ void Server::signalHandler(int signal)
 	(void)signal;
 	Server::signal_received_ = true;
 }
+
+void Server::queueueClientData(Client client, std::string data)
+{
+	size_t id = findConnectionByFd(client.getFd());
+	connections_[id].events |= POLLOUT;
+	client.appendToWriteBuf(data);
+}
+

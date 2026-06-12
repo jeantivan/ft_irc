@@ -51,6 +51,9 @@ public:
 	const std::string &getPassword() const;
 	static const char *getName();
 
+	// Busca a que elemento en connections_ pertenece un fd 
+	size_t findConnectionByFd(size_t fd) const;
+
 	// Bind listener to port
 	void init();
 
@@ -66,7 +69,10 @@ public:
 	// Disconnect Client
 	void disconnectClient(int fd);
 
-	// Send client data
+	// Envia datos al bufer de salida de client, activa el evento POLLOUT para ese cliente
+	void queueueClientData(Client client, std::string data);
+
+	// Send client data, los datos almacendos en el buffer desalida con la funcion anterior
 	bool sendClientData(size_t client_index);
 
 	// Static signal handler;
