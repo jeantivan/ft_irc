@@ -31,7 +31,7 @@ ResponseBuilder &ResponseBuilder::clear()
 
 ResponseBuilder &ResponseBuilder::prefix(const std::string &pref)
 {
-	prefix_ +=  pref;
+	prefix_ = pref;
 	return *this;
 }
 
