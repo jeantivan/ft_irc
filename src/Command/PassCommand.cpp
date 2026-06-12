@@ -51,7 +51,7 @@ void PassCommand::execute(Client *client, Server *server)
 		return;	
 	}
 
-	client->appendToWriteBuf(response.build());
+	server->queueueClientData(*client, response.build());
 	return;
 }
 

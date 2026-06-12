@@ -70,7 +70,7 @@ public:
 	void disconnectClient(int fd);
 
 	// Envia datos al bufer de salida de client, activa el evento POLLOUT para ese cliente
-	void queueueClientData(Client client, std::string data);
+	void queueueClientData(Client &client, const std::string &data);
 
 	// Send client data, los datos almacendos en el buffer desalida con la funcion anterior
 	bool sendClientData(size_t client_index);

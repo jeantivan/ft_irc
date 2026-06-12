@@ -359,7 +359,7 @@ void Server::signalHandler(int signal)
 	Server::signal_received_ = true;
 }
 
-void Server::queueueClientData(Client client, std::string data)
+void Server::queueueClientData(Client &client, const std::string &data)
 {
 	size_t id = findConnectionByFd(client.getFd());
 	connections_[id].events |= POLLOUT;
