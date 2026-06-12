@@ -170,6 +170,7 @@ void Server::run()
 			{
 				if (!sendClientData(i))
 				{
+
 					// TODO: Mejorar mensaje de error
 //comentado para test//std::cerr << "Error: Not all client<" << connections_[i].fd << ", " << clients_[connections_[i].fd].getFd() << "> data could be sent" << std::endl;
 				}
@@ -196,7 +197,7 @@ void Server::acceptNewClient()
 	struct pollfd new_connection;
 
 	new_connection.fd = new_fd;
-	new_connection.events = POLLIN | POLLOUT;// ----- Necesario??
+	new_connection.events = POLLIN;// ----- "| POLLOUT" Necesario??
 	new_connection.revents = 0;
 
 	connections_.push_back(new_connection);
@@ -216,7 +217,6 @@ void Server::receiveClientData(size_t client_index)
 	int client_fd = connections_[client_index].fd;
 	Client &client = clients_[client_fd];
 	int bytes_received = recv(client_fd, buffer, sizeof(buffer), 0);
-
 	if (bytes_received <= 0)
 	{
 		if (bytes_received == 0)
@@ -236,7 +236,7 @@ void Server::receiveClientData(size_t client_index)
 	client.appendToReadBuf(buffer, bytes_received);
 
 	// TODO: May be this will be deleted
-	while (client.hasCompleteCommand()  && !client.getToDisconnect()) // && !client.getToDisconnect() evita seguir ejecutando comandos acumulados en buffer de salida, cuando el cliente fué marcado toDisconnect_
+	while (client.hasCompleteCommand() && !client.getToDisconnect()) // && !client.getToDisconnect() evita seguir ejecutando comandos acumulados en buffer de salida, cuando el cliente fué marcado toDisconnect_
 	{
 		std::string raw_cmd = client.extractCommand();
 		std::string type;
@@ -282,13 +282,10 @@ bool Server::sendClientData(size_t client_index)
 {
 	int fd = connections_[client_index].fd;
 	Client &client = clients_[fd];
-
 	const std::string &clientWriteBuf = client.getWriteBuf();
 
 	if (clientWriteBuf.empty())
 	{
-		if (client.getToDisconnect())
-			disconnectClient(fd);
 		return false;
 	}
 
@@ -297,15 +294,21 @@ bool Server::sendClientData(size_t client_index)
 	if (bytes_sent > 0)
 	{
 		client.eraseFromWriteBuf(bytes_sent);
+		if (client.getWriteBuf().empty())
+		{
+			connections_[client_index].events &= ~POLLOUT; // "&= ~" borra el bit de POLLOUT
+			if (client.getToDisconnect())
+				disconnectClient(fd);
+		}
 	}
 	else if (bytes_sent == -1)
 	{
 		//  TODO: This should not exists because the evals says so
-		if (errno == EAGAIN || errno == EWOULDBLOCK)
-		{
-			return false;
-		}
-
+//		if (errno == EAGAIN || errno == EWOULDBLOCK)
+//		{
+//			return false;
+//		}
+		disconnectClient(fd); //pipe roto probablemente??
 		return true;
 	}
 	return false;
