@@ -51,7 +51,7 @@ void PassCommand::execute(Client *client, Server *server)
 		return;	
 	}
 
-	server->queueueClientData(*client, response.build());
+	server->queueClientData(*client, response.build());
 	return;
 }
 

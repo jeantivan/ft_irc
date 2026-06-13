@@ -362,7 +362,7 @@ void Server::signalHandler(int signal)
 	Server::signal_received_ = true;
 }
 
-void Server::queueueClientData(Client &client, const std::string &data)
+void Server::queueClientData(Client &client, const std::string &data)
 {
 	size_t id = findConnectionByFd(client.getFd());
 	if (id == static_cast<size_t>(-1))
