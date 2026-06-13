@@ -168,11 +168,10 @@ void Server::run()
 			}
 			else if (connections_[i].revents & POLLOUT)
 			{
-				if (!sendClientData(i))
+				if (sendClientData(i))
 				{
-
 					// TODO: Mejorar mensaje de error
-//comentado para test//std::cerr << "Error: Not all client<" << connections_[i].fd << ", " << clients_[connections_[i].fd].getFd() << "> data could be sent" << std::endl;
+					// std::cerr << "Error: Not all client<" << connections_[i].fd << ", " << clients_[connections_[i].fd].getFd() << "> data could be sent" << std::endl;
 				}
 			}
 		}
@@ -278,14 +277,17 @@ void Server::disconnectClient(int fd)
 	}
 }
 
+// Retorna true si send() falló.
 bool Server::sendClientData(size_t client_index)
 {
 	int fd = connections_[client_index].fd;
 	Client &client = clients_[fd];
 	const std::string &clientWriteBuf = client.getWriteBuf();
 
-	if (clientWriteBuf.empty())
+	if (clientWriteBuf.empty())// Se supone que no llamamos a sendClientData cuando no hay nada que enviar. ¿Es solo defensivo?
 	{
+		connections_[client_index].events &= ~POLLOUT;
+		std::cerr << "[INFO] client in shocket:" << fd << "calls sendClientData wuith writeBuff_ empthy." <<std::endl;
 		return false;
 	}
 
@@ -311,6 +313,8 @@ bool Server::sendClientData(size_t client_index)
 		disconnectClient(fd); //pipe roto probablemente??
 		return true;
 	}
+	else
+		std::cerr << "[INFO] client in shocket:" << fd << "send() return 0;" <<std::endl;
 	return false;
 }
 
