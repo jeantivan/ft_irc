@@ -289,7 +289,7 @@ Esta funcion debe ser llamada por los comandos USER y NICK (PASS no)
 */
 void Server::requestRegistration(Client &client)
 {
-	if (client.getState() == AUTH_COMPLETE)
+	if (client.getState() == AUTH_PASS + AUTH_USER)//Solo TEST!! cambiar AUTH_COMPLETE)
 	{
 		ResponseBuilder response;
 		if (password_ == client.getPassword())
@@ -300,7 +300,7 @@ void Server::requestRegistration(Client &client)
 			// TODO:extraer este bloque a funcion auxiliar WelcomReply()
 			//001    RPL_WELCOME	"Welcome to the Internet Relay Network <nick>!<user>@<host>"
 			response.prefix(getName()).numeric(1).target(client.getNick())
-				.trailing("Welcome to the Internet Relay Network " + client.getNick() + "!" + client.getUser() + client.getIp());
+				.trailing("Welcome to the Internet Relay Network " + client.getNick() + "!" + client.getUser() + "@"+ client.getIp());
 			queueClientData(client, response.build());
 			//002	YOURHOST		"Your host is <servername>, running version <ver>"
 			response.numeric(2).trailing("Your host is " + getName() + ", running version" + SERVER_VERSION);
@@ -314,7 +314,7 @@ void Server::requestRegistration(Client &client)
 			response.numeric(3).trailing(createdMsg);
 			queueClientData(client, response.build());
 			//004    RPL_MYINFO		"<servername> <version> <available user modes> <available channel modes>"
-			response.numeric(4).trailing(nameServer_ + " " + SERVER_VERSION + "io itkol");
+			response.numeric(4).trailing(nameServer_ + " " + SERVER_VERSION + " " +"io itkol");
 			queueClientData(client, response.build());			
 			// fin WelcomReply()
 			

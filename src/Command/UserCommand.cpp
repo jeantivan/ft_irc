@@ -49,3 +49,8 @@ void UserCommand::execute(Client *client, Server *server)
 		server->requestRegistration(*client);
 	}
 }
+
+Command *UserCommand::create(const std::string &type, const std::vector<std::string> &params)
+{
+	return new UserCommand(type, params);
+}
