@@ -21,7 +21,7 @@ public:
 	ResponseBuilder &operator=(const ResponseBuilder &other);
 
 	// Build pattern;
-	std::string build();
+	const std::string build() const;
 	ResponseBuilder &clear();
 	ResponseBuilder &prefix(const std::string &pref);
 	ResponseBuilder &command(const std::string &cmd);

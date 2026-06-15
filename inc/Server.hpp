@@ -21,8 +21,10 @@
 #include "utils.hpp"
 #include "Client.hpp"
 #include "Command/Command.hpp"
+#include <ctime>
 
 #define NAME_SERVER "Our_IRC_Serv"
+#define SERVER_VERSION "Beta"
 
 class Server
 {
@@ -30,8 +32,11 @@ private:
 	std::string port_;
 	int listener_; // Socket fd
 	std::string password_;
+	std::string nameServer_;
+	time_t creationDate_;
 	std::vector<struct pollfd> connections_;
 	std::map<int, Client> clients_;
+
 
 	// Constructors private to avoid duplication of the Server
 	Server();
@@ -49,7 +54,7 @@ public:
 	std::string getPort() const;
 	int getListener() const;
 	const std::string &getPassword() const;
-	static const char *getName();
+	const std::string &getName() const;
 
 	// Busca a que elemento en connections_ pertenece un fd 
 	size_t findConnectionByFd(int fd) const;
@@ -68,6 +73,8 @@ public:
 
 	// Disconnect Client
 	void disconnectClient(int fd);
+
+	void requestRegistration(Client &client);
 
 	// Envia datos al bufer de salida de client, activa el evento POLLOUT para ese cliente
 	void queueClientData(Client &client, const std::string &data);

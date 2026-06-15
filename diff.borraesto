@@ -1,0 +1,371 @@
+diff --git a/README.md b/README.md
+index db20630..ec57563 100644
+--- a/README.md
++++ b/README.md
+@@ -1,2 +1 @@
+ # ft_irc
+-
+diff --git a/inc/Client.hpp b/inc/Client.hpp
+index bae0f8c..05f0e01 100644
+--- a/inc/Client.hpp
++++ b/inc/Client.hpp
+@@ -11,7 +11,7 @@ enum AuthState
+ 	AUTH_PASS = 1 << 0, // 0001 (1)
+ 	AUTH_NICK = 1 << 1, // 0010 (2)
+ 	AUTH_USER = 1 << 2, // 0100 (4)
+-	AUTH_REGISTERED = 7 // 0111 (1 | 2 | 4)
++	AUTH_COMPLETE = 7 // 0111 (1 | 2 | 4) Se instanciaron todos los campos, no significa autentificado
+ };
+ 
+ class Client
+@@ -23,8 +23,10 @@ private:
+ 	std::string writeBuf_;
+ 
+ 	AuthState authState_;
+-	bool auth_; //sin uso, isAuth() hace authState- == AUTH_REGISTERED
++	bool auth_;
++	std::string password_;
+ 	std::string nick_;
++	std::string user_;
+ 	std::string realname_;
+ 	bool toDisconnect_;
+ 
+@@ -41,16 +43,20 @@ public:
+ 	const std::string &getIp() const;
+ 	const std::string &getReadBuf() const;
+ 	const std::string &getWriteBuf() const;
+-	bool isAuth() const; //mejor nombre isRegistered()
++	bool isAuth() const;
++	const std::string &getPassword() const;
+ 	AuthState getState() const;
+ 	const std::string &getNick() const;
++	const std::string &getUser() const;
+ 	const std::string &getRealname() const;
+ 	bool getToDisconnect() const;
+ 
+ 	// Setters;
+ 	void setAuthState(AuthState); 
+-	void setAuth(bool auth);// borrar?
++	void setAuth(bool auth);
++	void setPassword(std::string pass);
+ 	void setNick(const std::string &nick);
++	void setUser(const std::string &user);
+ 	void setRealname(const std::string &realname);
+ 	void setToDisconnect();
+ 
+diff --git a/inc/ResponseBuilder.hpp b/inc/ResponseBuilder.hpp
+index 1d86fdc..78bca41 100644
+--- a/inc/ResponseBuilder.hpp
++++ b/inc/ResponseBuilder.hpp
+@@ -21,7 +21,7 @@ public:
+ 	ResponseBuilder &operator=(const ResponseBuilder &other);
+ 
+ 	// Build pattern;
+-	std::string build();
++	const std::string build() const;
+ 	ResponseBuilder &clear();
+ 	ResponseBuilder &prefix(const std::string &pref);
+ 	ResponseBuilder &command(const std::string &cmd);
+diff --git a/inc/Server.hpp b/inc/Server.hpp
+index bde550c..543e8fa 100644
+--- a/inc/Server.hpp
++++ b/inc/Server.hpp
+@@ -21,8 +21,10 @@
+ #include "utils.hpp"
+ #include "Client.hpp"
+ #include "Command/Command.hpp"
++#include <ctime>
+ 
+ #define NAME_SERVER "Our_IRC_Serv"
++#define SERVER_VERSION "Beta"
+ 
+ class Server
+ {
+@@ -30,9 +32,12 @@ private:
+ 	std::string port_;
+ 	int listener_; // Socket fd
+ 	std::string password_;
++	std::string nameServer_;
++	time_t creationDate_;
+ 	std::vector<struct pollfd> connections_;
+ 	std::map<int, Client> clients_;
+ 
++
+ 	// Constructors private to avoid duplication of the Server
+ 	Server();
+ 	Server(const Server &other);
+@@ -49,7 +54,7 @@ public:
+ 	std::string getPort() const;
+ 	int getListener() const;
+ 	const std::string &getPassword() const;
+-	static const char *getName();
++	const std::string &getName() const;
+ 
+ 	// Busca a que elemento en connections_ pertenece un fd 
+ 	size_t findConnectionByFd(int fd) const;
+@@ -69,6 +74,8 @@ public:
+ 	// Disconnect Client
+ 	void disconnectClient(int fd);
+ 
++	void requestRegistration(Client &client);
++
+ 	// Envia datos al bufer de salida de client, activa el evento POLLOUT para ese cliente
+ 	void queueClientData(Client &client, const std::string &data);
+ 
+diff --git a/src/Client.cpp b/src/Client.cpp
+index 8082165..a26c0f4 100644
+--- a/src/Client.cpp
++++ b/src/Client.cpp
+@@ -1,8 +1,8 @@
+ #include "Client.hpp"
+ 
+-Client::Client() : fd(-1), ip(""), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), nick_(""), realname_(""), toDisconnect_(false) {}
++Client::Client() : fd(-1), ip(""), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), password_(""), nick_(""), user_(""), realname_(""), toDisconnect_(false) {}
+ 
+-Client::Client(const Client &other) : fd(other.fd), ip(other.ip), readBuf_(other.readBuf_), writeBuf_(other.writeBuf_), authState_(other.authState_), auth_(other.auth_), nick_(other.nick_), realname_(other.realname_), toDisconnect_(other.toDisconnect_) {}
++Client::Client(const Client &other) : fd(other.fd), ip(other.ip), readBuf_(other.readBuf_), writeBuf_(other.writeBuf_), authState_(other.authState_), auth_(other.auth_), password_(other.password_), nick_(other.nick_), user_(other.user_), realname_(other.realname_), toDisconnect_(other.toDisconnect_) {}
+ 
+ Client &Client::operator=(const Client &other)
+ {
+@@ -14,7 +14,9 @@ Client &Client::operator=(const Client &other)
+ 		writeBuf_ = other.writeBuf_;
+ 		authState_ = other.authState_;
+ 		auth_ = other.auth_;
++		password_ = other.password_;
+ 		nick_ = other.nick_;
++		user_ = other.user_;
+ 		realname_ = other.realname_;
+ 		toDisconnect_ = other.toDisconnect_;
+ 	}
+@@ -24,7 +26,7 @@ Client &Client::operator=(const Client &other)
+ 
+ Client::~Client() {}
+ 
+-Client::Client(int fd, const std::string &ip) : fd(fd), ip(ip), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), nick_(""), realname_(""), toDisconnect_(false) {}
++Client::Client(int fd, const std::string &ip) : fd(fd), ip(ip), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), password_(""), nick_(""), user_(""), realname_(""), toDisconnect_(false) {}
+ 
+ int Client::getFd() const
+ {
+@@ -53,7 +55,12 @@ AuthState Client::getState() const
+ 
+ bool Client::isAuth() const
+ {
+-	return (authState_ == AUTH_REGISTERED);
++	return (auth_);
++}
++
++const std::string &Client::getPassword() const
++{
++	return password_;
+ }
+ 
+ const std::string &Client::getNick() const
+@@ -61,6 +68,11 @@ const std::string &Client::getNick() const
+ 	return nick_;
+ }
+ 
++const std::string &Client::getUser() const
++{
++	return user_;
++}
++
+ const std::string &Client::getRealname() const
+ {
+ 	return realname_;
+@@ -76,6 +88,17 @@ void Client::setAuth(bool auth)
+ 	auth_ = auth;
+ }
+ 
++void Client::setPassword(std::string pass)
++{
++	password_ = pass;
++}
++
++void Client::setUser(const std::string &user)
++{
++	user_ = user;
++}
++
++//En realidad AÑADE estados no cambia quiza mejor nombre addAuthState()
+ void Client::setAuthState(AuthState adding)
+ {
+ 	authState_ = static_cast<AuthState>(
+diff --git a/src/Command/PassCommand.cpp b/src/Command/PassCommand.cpp
+index c2425c6..eafb59d 100644
+--- a/src/Command/PassCommand.cpp
++++ b/src/Command/PassCommand.cpp
+@@ -24,19 +24,26 @@ PassCommand::PassCommand(const std::string &type, const std::vector<std::string>
+ void PassCommand::execute(Client *client, Server *server)
+ {
+ 	ResponseBuilder response;
+-
+ 	if (params_.empty())
+ 	{
+ 		response.prefix(server->getName()).numeric(ERR_NEEDMOREPARAMS).target("*").params("PASS").trailing("Not enough parameters");
+ 		std::cerr << "[ircserver]: Error: Bad command params." << std::endl;
+ 	}
+-	else if (client->getState() & AUTH_PASS)
++	else if (client->isAuth() == true)
+ 	{
+-		
+ 		response.prefix(server->getName()).numeric(ERR_ALREADYREGISTRED).target("*").trailing("Unauthorized command (already registered)");
+ 		std::cerr << "[ircserver]: Client <" << client->getFd() << " Error: Unauthorized command (already registered)" << std::endl;
+ 	}
+-	else if (params_[0] != server->getPassword())
++	else
++	{
++		client->setPassword(params_[0]); //el cliente guarda su password, durante el registro Server lo compara al password real
++		client->setAuthState(AUTH_PASS);
++//		server->requestRegistration(*client); // BORRAR El proceso de registro nunca termina con PASS (ver NOTAS_antofern)
++		return;
++	}
++// No se valida el PASSWORD hasta tener todos los campos completos, Un PASS incorrecto, puede ser
++// corregido con un segundo PASS correcto mientras no haya terminado el proceso de registro
++/*	else if (params_[0] != server->getPassword())
+ 	{
+ 
+ 		response.prefix(server->getName()).numeric(ERR_PASSWDMISMATCH).target("*").trailing("Password incorrect");
+@@ -50,7 +57,7 @@ void PassCommand::execute(Client *client, Server *server)
+ 		std::cout << "[ircserver]: Client <" << client->getFd() << ", " << client->getIp() << "> is authenticated" << std::endl;
+ 		return;	
+ 	}
+-
++*/
+ 	server->queueClientData(*client, response.build());
+ 	return;
+ }
+diff --git a/src/ResponseBuilder.cpp b/src/ResponseBuilder.cpp
+index 4fecc3a..9743b67 100644
+--- a/src/ResponseBuilder.cpp
++++ b/src/ResponseBuilder.cpp
+@@ -78,7 +78,7 @@ ResponseBuilder &ResponseBuilder::numeric(int code)
+ 	return *this;
+ }
+ 
+-std::string ResponseBuilder::build()
++const std::string ResponseBuilder::build() const
+ {
+ 	std::string result;
+ 
+diff --git a/src/Server.cpp b/src/Server.cpp
+index afb1c6c..dc1cb82 100644
+--- a/src/Server.cpp
++++ b/src/Server.cpp
+@@ -1,7 +1,9 @@
+ #include "Server.hpp"
+ #include "Command/CommandFactory.hpp"
++#include "ResponseBuilder.hpp"
++#include <ctime>
+ 
+-Server::Server() : port_(""), listener_(-1), password_("") {}
++Server::Server() : port_(""), listener_(-1), password_("") , nameServer_(NAME_SERVER), creationDate_(time(NULL)){}
+ 
+ Server::~Server()
+ {
+@@ -25,7 +27,7 @@ Server::~Server()
+ 		close(listener_);
+ }
+ 
+-Server::Server(const Server &other) : port_(other.port_), listener_(other.listener_), password_(other.password_) {}
++Server::Server(const Server &other) : port_(other.port_), listener_(other.listener_), password_(other.password_), nameServer_(other.nameServer_), creationDate_(time(NULL)){}
+ 
+ Server &Server::operator=(const Server &other)
+ {
+@@ -34,12 +36,14 @@ Server &Server::operator=(const Server &other)
+ 		port_ = other.port_;
+ 		listener_ = other.listener_;
+ 		password_ = other.password_;
++		nameServer_ = other.nameServer_;
++		creationDate_ = other.creationDate_;
+ 	}
+ 
+ 	return *this;
+ }
+ 
+-Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass)
++Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass), nameServer_(NAME_SERVER), creationDate_(time(NULL))
+ {
+ 	init();
+ 
+@@ -69,9 +73,9 @@ const std::string &Server::getPassword() const
+ 	return password_;
+ }
+ 
+-const char *Server::getName()
++const std::string &Server::getName() const
+ {
+-	return NAME_SERVER;
++	return nameServer_;
+ }
+ 
+ size_t Server::findConnectionByFd(int fd) const
+@@ -277,6 +281,56 @@ void Server::disconnectClient(int fd)
+ 	}
+ }
+ 
++/*
++Si se completaron todos los pasos del registro:
++- Marca al cliente como autentificado (client.auth_ = true)
++- Envia los mensajes de vienvenida RPL_WELCOME, YOURHOST, RPL_CREATED y RPL_MYINFO
++Esta funcion debe ser llamada por los comandos USER y NICK (PASS no)
++*/
++void Server::requestRegistration(Client &client)
++{
++	if (client.getState() == AUTH_COMPLETE)
++	{
++		ResponseBuilder response;
++		if (password_ == client.getPassword())
++		{
++			std::cout << "[ircserver]: Client <" << client.getFd() << ", " << client.getIp() << "> is authenticated" << std::endl;
++			client.setAuth(true);
++
++			// TODO:extraer este bloque a funcion auxiliar WelcomReply()
++			//001    RPL_WELCOME	"Welcome to the Internet Relay Network <nick>!<user>@<host>"
++			response.prefix(getName()).numeric(1).target(client.getNick())
++				.trailing("Welcome to the Internet Relay Network " + client.getNick() + "!" + client.getUser() + client.getIp());
++			queueClientData(client, response.build());
++			//002	YOURHOST		"Your host is <servername>, running version <ver>"
++			response.numeric(2).trailing("Your host is " + getName() + ", running version" + SERVER_VERSION);
++			queueClientData(client, response.build());
++			//003    RPL_CREATED	"This server was created <date>"
++			char date[64];
++			struct tm *tm_info = localtime(&creationDate_);
++			strftime(date, sizeof(date), "%c", tm_info);
++			std::string createdMsg = "This server was created ";
++			createdMsg += date;
++			response.numeric(3).trailing(createdMsg);
++			queueClientData(client, response.build());
++			//004    RPL_MYINFO		"<servername> <version> <available user modes> <available channel modes>"
++			response.numeric(4).trailing(nameServer_ + " " + SERVER_VERSION + "io itkol");
++			queueClientData(client, response.build());			
++			// fin WelcomReply()
++			
++			return;	
++		}
++		else
++		{
++			response.prefix(getName()).numeric(ERR_PASSWDMISMATCH).target(client.getNick()).trailing("Password incorrect");
++			queueClientData(client, response.build());
++
++			std::cerr<< "[ircserver]--->" << client.getFd() << " Error: Password incorrect" << std::endl;		
++			client.setToDisconnect();
++		}
++	}
++}
++
+ // Retorna true si send() falló.
+ bool Server::sendClientData(size_t client_index)
+ {
+
+
+
+Refactor auth/registro de clientes y balanceo de estado en el servidor IRC
+
+- Añadidos campos `password_` y `user_` en Client para soportar el flujo de registro.
+- Separada la bandera de autenticación (`auth_`) del estado parcial de registro (`authState_`).
+- Renombrado `AUTH_REGISTERED` a `AUTH_COMPLETE` para indicar sólo que se recibieron todos los datos necesarios.
+- `PassCommand` guarda el password en el cliente y marca el estado PASS, sin validar hasta completar el registro.
+- Añadido `Server::requestRegistration()` para rematar el registro completo y enviar los mensajes de bienvenida IRC.
+- Server ahora almacena `nameServer_` y `creationDate_`, y `getName()` devuelve la instancia actual.
+- Haciendo `ResponseBuilder::build()` const para mejorar la const-correctness.
+- Limpieza de comentarios y clarificación de responsabilidades en el flujo de registro.

@@ -11,7 +11,7 @@ enum AuthState
 	AUTH_PASS = 1 << 0, // 0001 (1)
 	AUTH_NICK = 1 << 1, // 0010 (2)
 	AUTH_USER = 1 << 2, // 0100 (4)
-	AUTH_REGISTERED = 7 // 0111 (1 | 2 | 4)
+	AUTH_COMPLETE = 7 // 0111 (1 | 2 | 4) Se instanciaron todos los campos, no significa autentificado
 };
 
 class Client
@@ -23,8 +23,10 @@ private:
 	std::string writeBuf_;
 
 	AuthState authState_;
-	bool auth_; //sin uso, isAuth() hace authState- == AUTH_REGISTERED
+	bool auth_;
+	std::string password_;
 	std::string nick_;
+	std::string user_;
 	std::string realname_;
 	bool toDisconnect_;
 
@@ -41,16 +43,20 @@ public:
 	const std::string &getIp() const;
 	const std::string &getReadBuf() const;
 	const std::string &getWriteBuf() const;
-	bool isAuth() const; //mejor nombre isRegistered()
+	bool isAuth() const;
+	const std::string &getPassword() const;
 	AuthState getState() const;
 	const std::string &getNick() const;
+	const std::string &getUser() const;
 	const std::string &getRealname() const;
 	bool getToDisconnect() const;
 
 	// Setters;
 	void setAuthState(AuthState); 
-	void setAuth(bool auth);// borrar?
+	void setAuth(bool auth);
+	void setPassword(std::string pass);
 	void setNick(const std::string &nick);
+	void setUser(const std::string &user);
 	void setRealname(const std::string &realname);
 	void setToDisconnect();
 

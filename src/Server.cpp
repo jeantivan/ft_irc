@@ -1,7 +1,9 @@
 #include "Server.hpp"
 #include "Command/CommandFactory.hpp"
+#include "ResponseBuilder.hpp"
+#include <ctime>
 
-Server::Server() : port_(""), listener_(-1), password_("") {}
+Server::Server() : port_(""), listener_(-1), password_("") , nameServer_(NAME_SERVER), creationDate_(time(NULL)){}
 
 Server::~Server()
 {
@@ -25,7 +27,7 @@ Server::~Server()
 		close(listener_);
 }
 
-Server::Server(const Server &other) : port_(other.port_), listener_(other.listener_), password_(other.password_) {}
+Server::Server(const Server &other) : port_(other.port_), listener_(other.listener_), password_(other.password_), nameServer_(other.nameServer_), creationDate_(time(NULL)){}
 
 Server &Server::operator=(const Server &other)
 {
@@ -34,12 +36,14 @@ Server &Server::operator=(const Server &other)
 		port_ = other.port_;
 		listener_ = other.listener_;
 		password_ = other.password_;
+		nameServer_ = other.nameServer_;
+		creationDate_ = other.creationDate_;
 	}
 
 	return *this;
 }
 
-Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass)
+Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass), nameServer_(NAME_SERVER), creationDate_(time(NULL))
 {
 	init();
 
@@ -69,9 +73,9 @@ const std::string &Server::getPassword() const
 	return password_;
 }
 
-const char *Server::getName()
+const std::string &Server::getName() const
 {
-	return NAME_SERVER;
+	return nameServer_;
 }
 
 size_t Server::findConnectionByFd(int fd) const
@@ -273,6 +277,56 @@ void Server::disconnectClient(int fd)
 		{
 			connections_.erase(connections_.begin() + i);
 			break;
+		}
+	}
+}
+
+/*
+Si se completaron todos los pasos del registro:
+- Marca al cliente como autentificado (client.auth_ = true)
+- Envia los mensajes de vienvenida RPL_WELCOME, YOURHOST, RPL_CREATED y RPL_MYINFO
+Esta funcion debe ser llamada por los comandos USER y NICK (PASS no)
+*/
+void Server::requestRegistration(Client &client)
+{
+	if (client.getState() == AUTH_COMPLETE)
+	{
+		ResponseBuilder response;
+		if (password_ == client.getPassword())
+		{
+			std::cout << "[ircserver]: Client <" << client.getFd() << ", " << client.getIp() << "> is authenticated" << std::endl;
+			client.setAuth(true);
+
+			// TODO:extraer este bloque a funcion auxiliar WelcomReply()
+			//001    RPL_WELCOME	"Welcome to the Internet Relay Network <nick>!<user>@<host>"
+			response.prefix(getName()).numeric(1).target(client.getNick())
+				.trailing("Welcome to the Internet Relay Network " + client.getNick() + "!" + client.getUser() + client.getIp());
+			queueClientData(client, response.build());
+			//002	YOURHOST		"Your host is <servername>, running version <ver>"
+			response.numeric(2).trailing("Your host is " + getName() + ", running version" + SERVER_VERSION);
+			queueClientData(client, response.build());
+			//003    RPL_CREATED	"This server was created <date>"
+			char date[64];
+			struct tm *tm_info = localtime(&creationDate_);
+			strftime(date, sizeof(date), "%c", tm_info);
+			std::string createdMsg = "This server was created ";
+			createdMsg += date;
+			response.numeric(3).trailing(createdMsg);
+			queueClientData(client, response.build());
+			//004    RPL_MYINFO		"<servername> <version> <available user modes> <available channel modes>"
+			response.numeric(4).trailing(nameServer_ + " " + SERVER_VERSION + "io itkol");
+			queueClientData(client, response.build());			
+			// fin WelcomReply()
+			
+			return;	
+		}
+		else
+		{
+			response.prefix(getName()).numeric(ERR_PASSWDMISMATCH).target(client.getNick()).trailing("Password incorrect");
+			queueClientData(client, response.build());
+
+			std::cerr<< "[ircserver]--->" << client.getFd() << " Error: Password incorrect" << std::endl;		
+			client.setToDisconnect();
 		}
 	}
 }
