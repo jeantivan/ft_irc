@@ -17,6 +17,7 @@
 #include <poll.h>
 #include <csignal>
 #include <fcntl.h>
+#include <set>
 
 #include "utils.hpp"
 #include "Client.hpp"
@@ -36,7 +37,7 @@ private:
 	time_t creationDate_;
 	std::vector<struct pollfd> connections_;
 	std::map<int, Client> clients_;
-
+	std::set<std::string> used_nicks_;
 
 	// Constructors private to avoid duplication of the Server
 	Server();
@@ -87,6 +88,11 @@ public:
 
 	// Handle command
 	void handleCommand(size_t client_index, const Command &cmd);
+
+	// Nick cmmand
+	bool isNickInUse(const std::string &nick) const;
+	void addNick(const std::string &nick);
+	void removeNick(const std::string &nick);
 };
 
 #endif // SERVER_HPP

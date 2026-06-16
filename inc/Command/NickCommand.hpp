@@ -6,13 +6,15 @@
 class NickCommand : public Command
 {
 private:
+	bool isValidNick(const std::string &nick) const;
+
 public:
 	NickCommand();
 	NickCommand(const NickCommand &other);
 	virtual ~NickCommand();
 	NickCommand &operator=(const NickCommand &other);
 
-	NickCommand::NickCommand(const std::string &type, const std::vector<std::string> &params);
+	NickCommand(const std::string &type, const std::vector<std::string> &params);
 
 	virtual void execute(Client *client, Server *server);
 
