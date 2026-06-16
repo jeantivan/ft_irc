@@ -113,9 +113,9 @@ void NickCommand::execute(Client *client, Server *server)
 	client->setNick(new_nick);
 	server->addNick(new_nick);
 
-	AuthState current_state = client->getState();
-	client->setAuthState(static_cast<AuthState>(current_state | AUTH_NICK));
-
+//	AuthState current_state = client->getState(); // COMENTADO
+	client->setAuthState(AUTH_NICK);	// NUEVO
+	server->requestRegistration(*client);// NUEVO 
 
 	std::cout << "[ircserver]: Client <" << client->getFd() << ", " << client->getIp()
 			  << "> set nick to " << new_nick << std::endl;

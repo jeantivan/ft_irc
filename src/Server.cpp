@@ -45,7 +45,7 @@ Server &Server::operator=(const Server &other)
 	return *this;
 }
 
-Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass), nameServer_(NAME_SERVER), creationDate_(time(NULL), used_nicks_())
+Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass), nameServer_(NAME_SERVER), creationDate_(time(NULL)), used_nicks_()
 {
 	init();
 
@@ -78,16 +78,6 @@ const std::string &Server::getPassword() const
 const std::string &Server::getName() const
 {
 	return nameServer_;
-}
-
-size_t Server::findConnectionByFd(int fd) const
-{
-	for (size_t i = 0; i < connections_.size(); i++)
-	{
-		if (connections_[i].fd == fd)
-			return i;
-	}
-	return static_cast<size_t>(-1); //valor maximo, para marcar error
 }
 
 size_t Server::findConnectionByFd(int fd) const
@@ -312,7 +302,7 @@ Esta funcion debe ser llamada por los comandos USER y NICK (PASS no)
 */
 void Server::requestRegistration(Client &client)
 {
-	if (client.getState() == AUTH_PASS + AUTH_USER)//Solo TEST!! cambiar AUTH_COMPLETE)
+	if (client.getState() == AUTH_COMPLETE)
 	{
 		ResponseBuilder response;
 		if (password_ == client.getPassword())
