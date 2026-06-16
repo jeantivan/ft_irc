@@ -1,10 +1,11 @@
 #include <Command/CommandFactory.hpp>
 #include <Command/PassCommand.hpp>
+#include <Command/NickCommand.hpp>
 
 CommandFactory::CommandFactory()
 {
 	creators_["PASS"] = &PassCommand::create;
-
+	creators_["NICK"] = &NickCommand::create;
 }
 
 CommandFactory::~CommandFactory() {}

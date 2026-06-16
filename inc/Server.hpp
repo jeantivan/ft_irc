@@ -17,6 +17,7 @@
 #include <poll.h>
 #include <csignal>
 #include <fcntl.h>
+#include <set>
 
 #include "utils.hpp"
 #include "Client.hpp"
@@ -32,6 +33,8 @@ private:
 	std::string password_;
 	std::vector<struct pollfd> connections_;
 	std::map<int, Client> clients_;
+	private:
+	std::set<std::string> used_nicks_;  // Almacena nicks en uso
 
 	// Constructors private to avoid duplication of the Server
 	Server();
@@ -51,6 +54,9 @@ public:
 	const std::string &getPassword() const;
 	static const char *getName();
 
+	// Busca a que elemento en connections_ pertenece un fd 
+	size_t findConnectionByFd(int fd) const;
+
 	// Bind listener to port
 	void init();
 
@@ -66,7 +72,10 @@ public:
 	// Disconnect Client
 	void disconnectClient(int fd);
 
-	// Send client data
+	// Envia datos al bufer de salida de client, activa el evento POLLOUT para ese cliente
+	void queueClientData(Client &client, const std::string &data);
+
+	// Send client data, los datos almacendos en el buffer desalida con la funcion anterior
 	bool sendClientData(size_t client_index);
 
 	// Static signal handler;
@@ -74,6 +83,12 @@ public:
 
 	// Handle command
 	void handleCommand(size_t client_index, const Command &cmd);
+
+	// Nick cmmand
+	bool isNickInUse(const std::string &nick) const;
+	void addNick(const std::string &nick);
+	void removeNick(const std::string &nick);
 };
 
 #endif // SERVER_HPP
+

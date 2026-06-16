@@ -23,6 +23,8 @@ Server::~Server()
 
 	if (listener_ != -1)
 		close(listener_);
+
+	used_nicks_.clear(); // Limpiar los nicks
 }
 
 Server::Server(const Server &other) : port_(other.port_), listener_(other.listener_), password_(other.password_) {}
@@ -39,7 +41,7 @@ Server &Server::operator=(const Server &other)
 	return *this;
 }
 
-Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass)
+Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass), used_nicks_()
 {
 	init();
 
@@ -72,6 +74,16 @@ const std::string &Server::getPassword() const
 const char *Server::getName()
 {
 	return NAME_SERVER;
+}
+
+size_t Server::findConnectionByFd(int fd) const
+{
+	for (size_t i = 0; i < connections_.size(); i++)
+	{
+		if (connections_[i].fd == fd)
+			return i;
+	}
+	return static_cast<size_t>(-1); //valor maximo, para marcar error
 }
 
 void Server::init()
@@ -143,10 +155,7 @@ void Server::run()
 		for (int i = connections_.size() - 1; i >= 0; i--)
 		{
 
-			if (!clients_[connections_[i].fd].getWriteBuf().empty())
-				connections_[i].events = POLLIN | POLLOUT;
-			else
-				connections_[i].events = POLLIN;
+//PLACEHOLDER bloque logica POLLOUT si o no
 
 			if (connections_[i].revents & (POLLIN | POLLHUP))
 			{
@@ -161,10 +170,10 @@ void Server::run()
 			}
 			else if (connections_[i].revents & POLLOUT)
 			{
-				if (!sendClientData(i))
+				if (sendClientData(i))
 				{
 					// TODO: Mejorar mensaje de error
-					std::cerr << "Error: Not all client<" << connections_[i].fd << ", " << clients_[connections_[i].fd].getFd() << "> data could be sent" << std::endl;
+					// std::cerr << "Error: Not all client<" << connections_[i].fd << ", " << clients_[connections_[i].fd].getFd() << "> data could be sent" << std::endl;
 				}
 			}
 		}
@@ -189,7 +198,7 @@ void Server::acceptNewClient()
 	struct pollfd new_connection;
 
 	new_connection.fd = new_fd;
-	new_connection.events = POLLIN;
+	new_connection.events = POLLIN;// ----- "| POLLOUT" Necesario??
 	new_connection.revents = 0;
 
 	connections_.push_back(new_connection);
@@ -209,7 +218,6 @@ void Server::receiveClientData(size_t client_index)
 	int client_fd = connections_[client_index].fd;
 	Client &client = clients_[client_fd];
 	int bytes_received = recv(client_fd, buffer, sizeof(buffer), 0);
-
 	if (bytes_received <= 0)
 	{
 		if (bytes_received == 0)
@@ -229,7 +237,7 @@ void Server::receiveClientData(size_t client_index)
 	client.appendToReadBuf(buffer, bytes_received);
 
 	// TODO: May be this will be deleted
-	while (client.hasCompleteCommand())
+	while (client.hasCompleteCommand() && !client.getToDisconnect()) // && !client.getToDisconnect() evita seguir ejecutando comandos acumulados en buffer de salida, cuando el cliente fué marcado toDisconnect_
 	{
 		std::string raw_cmd = client.extractCommand();
 		std::string type;
@@ -257,6 +265,17 @@ void Server::receiveClientData(size_t client_index)
 
 void Server::disconnectClient(int fd)
 {
+	// AÑADIDO NUEVO Liberar nick
+	if (clients_.count(fd) > 0)
+	{
+		std::string nick = clients_[fd].getNick();
+		if (!nick.empty())
+		{
+			removeNick(nick);
+			//std::cout << "[ircserver]: Nick '" << nick << "' freed from client " << fd << std::endl;
+		}
+	}
+
 	close(fd);
 
 	clients_.erase(fd);
@@ -271,15 +290,17 @@ void Server::disconnectClient(int fd)
 	}
 }
 
+// Retorna true si send() falló.
 bool Server::sendClientData(size_t client_index)
 {
 	int fd = connections_[client_index].fd;
 	Client &client = clients_[fd];
-
 	const std::string &clientWriteBuf = client.getWriteBuf();
 
-	if (clientWriteBuf.empty())
+	if (clientWriteBuf.empty())// Se supone que no llamamos a sendClientData cuando no hay nada que enviar. ¿Es solo defensivo?
 	{
+		connections_[client_index].events &= ~POLLOUT;
+		std::cerr << "[INFO] client in shocket:" << fd << "calls sendClientData wuith writeBuff_ empthy." <<std::endl;
 		return false;
 	}
 
@@ -288,17 +309,25 @@ bool Server::sendClientData(size_t client_index)
 	if (bytes_sent > 0)
 	{
 		client.eraseFromWriteBuf(bytes_sent);
+		if (client.getWriteBuf().empty())
+		{
+			connections_[client_index].events &= ~POLLOUT; // "&= ~" borra el bit de POLLOUT
+			if (client.getToDisconnect())
+				disconnectClient(fd);
+		}
 	}
 	else if (bytes_sent == -1)
 	{
 		//  TODO: This should not exists because the evals says so
-		if (errno == EAGAIN || errno == EWOULDBLOCK)
-		{
-			return false;
-		}
-
+//		if (errno == EAGAIN || errno == EWOULDBLOCK)
+//		{
+//			return false;
+//		}
+		disconnectClient(fd); //pipe roto probablemente??
 		return true;
 	}
+	else
+		std::cerr << "[INFO] client in shocket:" << fd << "send() return 0;" <<std::endl;
 	return false;
 }
 
@@ -348,4 +377,33 @@ void Server::signalHandler(int signal)
 {
 	(void)signal;
 	Server::signal_received_ = true;
+}
+
+void Server::queueClientData(Client &client, const std::string &data)
+{
+	size_t id = findConnectionByFd(client.getFd());
+	if (id == static_cast<size_t>(-1))
+	{
+		std::cerr << "ERROR en findConnectionByFd" << std::endl;
+		// TODO no se si gestionar el error con un throw o como, pero seria grave que quedase asi
+		return;
+	}
+	connections_[id].events |= POLLOUT;
+	client.appendToWriteBuf(data);
+}
+
+//NICK COMMAND
+bool Server::isNickInUse(const std::string &nick) const
+{
+	return used_nicks_.count(nick) > 0;
+}
+
+void Server::addNick(const std::string &nick)
+{
+	used_nicks_.insert(nick);
+}
+
+void Server::removeNick(const std::string &nick)
+{
+	used_nicks_.erase(nick);
 }

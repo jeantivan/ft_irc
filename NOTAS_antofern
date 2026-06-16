@@ -10,3 +10,9 @@ capturar comunicaciones servidor-cliente: sudo ngrep -d lo -W byline '' 'tcp por
 
 nc 127.0.0.1 -C 6667
 INEXISTENT_COMMAND --- no avisa al cliente ---
+
+
+			if (!clients_[connections_[i].fd].getWriteBuf().empty())
+				connections_[i].events = POLLIN | POLLOUT;
+			else
+				connections_[i].events = POLLIN;//////te

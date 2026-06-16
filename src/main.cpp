@@ -21,6 +21,7 @@ int main(int ac, char **av)
 
 	signal(SIGINT, Server::signalHandler);
 	signal(SIGQUIT, Server::signalHandler);
+	signal(SIGPIPE, SIG_IGN); // si el clente cierra de golpe, durante un send(), llegara la señal sigpipe. Que por defecto mata el proceso (osea crash).
 
 	try
 	{
