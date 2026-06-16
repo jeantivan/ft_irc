@@ -25,6 +25,8 @@ Server::~Server()
 
 	if (listener_ != -1)
 		close(listener_);
+
+	used_nicks_.clear(); // Limpiar los nicks
 }
 
 Server::Server(const Server &other) : port_(other.port_), listener_(other.listener_), password_(other.password_), nameServer_(other.nameServer_), creationDate_(time(NULL)){}
@@ -76,6 +78,16 @@ const std::string &Server::getPassword() const
 const std::string &Server::getName() const
 {
 	return nameServer_;
+}
+
+size_t Server::findConnectionByFd(int fd) const
+{
+	for (size_t i = 0; i < connections_.size(); i++)
+	{
+		if (connections_[i].fd == fd)
+			return i;
+	}
+	return static_cast<size_t>(-1); //valor maximo, para marcar error
 }
 
 size_t Server::findConnectionByFd(int fd) const

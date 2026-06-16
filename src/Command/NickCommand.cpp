@@ -124,7 +124,6 @@ void NickCommand::execute(Client *client, Server *server)
 	return;
 }
 
-// Creator
 Command *NickCommand::create(const std::string &type, const std::vector<std::string> &params)
 {
 	return new NickCommand(type, params);
