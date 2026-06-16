@@ -18,6 +18,7 @@ FILES = main.cpp \
 		Command/Command.cpp \
 		Command/CommandFactory.cpp \
 		Command/PassCommand.cpp \
+		Command/NickCommand.cpp \
 		ResponseBuilder.cpp
 
 SRC_FILES = $(addprefix $(SRC_DIR)/, $(FILES))

@@ -23,6 +23,8 @@ Server::~Server()
 
 	if (listener_ != -1)
 		close(listener_);
+
+	used_nicks_.clear(); // Limpiar los nicks
 }
 
 Server::Server(const Server &other) : port_(other.port_), listener_(other.listener_), password_(other.password_) {}
@@ -39,7 +41,7 @@ Server &Server::operator=(const Server &other)
 	return *this;
 }
 
-Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass)
+Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass), used_nicks_()
 {
 	init();
 
@@ -263,6 +265,17 @@ void Server::receiveClientData(size_t client_index)
 
 void Server::disconnectClient(int fd)
 {
+	// AÑADIDO NUEVO Liberar nick
+	if (clients_.count(fd) > 0)
+	{
+		std::string nick = clients_[fd].getNick();
+		if (!nick.empty())
+		{
+			removeNick(nick);
+			//std::cout << "[ircserver]: Nick '" << nick << "' freed from client " << fd << std::endl;
+		}
+	}
+
 	close(fd);
 
 	clients_.erase(fd);
@@ -379,3 +392,18 @@ void Server::queueClientData(Client &client, const std::string &data)
 	client.appendToWriteBuf(data);
 }
 
+//NICK COMMAND
+bool Server::isNickInUse(const std::string &nick) const
+{
+	return used_nicks_.count(nick) > 0;
+}
+
+void Server::addNick(const std::string &nick)
+{
+	used_nicks_.insert(nick);
+}
+
+void Server::removeNick(const std::string &nick)
+{
+	used_nicks_.erase(nick);
+}
