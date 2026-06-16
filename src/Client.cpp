@@ -1,8 +1,8 @@
 #include "Client.hpp"
 
-Client::Client() : fd(-1), ip(""), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), nick_(""), realname_(""), toDisconnect_(false) {}
+Client::Client() : fd(-1), ip(""), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), password_(""), nick_(""), user_(""), realname_(""), toDisconnect_(false) {}
 
-Client::Client(const Client &other) : fd(other.fd), ip(other.ip), readBuf_(other.readBuf_), writeBuf_(other.writeBuf_), authState_(other.authState_), auth_(other.auth_), nick_(other.nick_), realname_(other.realname_), toDisconnect_(other.toDisconnect_) {}
+Client::Client(const Client &other) : fd(other.fd), ip(other.ip), readBuf_(other.readBuf_), writeBuf_(other.writeBuf_), authState_(other.authState_), auth_(other.auth_), password_(other.password_), nick_(other.nick_), user_(other.user_), realname_(other.realname_), toDisconnect_(other.toDisconnect_) {}
 
 Client &Client::operator=(const Client &other)
 {
@@ -14,7 +14,9 @@ Client &Client::operator=(const Client &other)
 		writeBuf_ = other.writeBuf_;
 		authState_ = other.authState_;
 		auth_ = other.auth_;
+		password_ = other.password_;
 		nick_ = other.nick_;
+		user_ = other.user_;
 		realname_ = other.realname_;
 		toDisconnect_ = other.toDisconnect_;
 	}
@@ -24,7 +26,7 @@ Client &Client::operator=(const Client &other)
 
 Client::~Client() {}
 
-Client::Client(int fd, const std::string &ip) : fd(fd), ip(ip), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), nick_(""), realname_(""), toDisconnect_(false) {}
+Client::Client(int fd, const std::string &ip) : fd(fd), ip(ip), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), password_(""), nick_(""), user_(""), realname_(""), toDisconnect_(false) {}
 
 int Client::getFd() const
 {
@@ -53,12 +55,22 @@ AuthState Client::getState() const
 
 bool Client::isAuth() const
 {
-	return (authState_ == AUTH_REGISTERED);
+	return (auth_);
+}
+
+const std::string &Client::getPassword() const
+{
+	return password_;
 }
 
 const std::string &Client::getNick() const
 {
 	return nick_;
+}
+
+const std::string &Client::getUser() const
+{
+	return user_;
 }
 
 const std::string &Client::getRealname() const
@@ -76,6 +88,17 @@ void Client::setAuth(bool auth)
 	auth_ = auth;
 }
 
+void Client::setPassword(std::string pass)
+{
+	password_ = pass;
+}
+
+void Client::setUser(const std::string &user)
+{
+	user_ = user;
+}
+
+//En realidad AÑADE estados no cambia quiza mejor nombre addAuthState()
 void Client::setAuthState(AuthState adding)
 {
 	authState_ = static_cast<AuthState>(

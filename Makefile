@@ -18,6 +18,7 @@ FILES = main.cpp \
 		Command/Command.cpp \
 		Command/CommandFactory.cpp \
 		Command/PassCommand.cpp \
+		Command/UserCommand.cpp\
 		Command/NickCommand.cpp \
 		ResponseBuilder.cpp
 

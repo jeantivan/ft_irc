@@ -78,7 +78,7 @@ ResponseBuilder &ResponseBuilder::numeric(int code)
 	return *this;
 }
 
-std::string ResponseBuilder::build()
+const std::string ResponseBuilder::build() const
 {
 	std::string result;
 

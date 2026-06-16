@@ -24,19 +24,26 @@ PassCommand::PassCommand(const std::string &type, const std::vector<std::string>
 void PassCommand::execute(Client *client, Server *server)
 {
 	ResponseBuilder response;
-
 	if (params_.empty())
 	{
 		response.prefix(server->getName()).numeric(ERR_NEEDMOREPARAMS).target("*").params("PASS").trailing("Not enough parameters");
 		std::cerr << "[ircserver]: Error: Bad command params." << std::endl;
 	}
-	else if (client->getState() & AUTH_PASS)
+	else if (client->isAuth() == true)
 	{
-		
 		response.prefix(server->getName()).numeric(ERR_ALREADYREGISTRED).target("*").trailing("Unauthorized command (already registered)");
 		std::cerr << "[ircserver]: Client <" << client->getFd() << " Error: Unauthorized command (already registered)" << std::endl;
 	}
-	else if (params_[0] != server->getPassword())
+	else
+	{
+		client->setPassword(params_[0]); //el cliente guarda su password, durante el registro Server lo compara al password real
+		client->setAuthState(AUTH_PASS);
+//		server->requestRegistration(*client); // BORRAR El proceso de registro nunca termina con PASS (ver NOTAS_antofern)
+		return;
+	}
+// No se valida el PASSWORD hasta tener todos los campos completos, Un PASS incorrecto, puede ser
+// corregido con un segundo PASS correcto mientras no haya terminado el proceso de registro
+/*	else if (params_[0] != server->getPassword())
 	{
 
 		response.prefix(server->getName()).numeric(ERR_PASSWDMISMATCH).target("*").trailing("Password incorrect");
@@ -50,7 +57,7 @@ void PassCommand::execute(Client *client, Server *server)
 		std::cout << "[ircserver]: Client <" << client->getFd() << ", " << client->getIp() << "> is authenticated" << std::endl;
 		return;	
 	}
-
+*/
 	server->queueClientData(*client, response.build());
 	return;
 }
