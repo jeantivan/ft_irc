@@ -2,12 +2,14 @@
 #include <Command/PassCommand.hpp>
 #include <Command/UserCommand.hpp>
 #include <Command/NickCommand.hpp>
+#include <Command/CapCommand.hpp>
 
 CommandFactory::CommandFactory()
 {
 	creators_["PASS"] = &PassCommand::create;
 	creators_["USER"] = &UserCommand::create;
 	creators_["NICK"] = &NickCommand::create;
+	creators_["CAP"] = &CapCommand::create;
 }
 
 CommandFactory::~CommandFactory() {}
