@@ -31,7 +31,7 @@ void UserCommand::execute(Client *client, Server *server)
 		server->queueClientData(*client, response.build());
 		return;
 	}
-	else if(params_.size() < 3)
+	else if(params_.size() < 4)
 	{
 		response.prefix(server->getName()).numeric(ERR_NEEDMOREPARAMS).target("*").params("PASS").trailing("Not enough parameters");
 		std::cerr << "[ircserver]: Error: Bad command params." << std::endl;
