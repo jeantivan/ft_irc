@@ -25,14 +25,13 @@ bool NickCommand::isValidNick(const std::string &nick) const
 	if (nick.empty() || nick.length() > 9)
 		return false;
 
-	if (std::isdigit(nick[0]) || nick[0] == '-')
+	if (std::isdigit(nick[0]) || nick[0] == '-' || nick[0] == '#' || nick[0] == '&' || nick[0] == '+' || nick[0] == '!')
 		return false;
 
 	for (size_t i = 0; i < nick.length(); i++)
 	{
 		char c = nick[i];
-		if (!std::isalnum(c) && c != '-' && c != '_' && c != '[' && c != ']' 
-			&& c != '{' && c != '}' && c != '|' && c != '^' && c != '`' && c != '\\')
+		if (!std::isalnum(c) && c != '-' && c != '_' && c != '[' && c != ']' && c != '{' && c != '}' && c != '|' && c != '^' && c != '`' && c != '\\')
 			return false;
 	}
 
@@ -113,9 +112,9 @@ void NickCommand::execute(Client *client, Server *server)
 	client->setNick(new_nick);
 	server->addNick(new_nick);
 
-//	AuthState current_state = client->getState(); // COMENTADO
-	client->setAuthState(AUTH_NICK);	// NUEVO
-	server->requestRegistration(*client);// NUEVO 
+	//	AuthState current_state = client->getState(); // COMENTADO
+	client->setAuthState(AUTH_NICK);	  // NUEVO
+	server->requestRegistration(*client); // NUEVO
 
 	std::cout << "[ircserver]: Client <" << client->getFd() << ", " << client->getIp()
 			  << "> set nick to " << new_nick << std::endl;
@@ -127,4 +126,4 @@ void NickCommand::execute(Client *client, Server *server)
 Command *NickCommand::create(const std::string &type, const std::vector<std::string> &params)
 {
 	return new NickCommand(type, params);
-}	
+}
