@@ -16,6 +16,14 @@
 #define RPL_ENDOFNAMES          366
 
 // ============================================================
+// RPL — Canal
+// ============================================================
+#define RPL_TOPIC           	332
+#define RPL_NOTOPIC         	331
+#define RPL_NAMREPLY			353			
+
+
+// ============================================================
 // ERR — Registro
 // ============================================================
 #define ERR_NONICKNAMEGIVEN     431
@@ -31,5 +39,14 @@
 #define ERR_UNKNOWNCOMMAND      421
 #define ERR_NOTREGISTERED       451
 #define ERR_NOPRIVILEGES        481
+
+// ============================================================
+// ERR — Canal
+// ============================================================
+#define ERR_NOSUCHCHANNEL   	403
+#define ERR_CHANNELISFULL   	471
+#define ERR_INVITEONLYCHAN  	473
+#define ERR_BADCHANNELKEY   	475
+#define ERR_BADCHANNAME			479
 
 #endif

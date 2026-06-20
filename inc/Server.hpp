@@ -23,9 +23,11 @@
 #include "Client.hpp"
 #include "Command/Command.hpp"
 #include <ctime>
+#include "Channel.hpp"
 
-#define NAME_SERVER "Our_IRC_Serv"
+#define NAME_SERVER "IRC_Serv"
 #define SERVER_VERSION "Beta"
+#define MAX_CHANNEL_MEMBERS 35 // evita desbordaminetos, MODE (l) deberia respetar este limite
 
 class Server
 {
@@ -38,6 +40,7 @@ private:
 	std::vector<struct pollfd> connections_;
 	std::map<int, Client> clients_;
 	std::set<std::string> used_nicks_;
+	std::map<std::string, Channel> _channels_;
 
 	// Constructors private to avoid duplication of the Server
 	Server();
@@ -93,6 +96,13 @@ public:
 	bool isNickInUse(const std::string &nick) const;
 	void addNick(const std::string &nick);
 	void removeNick(const std::string &nick);
+
+	// Server Command
+	bool isAchannel(const std::string &name) const;
+	Channel *getChannel(const std::string &name);
+	Channel &createChannel(const std::string &name);
+	bool joinChannel(Client *client, const std::string &name, const std::string &password);
+	void namreply(Client *client, Channel *channel);
 };
 
 #endif // SERVER_HPP

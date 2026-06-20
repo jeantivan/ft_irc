@@ -5,6 +5,13 @@
 #include <sstream>
 #include "NumericReplies.hpp"
 
+/* Ejemplo de uso:
+ResponseBilder response;
+response.prefix(server->getName())
+	.numeric(____)
+	.target(____)
+	.trailing("____");
+server->queueClientData(*client, response.build());   */
 class ResponseBuilder
 {
 private:

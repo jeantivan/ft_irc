@@ -461,3 +461,134 @@ void Server::removeNick(const std::string &nick)
 {
 	used_nicks_.erase(nick);
 }
+
+//JOIN COMMAND
+bool Server::isAchannel(const std::string &channel) const
+{
+	if (_channels_.find(channel) == _channels_.end())
+		return false;
+	else
+		return true;
+}
+
+//Necesario?
+Channel *Server::getChannel(const std::string &name)
+{
+	if (isAchannel(name))
+		return &(_channels_[name]);
+	return NULL;
+}
+
+bool Server::joinChannel(Client *client, const std::string &nameChannel, const std::string &password)
+{
+		Channel *channel;
+		std::string nickList;
+		ResponseBuilder response;
+
+		if (isAchannel(nameChannel))
+		{
+			channel = &(_channels_[nameChannel]);
+			// ¿Ya es miembro? Ignorar silenciosamente.
+			if (channel->getMembers().find(client->getFd()) != channel->getMembers().end())
+			{
+				std::cout << "[ircserver]:" << client->getNick() << "send JOIN->"
+					<< nameChannel << ". But he was already in the channel"<< std::endl;
+				return;
+			}
+			else // NO es miembro todavía, hacer.
+			{
+			/////////FASE 6///////////////////////////////////////////////////////////////////////////
+			// -¿El canal esta en modo  +k?															//
+			//		-Cruza password																	//
+			//		-Si el pasword es malo, envia mensaje "475 ERR_BADCHANNELKEY"					//
+			// -¿El canal esta en modo +i?															//
+			//		-Comprobar invitacion "_chanNames_(chanNames[i]).getPasswd() == channPasword[i]"//
+			// 		-Si no lo esta mandar 473 ERR_INVITEONLYCHAN									//
+			// -¿El canal alcanzo el numero maximo de usuarios?										//
+			// 		-471 ERR_CHANNELISFULL															//
+			//////////////////////////////////////////////////////////////////////////////////////////
+			if (channel->getMembers().size() > MAX_CHANNEL_MEMBERS) // falta impementar el limite de MODE "L"
+			{
+				std::cout << "[ircserver]:" << client->getNick() << "send JOIN->"
+					<< nameChannel << ". But Channel is full"<< std::endl;
+			//TO DO:
+			//	-responder ERR_CHANNELISFULL
+				return;
+			}
+			
+			channel->addClient(client);
+
+			// Cargar (sin enviar) RPL_TOPIC en response.		
+			response.prefix(getName())
+				.numeric(RPL_TOPIC)
+				.target(client->getNick())
+				.trailing(channel->getTopic());
+			}
+		}	
+		else // (El canal no existe)
+		{
+			// Crear canal
+			channel = &createChannel(nameChannel);
+			// Añadir client al canal
+			channel->addClient(client);
+			// Añadir a client como operador al canal
+			channel->addOperator(client->getFd());
+			// Cargar (sin enviar) RPL_NOTOPIC en response.		
+			response.prefix(getName())
+				.numeric(RPL_NOTOPIC)
+				.target(client->getNick())
+				.trailing("No topic is set");
+		}
+		// WELCOME:
+		// - Broadcast :<nick>!<user>@<ip> JOIN #canal
+		channel->broadcast(client->getNick()+"!"+client->getUser()+"@"+client->getIp()
+			+" JOIN"+" #"+nameChannel, client->getFd(),this);
+		// - RPL_TOPIC o RPL_NOTOPIC.
+		queueClientData(*client, response.build());
+		// - Envia la lista de miembros con RPL_NAMREPLY y RPL_ENDOFNAMES
+		//    ojo, una lista muy larga deberia lanzarse en varios RPL_NAMERPLY seguidos 
+		namreply(client, channel);
+}
+
+// envia RPL_NAMREPLY y RPL_ENDOFNAMES
+// Dependiente de MAX_CHANNEL_MEMBERS, si no lo implementamos hay que lanzar multiples  RPL_NAMEREPLY
+void Server::namreply(Client *client, Channel *channel)
+{
+	std::string	nickList = channel->getNickList();
+	ResponseBuilder response;
+
+	// TO DO: arreglar response, no repeta el formato
+	//  "<client> <symbol> <channel> :[prefix]<nick>{ [prefix]<nick>}"
+	response.prefix(getName())
+		.numeric(RPL_NAMREPLY)
+		.target(client->getNick())
+		//.params (...) TO DO
+		.trailing(nickList);
+	queueClientData(*client, response.build());
+
+	// TO DO: revisa response, params del anterior puede meter ruido
+	response.numeric(RPL_ENDOFNAMES)
+		.trailing("End of /NAMES list");
+	queueClientData(*client, response.build());
+
+	return;
+}
+
+//crea un canal, retorna referencia al canl creado
+//si el nombre del canal ya estaba en uso, no lo crea, y no falla, retorna referencia ese
+//canal.
+Channel &Server::createChannel(const std::string &name)
+{
+
+	if (_channels_.find(name) != _channels_.end())
+		std::cerr << "[ircserver] createChannel: " << name << "cannot be created, it already exists.";
+	else
+	{
+		_channels_[name] = Channel(name);
+		//TO DO: instanciar nuevo canal ¿TOPIC o algun otro campo pendiente?
+
+  		std::cout << "[ircserver]: Channel " << name << " created" << std::endl;
+	}
+
+	return _channels_[name];
+}

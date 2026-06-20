@@ -180,6 +180,10 @@ QUIT :Razón de salida
 
 > **Importante:** No llamar a `disconnectClient` dentro del bucle sobre los canales porque invalida iteradores. Primero limpiar todos los canales, luego desconectar.
 
+>NOTA Antonio:
+ No llamar a `disconnectClient`, sino `setToDisconnect()`. Salvo que tengas un buen motivo para desconectar sin terminar de enviar los datos pendientes en Client::writeBuf_
+
+
 ---
 
 ## Parte II — Nueva clase `Channel`
