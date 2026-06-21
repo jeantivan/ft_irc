@@ -2,6 +2,7 @@
 #include "Command/CommandFactory.hpp"
 #include "ResponseBuilder.hpp"
 #include <ctime>
+#include <sstream>
 
 Server::Server() : port_(""), listener_(-1), password_("") , nameServer_(NAME_SERVER), creationDate_(time(NULL)){}
 
@@ -550,28 +551,62 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 		namreply(client, channel);
 }
 
-// envia RPL_NAMREPLY y RPL_ENDOFNAMES
-// Dependiente de MAX_CHANNEL_MEMBERS, si no lo implementamos hay que lanzar multiples  RPL_NAMEREPLY
+void Server::sendNumericReply(Client *client, int numeric, const std::string &params, const std::string &trailing)
+{
+    ResponseBuilder response;
+
+    response.prefix(getName())
+            .numeric(numeric)
+            .target(client->getNick());
+
+    if (!params.empty())
+        response.params(params);
+
+    if (!trailing.empty()) {
+        response.trailing(trailing);
+    }
+
+    queueClientData(*client, response.build());
+}
+
+// Lanza uno o mas RPL_NAMEREPLY y un y RPL_ENDOFNAMES al final
 void Server::namreply(Client *client, Channel *channel)
 {
-	std::string	nickList = channel->getNickList();
-	ResponseBuilder response;
+    std::istringstream	nicksStream(channel->getNickList());
+    std::ostringstream	paqNicks;
+    std::string			nick;        
+    int i = 0;
 
-	// TO DO: arreglar response, no repeta el formato
-	//  "<client> <symbol> <channel> :[prefix]<nick>{ [prefix]<nick>}"
-	response.prefix(getName())
-		.numeric(RPL_NAMREPLY)
-		.target(client->getNick())
-		//.params (...) TO DO
-		.trailing(nickList);
-	queueClientData(*client, response.build());
+    while (nicksStream >> nick)
+    {
+        if (i > 0) { paqNicks << " "; }
+        paqNicks << nick;
+        i++;
 
-	// TO DO: revisa response, params del anterior puede meter ruido
-	response.numeric(RPL_ENDOFNAMES)
-		.trailing("End of /NAMES list");
-	queueClientData(*client, response.build());
+		//¿Por que 35 Nicks en cada RPL_NAMREPLY?
+		//	Longitud maxima de un mensaje 512
+		//	cada nick mide como maximo 9 caracteres + @ + " " = 11
+		//	(prefix + cmd + (11 * 40) + \r\n) = 512
+		//  como no hay necesidad de apurar hasta el limite del protocolo
+		//	en lugar de 40 usamos un limite de 35 nicks por respuesta 
+        if (i == 35)
+        {
+            sendNumericReply(client, RPL_NAMREPLY, "= " + channel->getName(), paqNicks.str()); // OJO!!! cuando se implementen los modos gestionar "= "
 
-	return;
+            // Limpieza del stream
+            paqNicks.str("");
+            paqNicks.clear();
+            i = 0;
+        }
+    }
+  
+	if (!paqNicks.str().empty()) 
+    {
+        sendNumericReply(client, RPL_NAMREPLY, "= " + channel->getName(), paqNicks.str()); // OJO!!! cuando se implementen los modos gestionar "= "
+    }
+
+    // Fin del protocolo (RPL_ENDOFNAMES) usando la MISMA función genérica
+    sendNumericReply(client, RPL_ENDOFNAMES, channel->getName(), "End of /NAMES list");
 }
 
 //crea un canal, retorna referencia al canl creado

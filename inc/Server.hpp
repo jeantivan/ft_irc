@@ -25,9 +25,9 @@
 #include <ctime>
 #include "Channel.hpp"
 
-#define NAME_SERVER "IRC_Serv"
+#define NAME_SERVER "IRC_Serv" //maximo 9 caracteres (RPL_s construidas con esa convencion)
 #define SERVER_VERSION "Beta"
-#define MAX_CHANNEL_MEMBERS 35 // evita desbordaminetos, MODE (l) deberia respetar este limite
+#define MAX_CHANNEL_MEMBERS 200
 
 class Server
 {
@@ -82,6 +82,11 @@ public:
 
 	// Envia datos al bufer de salida de client, activa el evento POLLOUT para ese cliente
 	void queueClientData(Client &client, const std::string &data);
+
+	// Respuestas listas y encoladas en una sola funcion.
+	// Istancia un objeto ResponseBuilder con los parametros recibidos y lo pone en cola del writeBuf del cliente
+	void sendNumericReply(Client *client, int numeric, const std::string &params, const std::string &trailing);
+
 
 	// Send client data, los datos almacendos en el buffer desalida con la funcion anterior
 	bool sendClientData(size_t client_index);
