@@ -32,4 +32,13 @@
 #define ERR_NOTREGISTERED       451
 #define ERR_NOPRIVILEGES        481
 
+// ============================================================
+// ERR — Privmsg
+// ============================================================
+#define ERR_NORECIPIENT			411
+#define ERR_NOTEXTTOSEND		412
+#define ERR_NOSUCHNICK			401
+#define ERR_NOSUCHCHANNEL		403
+#define ERR_CANNOTSENDTOCHAN	404
+
 #endif
