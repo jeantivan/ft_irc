@@ -38,7 +38,6 @@ void PrivMsgCommand::execute(Client *client, Server *server)
 		response.numeric(ERR_NOTREGISTERED)
 			.target(client->getNick().empty() ? "*" : client->getNick())
 			.trailing("You have not registered");
-
 		server->queueClientData(*client, response.build());
 		return;
 	}
@@ -59,7 +58,6 @@ void PrivMsgCommand::execute(Client *client, Server *server)
 		response.numeric(ERR_NORECIPIENT)
 			.target(client->getNick())
 			.trailing("no recipient given " + type_);
-
 		server->queueClientData(*client, response.build());
 		return;
 	}
@@ -75,7 +73,25 @@ void PrivMsgCommand::execute(Client *client, Server *server)
 	}
 
 	/**
-	 * TODO: Aquí los errores básicos ya han sido chequeados.
 	 * TODO: Ahora vamos tenemos que chequear si el destinatario es un canal o un usuario.
 	 */
+
+	// Enviamos el mensaje a un usuario
+	Client *recipient = server->findClientByNick(params_[0]);
+
+	if (!recipient)
+	{
+		response.numeric(ERR_NOSUCHNICK)
+			.target(client->getNick())
+			.trailing(params_[0] + ": No such nick/channel");
+		server->queueClientData(*client, response.build());
+		return;
+	}
+
+	response.clear();
+	response.prefix(client->getPrefix())
+		.command("PRIVMSG")
+		.target(recipient->getNick())
+		.trailing(params_[1]);
+	server->queueClientData(*recipient, response.build());
 }
