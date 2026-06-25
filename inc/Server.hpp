@@ -27,6 +27,7 @@
 #define NAME_SERVER "Our_IRC_Serv"
 #define SERVER_VERSION "Beta"
 
+class Channel;
 class Server
 {
 private:
@@ -38,6 +39,7 @@ private:
 	std::vector<struct pollfd> connections_;
 	std::map<int, Client> clients_;
 	std::set<std::string> used_nicks_;
+	std::vector<Channel> channels_;
 
 	// Constructors private to avoid duplication of the Server
 	Server();
