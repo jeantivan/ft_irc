@@ -50,7 +50,7 @@ const std::string &Client::getWriteBuf() const
 
 AuthState Client::getState() const
 {
-	return authState_ ;
+	return authState_;
 }
 
 bool Client::isAuth() const
@@ -98,12 +98,11 @@ void Client::setUser(const std::string &user)
 	user_ = user;
 }
 
-//En realidad AÑADE estados no cambia quiza mejor nombre addAuthState()
+// En realidad AÑADE estados no cambia quiza mejor nombre addAuthState()
 void Client::setAuthState(AuthState adding)
 {
 	authState_ = static_cast<AuthState>(
-    	static_cast<int>(authState_) | static_cast<int>(adding)
-    );
+		static_cast<int>(authState_) | static_cast<int>(adding));
 }
 
 void Client::setNick(const std::string &nick)
@@ -155,4 +154,9 @@ void Client::eraseFromWriteBuf(size_t len)
 		writeBuf_.clear();
 	else
 		writeBuf_ = writeBuf_.substr(len);
+}
+
+std::string Client::getPrefix() const
+{
+	return nick_ + "!" + user_ + "@" + ip;
 }
