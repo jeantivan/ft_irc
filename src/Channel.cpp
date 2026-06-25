@@ -112,5 +112,8 @@ void Channel::broadcastAll(const std::string &message, Server *server) const
 	}
 }
 
-// Nick list for RPL_NAMREPLY
-std::string Channel::getNickList() const {}
+// TODO: Nick list for RPL_NAMREPLY
+std::string Channel::getNickList() const
+{
+	return "";
+}
