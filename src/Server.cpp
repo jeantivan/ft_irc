@@ -1,6 +1,7 @@
 #include "Server.hpp"
 #include "Command/CommandFactory.hpp"
 #include "ResponseBuilder.hpp"
+#include "Channel.hpp"
 #include <ctime>
 
 Server::Server() : port_(""), listener_(-1), password_(""), nameServer_(NAME_SERVER), creationDate_(time(NULL)) {}
