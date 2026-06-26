@@ -6,7 +6,6 @@ FLAGS = -Wall -Werror -Wextra -std=c++98
 
 INCLUDES = -Iinc
 
-
 SRC_DIR = src
 
 OBJ_DIR = obj
@@ -21,7 +20,7 @@ FILES = main.cpp \
 		Command/UserCommand.cpp\
 		Command/NickCommand.cpp \
 		Command/CapCommand.cpp \
-		Command/JoinCommand.cpp
+		Command/JoinCommand.cpp \
 		Command/PrivMsgCommand.cpp \
 		ResponseBuilder.cpp \
 		Channel.cpp

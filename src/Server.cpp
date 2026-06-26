@@ -482,73 +482,79 @@ Channel *Server::getChannel(const std::string &name)
 
 bool Server::joinChannel(Client *client, const std::string &nameChannel, const std::string &password)
 {
-		Channel *channel;
-		std::string nickList;
-		ResponseBuilder response;
 
-		if (isAchannel(nameChannel))
-		{
-			channel = &(_channels_[nameChannel]);
-			// ¿Ya es miembro? Ignorar silenciosamente.
-			if (channel->getMembers().find(client->getFd()) != channel->getMembers().end())
-			{
-				std::cout << "[ircserver]:" << client->getNick() << "send JOIN->"
-					<< nameChannel << ". But he was already in the channel"<< std::endl;
-				return;
-			}
-			else // NO es miembro todavía, hacer.
-			{
-			/////////FASE 6///////////////////////////////////////////////////////////////////////////
-			// -¿El canal esta en modo  +k?															//
-			//		-Cruza password																	//
-			//		-Si el pasword es malo, envia mensaje "475 ERR_BADCHANNELKEY"					//
-			// -¿El canal esta en modo +i?															//
-			//		-Comprobar invitacion "_chanNames_(chanNames[i]).getPasswd() == channPasword[i]"//
-			// 		-Si no lo esta mandar 473 ERR_INVITEONLYCHAN									//
-			// -¿El canal alcanzo el numero maximo de usuarios?										//
-			// 		-471 ERR_CHANNELISFULL															//
-			//////////////////////////////////////////////////////////////////////////////////////////
-			if (channel->getMembers().size() > MAX_CHANNEL_MEMBERS) // falta impementar el limite de MODE "L"
-			{
-				std::cout << "[ircserver]:" << client->getNick() << "send JOIN->"
-					<< nameChannel << ". But Channel is full"<< std::endl;
-			//TO DO:
-			//	-responder ERR_CHANNELISFULL
-				return;
-			}
-			
-			channel->addClient(client);
+	///////////////BORRAESTO como aun no implementamnos la logica de password, tengo que silenciar warning por parametro sin uso
+	(void)password;
+	///////////////
 
-			// Cargar (sin enviar) RPL_TOPIC en response.		
-			response.prefix(getName())
-				.numeric(RPL_TOPIC)
-				.target(client->getNick())
-				.trailing(channel->getTopic());
-			}
-		}	
-		else // (El canal no existe)
+	Channel *channel;
+	std::string nickList;
+	ResponseBuilder response;
+
+	if (isAchannel(nameChannel))
+	{
+		channel = &(_channels_[nameChannel]);
+		// ¿Ya es miembro? Ignorar silenciosamente.
+		if (channel->getMembers().find(client->getFd()) != channel->getMembers().end())
 		{
-			// Crear canal
-			channel = &createChannel(nameChannel);
-			// Añadir client al canal
-			channel->addClient(client);
-			// Añadir a client como operador al canal
-			channel->addOperator(client->getFd());
-			// Cargar (sin enviar) RPL_NOTOPIC en response.		
-			response.prefix(getName())
-				.numeric(RPL_NOTOPIC)
-				.target(client->getNick())
-				.trailing("No topic is set");
+			std::cout << "[ircserver]:" << client->getNick() << "send JOIN->"
+				<< nameChannel << ". But he was already in the channel"<< std::endl;
+			return false;
 		}
-		// WELCOME:
-		// - Broadcast :<nick>!<user>@<ip> JOIN #canal
-		channel->broadcast(client->getNick()+"!"+client->getUser()+"@"+client->getIp()
-			+" JOIN"+" #"+nameChannel, client->getFd(),this);
-		// - RPL_TOPIC o RPL_NOTOPIC.
-		queueClientData(*client, response.build());
-		// - Envia la lista de miembros con RPL_NAMREPLY y RPL_ENDOFNAMES
-		//    ojo, una lista muy larga deberia lanzarse en varios RPL_NAMERPLY seguidos 
-		namreply(client, channel);
+		else // NO es miembro todavía, hacer.
+		{
+		/////////FASE 6///////////////////////////////////////////////////////////////////////////
+		// -¿El canal esta en modo  +k?															//
+		//		-Cruza password																	//
+		//		-Si el pasword es malo, envia mensaje "475 ERR_BADCHANNELKEY"					//
+		// -¿El canal esta en modo +i?															//
+		//		-Comprobar invitacion "_chanNames_(chanNames[i]).getPasswd() == channPasword[i]"//
+		// 		-Si no lo esta mandar 473 ERR_INVITEONLYCHAN									//
+		// -¿El canal alcanzo el numero maximo de usuarios?										//
+		// 		-471 ERR_CHANNELISFULL															//
+		//////////////////////////////////////////////////////////////////////////////////////////
+		if (channel->getMembers().size() > MAX_CHANNEL_MEMBERS) // falta impementar el limite de MODE "L"
+		{
+			std::cout << "[ircserver]:" << client->getNick() << "send JOIN->"
+				<< nameChannel << ". But Channel is full"<< std::endl;
+		// TODO :
+		//	-responder ERR_CHANNELISFULL
+			return false;
+		}
+		
+		channel->addClient(client);
+
+		// Cargar (sin enviar) RPL_TOPIC en response.		
+		response.prefix(getName())
+			.numeric(RPL_TOPIC)
+			.target(client->getNick())
+			.trailing(channel->getTopic());
+		}
+	}	
+	else // (El canal no existe)
+	{
+		// Crear canal
+		channel = &createChannel(nameChannel);
+		// Añadir client al canal
+		channel->addClient(client);
+		// Añadir a client como operador al canal
+		channel->addOperator(client->getFd());
+		// Cargar (sin enviar) RPL_NOTOPIC en response.		
+		response.prefix(getName())
+			.numeric(RPL_NOTOPIC)
+			.target(client->getNick())
+			.trailing("No topic is set");
+	}
+	// WELCOME:
+	// - Broadcast :<nick>!<user>@<ip> JOIN #canal
+	channel->broadcast(client->getNick()+"!"+client->getUser()+"@"+client->getIp()
+		+" JOIN"+" #"+nameChannel, client->getFd(),this);
+	// - RPL_TOPIC o RPL_NOTOPIC.
+	queueClientData(*client, response.build());
+	// - Envia la lista de miembros con RPL_NAMREPLY y RPL_ENDOFNAMES
+	//    ojo, una lista muy larga deberia lanzarse en varios RPL_NAMERPLY seguidos 
+	namreply(client, channel);
+	return true;
 }
 
 void Server::sendNumericReply(Client *client, int numeric, const std::string &params, const std::string &trailing)
