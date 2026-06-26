@@ -22,6 +22,28 @@ JoinCommand::~JoinCommand() {}
 
 JoinCommand::JoinCommand(const std::string &type, const std::vector<std::string> &params) : Command(type, params) {}
 
+// Funciones auxiliares a esecute()
+static void splitByComma(const std::string &str, std::vector<std::string> &tokens)
+{
+	std::istringstream ss(str);
+	std::string token;
+
+	while (std::getline(ss, token, ',')) {
+		tokens.push_back(token);
+	}
+}
+
+static bool parseChannName(std::string name)
+{
+	if (name[0] != '#')
+		return false;
+	if (name.length() > 50 || name.length() < 2)
+		return false;
+	if (name.find_first_of(" \a:\r\n"))
+		return false;
+	return true;
+}
+
 void JoinCommand::execute(Client *client, Server *server)
 {
 	ResponseBuilder response;
@@ -60,7 +82,6 @@ void JoinCommand::execute(Client *client, Server *server)
 	
 	for(size_t i = 0; i < chanNames.size(); i++)
 	{
-		Channel *channel_i;
 		if (!parseChannName(chanNames[i]))
 		{
 			response.prefix(server->getName())
@@ -81,25 +102,4 @@ void JoinCommand::execute(Client *client, Server *server)
 Command *JoinCommand::create(const std::string &type, const std::vector<std::string> &params)
 {
 	return new JoinCommand(type, params);
-}
-
-// función auxiliar a execute
-static void splitByComma(const std::string &str, std::vector<std::string> &tokens) {
-	std::istringstream ss(str);
-	std::string token;
-
-	while (std::getline(ss, token, ',')) {
-		tokens.push_back(token);
-	}
-}
-
-bool parseChannName(std::string name)
-{
-	if (name[0] != '#')
-		return false;
-	if (name.length() > 50 || name.length() < 2)
-		return false;
-	if (name.find_first_of(" \a:\r\n"))
-		return false;
-	return true;
 }
