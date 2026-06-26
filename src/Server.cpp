@@ -386,45 +386,6 @@ bool Server::sendClientData(size_t client_index)
 	return false;
 }
 
-// ¿Via muerta?
-/*
-void Server::handleCommand(size_t client_index, const Command &cmd)
-{
-	Client &client = clients_[connections_[client_index].fd];
-
-	std::cout << "Client <" << client.getFd() << ", " << client.getIp() << "> sent a command: " << std::endl;
-
-	if (cmd.getType() == "PASS")
-	{
-		if (cmd.getParams().size() != 1)
-		{
-			std::cerr << "Bad command: PASS" << std::endl;
-			return;
-		}
-
-		if (cmd.getParams()[0] == password_)
-		{
-			client.setAuth(true);
-			std::cout << "Client <" << client.getFd() << ", " << client.getIp() << "> is authenticated" << std::endl;
-			return;
-		}
-		std::cerr << "Bad password, disconnecting client <" << client.getFd() << ", " << client.getIp() << ">" << std::endl;
-		disconnectClient(client_index);
-	}
-	else if (cmd.getType() == "NICK")
-	{
-		std::cout << "Handle command NICK" << std::endl;
-	}
-	else if (cmd.getType() == "USER")
-	{
-		std::cout << "Handle command USER" << std::endl;
-	}
-	else
-	{
-		std::cerr << "Unknown command: " << cmd.getType() << std::endl;
-	}
-}*/
-
 // TODO: Separar a otro archivo
 bool Server::signal_received_ = false;
 
@@ -499,6 +460,7 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 		{
 			std::cout << "[ircserver]:" << client->getNick() << "send JOIN->"
 				<< nameChannel << ". But he was already in the channel"<< std::endl;
+			// IGNORAR SILENCIOSAMENTE???
 			return false;
 		}
 		else // NO es miembro todavía, hacer.

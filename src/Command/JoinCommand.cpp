@@ -39,7 +39,7 @@ static bool parseChannName(std::string name)
 		return false;
 	if (name.length() > 50 || name.length() < 2)
 		return false;
-	if (name.find_first_of(" \a:\r\n"))
+	if (name.find_first_of(" \a:\r\n") != std::string::npos)
 		return false;
 	return true;
 }
@@ -89,12 +89,13 @@ void JoinCommand::execute(Client *client, Server *server)
 				.target(client->getNick())
 				.trailing("Illegal channel name");
 			std::cerr << "[ircserver]: Error: ERR_BADCHANNAME" << std::endl;
+			server->queueClientData(*client, response.build());
 			return;
 		}
 		if (i < channPasword.size())
 			server->joinChannel(client, chanNames[i], channPasword[i]);
 		else
-			server->joinChannel(client, chanNames[i], NULL);
+			server->joinChannel(client, chanNames[i], "");
 	}
 	return;
 }
