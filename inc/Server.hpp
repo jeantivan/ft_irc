@@ -29,6 +29,7 @@
 #define SERVER_VERSION "Beta"
 #define MAX_CHANNEL_MEMBERS 200
 
+class Channel;
 class Server
 {
 private:
@@ -60,7 +61,7 @@ public:
 	const std::string &getPassword() const;
 	const std::string &getName() const;
 
-	// Busca a que elemento en connections_ pertenece un fd 
+	// Busca a que elemento en connections_ pertenece un fd
 	size_t findConnectionByFd(int fd) const;
 
 	// Bind listener to port
@@ -102,13 +103,17 @@ public:
 	void addNick(const std::string &nick);
 	void removeNick(const std::string &nick);
 
-	// Server Command
+	// _Chanels_
 	bool isAchannel(const std::string &name) const;
 	Channel *getChannel(const std::string &name);
 	Channel &createChannel(const std::string &name);
 	bool joinChannel(Client *client, const std::string &name, const std::string &password);
+
+	// Lanza uno o mas RPL_NAMEREPLY y un y RPL_ENDOFNAMES al final
 	void namreply(Client *client, Channel *channel);
+
+	// PrivMsg Command
+	Client *findClientByNick(const std::string &nick_to_find);
 };
 
 #endif // SERVER_HPP
-

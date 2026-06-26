@@ -21,8 +21,10 @@ FILES = main.cpp \
 		Command/UserCommand.cpp\
 		Command/NickCommand.cpp \
 		Command/CapCommand.cpp \
-		ResponseBuilder.cpp \
 		Command/JoinCommand.cpp
+		Command/PrivMsgCommand.cpp \
+		ResponseBuilder.cpp \
+		Channel.cpp
 
 SRC_FILES = $(addprefix $(SRC_DIR)/, $(FILES))
 OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRC_FILES))

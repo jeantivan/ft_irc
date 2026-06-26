@@ -1,10 +1,11 @@
 #include "Server.hpp"
 #include "Command/CommandFactory.hpp"
 #include "ResponseBuilder.hpp"
+#include "Channel.hpp"
 #include <ctime>
 #include <sstream>
 
-Server::Server() : port_(""), listener_(-1), password_("") , nameServer_(NAME_SERVER), creationDate_(time(NULL)){}
+Server::Server() : port_(""), listener_(-1), password_(""), nameServer_(NAME_SERVER), creationDate_(time(NULL)) {}
 
 Server::~Server()
 {
@@ -30,7 +31,7 @@ Server::~Server()
 	used_nicks_.clear(); // Limpiar los nicks
 }
 
-Server::Server(const Server &other) : port_(other.port_), listener_(other.listener_), password_(other.password_), nameServer_(other.nameServer_), creationDate_(time(NULL)){}
+Server::Server(const Server &other) : port_(other.port_), listener_(other.listener_), password_(other.password_), nameServer_(other.nameServer_), creationDate_(time(NULL)) {}
 
 Server &Server::operator=(const Server &other)
 {
@@ -88,7 +89,7 @@ size_t Server::findConnectionByFd(int fd) const
 		if (connections_[i].fd == fd)
 			return i;
 	}
-	return static_cast<size_t>(-1); //valor maximo, para marcar error
+	return static_cast<size_t>(-1); // valor maximo, para marcar error
 }
 
 void Server::init()
@@ -160,7 +161,7 @@ void Server::run()
 		for (int i = connections_.size() - 1; i >= 0; i--)
 		{
 
-//PLACEHOLDER bloque logica POLLOUT si o no
+			// PLACEHOLDER bloque logica POLLOUT si o no
 
 			if (connections_[i].revents & (POLLIN | POLLHUP))
 			{
@@ -203,7 +204,7 @@ void Server::acceptNewClient()
 	struct pollfd new_connection;
 
 	new_connection.fd = new_fd;
-	new_connection.events = POLLIN;// ----- "| POLLOUT" Necesario??
+	new_connection.events = POLLIN; // ----- "| POLLOUT" Necesario??
 	new_connection.revents = 0;
 
 	connections_.push_back(new_connection);
@@ -277,7 +278,7 @@ void Server::disconnectClient(int fd)
 		if (!nick.empty())
 		{
 			removeNick(nick);
-			//std::cout << "[ircserver]: Nick '" << nick << "' freed from client " << fd << std::endl;
+			// std::cout << "[ircserver]: Nick '" << nick << "' freed from client " << fd << std::endl;
 		}
 	}
 
@@ -312,14 +313,13 @@ void Server::requestRegistration(Client &client)
 			client.setAuth(true);
 
 			// TODO:extraer este bloque a funcion auxiliar WelcomReply()
-			//001    RPL_WELCOME	"Welcome to the Internet Relay Network <nick>!<user>@<host>"
-			response.prefix(getName()).numeric(1).target(client.getNick())
-				.trailing("Welcome to the Internet Relay Network " + client.getNick() + "!" + client.getUser() + "@"+ client.getIp());
+			// 001    RPL_WELCOME	"Welcome to the Internet Relay Network <nick>!<user>@<host>"
+			response.prefix(getName()).numeric(1).target(client.getNick()).trailing("Welcome to the Internet Relay Network " + client.getNick() + "!" + client.getUser() + "@" + client.getIp());
 			queueClientData(client, response.build());
-			//002	YOURHOST		"Your host is <servername>, running version <ver>"
+			// 002	YOURHOST		"Your host is <servername>, running version <ver>"
 			response.numeric(2).trailing("Your host is " + getName() + ", running version" + SERVER_VERSION);
 			queueClientData(client, response.build());
-			//003    RPL_CREATED	"This server was created <date>"
+			// 003    RPL_CREATED	"This server was created <date>"
 			char date[64];
 			struct tm *tm_info = localtime(&creationDate_);
 			strftime(date, sizeof(date), "%c", tm_info);
@@ -327,19 +327,19 @@ void Server::requestRegistration(Client &client)
 			createdMsg += date;
 			response.numeric(3).trailing(createdMsg);
 			queueClientData(client, response.build());
-			//004    RPL_MYINFO		"<servername> <version> <available user modes> <available channel modes>"
-			response.numeric(4).trailing(nameServer_ + " " + SERVER_VERSION + " " +"io itkol");
-			queueClientData(client, response.build());			
+			// 004    RPL_MYINFO		"<servername> <version> <available user modes> <available channel modes>"
+			response.numeric(4).trailing(nameServer_ + " " + SERVER_VERSION + " " + "io itkol");
+			queueClientData(client, response.build());
 			// fin WelcomReply()
-			
-			return;	
+
+			return;
 		}
 		else
 		{
 			response.prefix(getName()).numeric(ERR_PASSWDMISMATCH).target(client.getNick()).trailing("Password incorrect");
 			queueClientData(client, response.build());
 
-			std::cerr<< "[ircserver]--->" << client.getFd() << " Error: Password incorrect" << std::endl;		
+			std::cerr << "[ircserver]--->" << client.getFd() << " Error: Password incorrect" << std::endl;
 			client.setToDisconnect();
 		}
 	}
@@ -352,10 +352,10 @@ bool Server::sendClientData(size_t client_index)
 	Client &client = clients_[fd];
 	const std::string &clientWriteBuf = client.getWriteBuf();
 
-	if (clientWriteBuf.empty())// Se supone que no llamamos a sendClientData cuando no hay nada que enviar. ¿Es solo defensivo?
+	if (clientWriteBuf.empty()) // Se supone que no llamamos a sendClientData cuando no hay nada que enviar. ¿Es solo defensivo?
 	{
 		connections_[client_index].events &= ~POLLOUT;
-		std::cerr << "[INFO] client in shocket:" << fd << "calls sendClientData wuith writeBuff_ empthy." <<std::endl;
+		std::cerr << "[INFO] client in shocket:" << fd << "calls sendClientData wuith writeBuff_ empthy." << std::endl;
 		return false;
 	}
 
@@ -374,15 +374,15 @@ bool Server::sendClientData(size_t client_index)
 	else if (bytes_sent == -1)
 	{
 		//  TODO: This should not exists because the evals says so
-//		if (errno == EAGAIN || errno == EWOULDBLOCK)
-//		{
-//			return false;
-//		}
-		disconnectClient(fd); //pipe roto probablemente??
+		//		if (errno == EAGAIN || errno == EWOULDBLOCK)
+		//		{
+		//			return false;
+		//		}
+		disconnectClient(fd); // pipe roto probablemente??
 		return true;
 	}
 	else
-		std::cerr << "[INFO] client in shocket:" << fd << "send() return 0;" <<std::endl;
+		std::cerr << "[INFO] client in shocket:" << fd << "send() return 0;" << std::endl;
 	return false;
 }
 
@@ -447,7 +447,7 @@ void Server::queueClientData(Client &client, const std::string &data)
 	client.appendToWriteBuf(data);
 }
 
-//NICK COMMAND
+// NICK COMMAND
 bool Server::isNickInUse(const std::string &nick) const
 {
 	return used_nicks_.count(nick) > 0;
@@ -625,4 +625,20 @@ Channel &Server::createChannel(const std::string &name)
 	}
 
 	return _channels_[name];
+}
+Client *Server::findClientByNick(const std::string &nick_to_find)
+{
+	if (nick_to_find.empty())
+		return NULL;
+
+	std::map<int, Client>::iterator it;
+
+	for (it = clients_.begin(); it != clients_.end(); ++it)
+	{
+		if (it->second.getNick() == nick_to_find)
+		{
+			return &(it->second);
+		}
+	}
+	return NULL;
 }

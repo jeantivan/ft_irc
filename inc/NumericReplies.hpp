@@ -49,4 +49,12 @@
 #define ERR_BADCHANNELKEY   	475
 #define ERR_BADCHANNAME			479
 
+// ============================================================
+// ERR — Privmsg
+// ============================================================
+#define ERR_NORECIPIENT			411
+#define ERR_NOTEXTTOSEND		412
+#define ERR_NOSUCHNICK			401
+#define ERR_CANNOTSENDTOCHAN	404
+
 #endif

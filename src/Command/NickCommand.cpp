@@ -25,14 +25,13 @@ bool NickCommand::isValidNick(const std::string &nick) const
 	if (nick.empty() || nick.length() > 9)
 		return false;
 
-	if (std::isdigit(nick[0]) || nick[0] == '-')
+	if (std::isdigit(nick[0]) || nick[0] == '-' || nick[0] == '#' || nick[0] == '&' || nick[0] == '+' || nick[0] == '!')
 		return false;
 
 	for (size_t i = 0; i < nick.length(); i++)
 	{
 		char c = nick[i];
-		if (!std::isalnum(c) && c != '-' && c != '_' && c != '[' && c != ']' 
-			&& c != '{' && c != '}' && c != '|' && c != '^' && c != '`' && c != '\\')
+		if (!std::isalnum(c) && c != '-' && c != '_' && c != '[' && c != ']' && c != '{' && c != '}' && c != '|' && c != '^' && c != '`' && c != '\\')
 			return false;
 	}
 
@@ -128,4 +127,4 @@ void NickCommand::execute(Client *client, Server *server)
 Command *NickCommand::create(const std::string &type, const std::vector<std::string> &params)
 {
 	return new NickCommand(type, params);
-}	
+}

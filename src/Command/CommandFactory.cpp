@@ -4,6 +4,7 @@
 #include <Command/NickCommand.hpp>
 #include <Command/CapCommand.hpp>
 #include "Command/JoinCommand.hpp"
+#include <Command/PrivMsgCommand.hpp>
 
 CommandFactory::CommandFactory()
 {
@@ -12,6 +13,7 @@ CommandFactory::CommandFactory()
 	creators_["NICK"] = &NickCommand::create;
 	creators_["CAP"] = &CapCommand::create;
 	creators_["JOIN"] = &JoinCommand::create;
+	creators_["PRIVMSG"] = &PrivMsgCommand::create;
 }
 
 CommandFactory::~CommandFactory() {}
