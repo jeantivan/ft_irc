@@ -572,15 +572,15 @@ void Server::sendNumericReply(Client *client, int numeric, const std::string &pa
 // Lanza uno o mas RPL_NAMEREPLY y un y RPL_ENDOFNAMES al final
 void Server::namreply(Client *client, Channel *channel)
 {
-    std::istringstream	nicksStream(channel->getNickList());
+    std::istringstream	nicksStream(channel->getNickList()); // la nicklist deberia incluir "@" delante de cada operador obtener el FD apartir de un nick en este punto del codigo es un dolor
     std::ostringstream	paqNicks;
-    std::string			nick;        
+    std::string			nick;
     int i = 0;
 
     while (nicksStream >> nick)
     {
         if (i > 0) { paqNicks << " "; }
-        paqNicks << nick;
+        paqNicks << nick; 
         i++;
 
 		//¿Por que 35 Nicks en cada RPL_NAMREPLY?
@@ -614,7 +614,6 @@ void Server::namreply(Client *client, Channel *channel)
 //canal.
 Channel &Server::createChannel(const std::string &name)
 {
-
 	if (_channels_.find(name) != _channels_.end())
 		std::cerr << "[ircserver] createChannel: " << name << "cannot be created, it already exists.";
 	else

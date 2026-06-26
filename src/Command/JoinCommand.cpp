@@ -53,10 +53,10 @@ void JoinCommand::execute(Client *client, Server *server)
 		std::cerr << "[ircserver]: Error: ERR_NEEDMOREPARAMS" << std::endl;
 		return;
 	}
-	chanNames = splitByComma(params_[0]);
+	splitByComma(params_[0], chanNames);
 
 	if (params_.size() >= 2)
-		channPasword = splitByComma(params_[1]);
+		splitByComma(params_[1], channPasword);
 	
 	for(size_t i = 0; i < chanNames.size(); i++)
 	{
@@ -84,15 +84,13 @@ Command *JoinCommand::create(const std::string &type, const std::vector<std::str
 }
 
 // función auxiliar a execute
-static std::vector<std::string> splitByComma(const std::string& str) {
-    std::vector<std::string> tokens;
-    std::istringstream ss(str);
-    std::string token;
+static void splitByComma(const std::string &str, std::vector<std::string> &tokens) {
+	std::istringstream ss(str);
+	std::string token;
 
-    while (std::getline(ss, token, ',')) {
-        tokens.push_back(token);
-    }
-    return tokens;
+	while (std::getline(ss, token, ',')) {
+		tokens.push_back(token);
+	}
 }
 
 bool parseChannName(std::string name)
