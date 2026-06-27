@@ -112,8 +112,15 @@ void Channel::broadcastAll(const std::string &message, Server *server) const
 	}
 }
 
-// TODO: Nick list for RPL_NAMREPLY
 std::string Channel::getNickList() const
 {
-	return "";
+	std::map<int, Client *>::const_iterator it;
+	std::string nickList;
+
+	for (it = members_.begin(); it != members_.end(); it++)
+	{
+		nickList + it->second->getNick();
+	}
+
+	return nickList;
 }
