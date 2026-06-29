@@ -424,7 +424,7 @@ void Server::removeNick(const std::string &nick)
 	used_nicks_.erase(nick);
 }
 
-//JOIN COMMAND
+// JOIN COMMAND
 bool Server::isAchannel(const std::string &channel) const
 {
 	if (_channels_.find(channel) == _channels_.end())
@@ -433,7 +433,7 @@ bool Server::isAchannel(const std::string &channel) const
 		return true;
 }
 
-//Necesario?
+// Necesario?
 Channel *Server::getChannel(const std::string &name)
 {
 	if (isAchannel(name))
@@ -443,7 +443,7 @@ Channel *Server::getChannel(const std::string &name)
 
 std::map<std::string, Channel> &Server::getChannels()
 {
-    return _channels_;
+	return _channels_;
 }
 
 bool Server::joinChannel(Client *client, const std::string &nameChannel, const std::string &password)
@@ -464,7 +464,7 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 		if (channel->getMembers().find(client->getFd()) != channel->getMembers().end())
 		{
 			std::cout << "[ircserver]:" << client->getNick() << "send JOIN->"
-				<< nameChannel << ". But he was already in the channel"<< std::endl;
+					  << nameChannel << ". But he was already in the channel" << std::endl;
 			return false;
 		}
 		else // NO es miembro todavía, hacer.
@@ -482,21 +482,21 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 			if (channel->getMembers().size() > MAX_CHANNEL_MEMBERS) // falta impementar el limite de MODE "L"
 			{
 				std::cout << "[ircserver]:" << client->getNick() << "send JOIN->"
-					<< nameChannel << ". But Channel is full"<< std::endl;
+						  << nameChannel << ". But Channel is full" << std::endl;
 				sendNumericReply(client, ERR_CHANNELISFULL, nameChannel, "Cannot join channel (channel is full)");
 				return false;
 			}
-			
+
 			channel->addClient(client);
 			std::cout << "[ircserver]: " << client->getNick() << " Join to: " << nameChannel << std::endl;
 
-			// Cargar (sin enviar) RPL_TOPIC en response.		
+			// Cargar (sin enviar) RPL_TOPIC en response.
 			response.prefix(getName())
 				.numeric(RPL_TOPIC)
 				.target(client->getNick())
 				.trailing(channel->getTopic());
 		}
-	}	
+	}
 	else // (El canal no existe)
 	{
 		// Crear canal
@@ -505,7 +505,7 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 		channel->addClient(client);
 		// Añadir a client como operador al canal
 		channel->addOperator(client->getFd());
-		// Cargar (sin enviar) RPL_NOTOPIC en response.		
+		// Cargar (sin enviar) RPL_NOTOPIC en response.
 		response.prefix(getName())
 			.numeric(RPL_NOTOPIC)
 			.target(client->getNick())
@@ -513,8 +513,7 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 	}
 	// WELCOME:
 	// - Broadcast :<nick>!<user>@<ip> JOIN #canal
-	channel->broadcast(client->getNick()+"!"+client->getUser()+"@"+client->getIp()
-		+" JOIN"+" #"+nameChannel, client->getFd(),this);
+	channel->broadcastAll(client->getPrefix() + " JOIN " + nameChannel + "\r\n", this);
 	// - RPL_TOPIC o RPL_NOTOPIC.
 	queueClientData(*client, response.build());
 	// - Envia la lista de miembros con RPL_NAMREPLY y RPL_ENDOFNAMES
@@ -524,65 +523,69 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 
 void Server::sendNumericReply(Client *client, int numeric, const std::string &params, const std::string &trailing)
 {
-    ResponseBuilder response;
+	ResponseBuilder response;
 
-    response.prefix(getName())
-            .numeric(numeric)
-            .target(client->getNick());
+	response.prefix(getName())
+		.numeric(numeric)
+		.target(client->getNick());
 
-    if (!params.empty())
-        response.params(params);
+	if (!params.empty())
+		response.params(params);
 
-    if (!trailing.empty()) {
-        response.trailing(trailing);
-    }
+	if (!trailing.empty())
+	{
+		response.trailing(trailing);
+	}
 
-    queueClientData(*client, response.build());
+	queueClientData(*client, response.build());
 }
 
 // Lanza uno o mas RPL_NAMEREPLY y un y RPL_ENDOFNAMES al final
 void Server::namreply(Client *client, Channel *channel)
 {
-    std::istringstream	nicksStream(channel->getNickList()); // la nicklist deberia incluir "@" delante de cada operador obtener el FD apartir de un nick en este punto del codigo es un dolor
-    std::ostringstream	paqNicks;
-    std::string			nick;
-    int i = 0;
+	std::istringstream nicksStream(channel->getNickList()); // la nicklist deberia incluir "@" delante de cada operador obtener el FD apartir de un nick en este punto del codigo es un dolor
+	std::ostringstream paqNicks;
+	std::string nick;
+	int i = 0;
 
-    while (nicksStream >> nick)
-    {
-        if (i > 0) { paqNicks << " "; }
-        paqNicks << nick; 
-        i++;
+	while (nicksStream >> nick)
+	{
+		if (i > 0)
+		{
+			paqNicks << " ";
+		}
+		paqNicks << nick;
+		i++;
 
-		//¿Por que 35 Nicks en cada RPL_NAMREPLY?
+		// ¿Por que 35 Nicks en cada RPL_NAMREPLY?
 		//	Longitud maxima de un mensaje 512
 		//	cada nick mide como maximo 9 caracteres + @ + " " = 11
 		//	(prefix + cmd + (11 * 40) + \r\n) = 512
-		//  como no hay necesidad de apurar hasta el limite del protocolo
-		//	en lugar de 40 usamos un limite de 35 nicks por respuesta 
-        if (i == 35)
-        {
-            sendNumericReply(client, RPL_NAMREPLY, "= " + channel->getName(), paqNicks.str()); // OJO!!! cuando se implementen los modos gestionar "= "
+		//   como no hay necesidad de apurar hasta el limite del protocolo
+		//	en lugar de 40 usamos un limite de 35 nicks por respuesta
+		if (i == 35)
+		{
+			sendNumericReply(client, RPL_NAMREPLY, "= " + channel->getName(), paqNicks.str()); // OJO!!! cuando se implementen los modos gestionar "= "
 
-            // Limpieza del stream
-            paqNicks.str("");
-            paqNicks.clear();
-            i = 0;
-        }
-    }
-  
-	if (!paqNicks.str().empty()) 
-    {
-        sendNumericReply(client, RPL_NAMREPLY, "= " + channel->getName(), paqNicks.str()); // OJO!!! cuando se implementen los modos gestionar "= "
-    }
+			// Limpieza del stream
+			paqNicks.str("");
+			paqNicks.clear();
+			i = 0;
+		}
+	}
 
-    // Fin del protocolo (RPL_ENDOFNAMES) usando la MISMA función genérica
-    sendNumericReply(client, RPL_ENDOFNAMES, channel->getName(), "End of /NAMES list");
+	if (!paqNicks.str().empty())
+	{
+		sendNumericReply(client, RPL_NAMREPLY, "= " + channel->getName(), paqNicks.str()); // OJO!!! cuando se implementen los modos gestionar "= "
+	}
+
+	// Fin del protocolo (RPL_ENDOFNAMES) usando la MISMA función genérica
+	sendNumericReply(client, RPL_ENDOFNAMES, channel->getName(), "End of /NAMES list");
 }
 
-//crea un canal, retorna referencia al canl creado
-//si el nombre del canal ya estaba en uso, no lo crea, y no falla, retorna referencia ese
-//canal.
+// crea un canal, retorna referencia al canl creado
+// si el nombre del canal ya estaba en uso, no lo crea, y no falla, retorna referencia ese
+// canal.
 Channel &Server::createChannel(const std::string &name)
 {
 	if (_channels_.find(name) != _channels_.end())
@@ -590,9 +593,9 @@ Channel &Server::createChannel(const std::string &name)
 	else
 	{
 		_channels_[name] = Channel(name);
-		//TO DO: instanciar nuevo canal ¿TOPIC o algun otro campo pendiente?
+		// TO DO: instanciar nuevo canal ¿TOPIC o algun otro campo pendiente?
 
-  		std::cout << "[ircserver]: Channel " << name << " created" << std::endl;
+		std::cout << "[ircserver]: Channel " << name << " created" << std::endl;
 	}
 
 	return _channels_[name];
@@ -614,57 +617,57 @@ Client *Server::findClientByNick(const std::string &nick_to_find)
 	return NULL;
 }
 
-//PART COMMMAND
+// PART COMMMAND
 
 void Server::leaveChannel(Client *client, const std::string &nameChannel, const std::string &reason)
 {
-    ResponseBuilder response;
-    int clientFd = client->getFd();
+	ResponseBuilder response;
+	int clientFd = client->getFd();
 
-    // 1. Validar si el canal existe buscando en el std::map _channels_
-    Channel *channelPtr = getChannel(nameChannel); // Seguimos usando tu getChannel seguro
-    if (!channelPtr)
-    {
-        response.prefix(getName())
-            .numeric(ERR_NOSUCHCHANNEL)
-            .target(client->getNick())
-            .trailing(nameChannel + " :No such channel");
-        queueClientData(*client, response.build());
-        std::cerr << "[ircserver]: Error: ERR_NOSUCHCHANNEL para " << nameChannel << std::endl;
-        return;
-    }
+	// 1. Validar si el canal existe buscando en el std::map _channels_
+	Channel *channelPtr = getChannel(nameChannel); // Seguimos usando tu getChannel seguro
+	if (!channelPtr)
+	{
+		response.prefix(getName())
+			.numeric(ERR_NOSUCHCHANNEL)
+			.target(client->getNick())
+			.trailing(nameChannel + " :No such channel");
+		queueClientData(*client, response.build());
+		std::cerr << "[ircserver]: Error: ERR_NOSUCHCHANNEL para " << nameChannel << std::endl;
+		return;
+	}
 
-    Channel &channel = *channelPtr;
+	Channel &channel = *channelPtr;
 
-    // 2. Validar si el usuario está dentro usando isMember de la clase Channel
-    if (!channel.isMember(clientFd))
-    {
-        response.prefix(getName())
-            .numeric(ERR_NOTONCHANNEL)
-            .target(client->getNick())
-            .trailing(nameChannel + " :You're not on that channel");
-        queueClientData(*client, response.build());
-        std::cerr << "[ircserver]: Error: ERR_NOTONCHANNEL en " << nameChannel << std::endl;
-        return;
-    }
+	// 2. Validar si el usuario está dentro usando isMember de la clase Channel
+	if (!channel.isMember(clientFd))
+	{
+		response.prefix(getName())
+			.numeric(ERR_NOTONCHANNEL)
+			.target(client->getNick())
+			.trailing(nameChannel + " :You're not on that channel");
+		queueClientData(*client, response.build());
+		std::cerr << "[ircserver]: Error: ERR_NOTONCHANNEL en " << nameChannel << std::endl;
+		return;
+	}
 
-    // 3. Construir el mensaje de broadcast oficial de PART
-    std::string partMsg = ":" + client->getNick() + "!" + client->getUser() + "@" + client->getIp() + " PART " + nameChannel;
-    if (!reason.empty())
-        partMsg += " :" + reason;
-    partMsg += "\r\n";
+	// 3. Construir el mensaje de broadcast oficial de PART
+	std::string partMsg = ":" + client->getNick() + "!" + client->getUser() + "@" + client->getIp() + " PART " + nameChannel;
+	if (!reason.empty())
+		partMsg += " :" + reason;
+	partMsg += "\r\n";
 
-    // 4. Enviar el broadcast a TODOS en el canal
-    channel.broadcastAll(partMsg, this);
+	// 4. Enviar el broadcast a TODOS en el canal
+	channel.broadcastAll(partMsg, this);
 
-    // 5. Sacar al cliente de la lista de miembros
-    channel.removeClient(clientFd);
+	// 5. Sacar al cliente de la lista de miembros
+	channel.removeClient(clientFd);
 
-    // 6. CONTROL DE MEMORIA LIMPIO CON MAPAS (Adiós al bucle for)
-    // Si el canal se queda vacío, lo borramos directamente por su clave (nombre)
-    if (channel.isEmpty())
-    {
-        _channels_.erase(nameChannel); // El mapa se encarga de todo en una sola línea
-        std::cout << "[ircserver]: Channel " << nameChannel << " deleted de _channels_ (no members left)." << std::endl;
-    }
+	// 6. CONTROL DE MEMORIA LIMPIO CON MAPAS (Adiós al bucle for)
+	// Si el canal se queda vacío, lo borramos directamente por su clave (nombre)
+	if (channel.isEmpty())
+	{
+		_channels_.erase(nameChannel); // El mapa se encarga de todo en una sola línea
+		std::cout << "[ircserver]: Channel " << nameChannel << " deleted de _channels_ (no members left)." << std::endl;
+	}
 }
