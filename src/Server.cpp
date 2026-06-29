@@ -441,6 +441,11 @@ Channel *Server::getChannel(const std::string &name)
 	return NULL;
 }
 
+std::map<std::string, Channel> &Server::getChannels()
+{
+    return _channels_;
+}
+
 bool Server::joinChannel(Client *client, const std::string &nameChannel, const std::string &password)
 {
 
@@ -607,4 +612,59 @@ Client *Server::findClientByNick(const std::string &nick_to_find)
 		}
 	}
 	return NULL;
+}
+
+//PART COMMMAND
+
+void Server::leaveChannel(Client *client, const std::string &nameChannel, const std::string &reason)
+{
+    ResponseBuilder response;
+    int clientFd = client->getFd();
+
+    // 1. Validar si el canal existe buscando en el std::map _channels_
+    Channel *channelPtr = getChannel(nameChannel); // Seguimos usando tu getChannel seguro
+    if (!channelPtr)
+    {
+        response.prefix(getName())
+            .numeric(ERR_NOSUCHCHANNEL)
+            .target(client->getNick())
+            .trailing(nameChannel + " :No such channel");
+        queueClientData(*client, response.build());
+        std::cerr << "[ircserver]: Error: ERR_NOSUCHCHANNEL para " << nameChannel << std::endl;
+        return;
+    }
+
+    Channel &channel = *channelPtr;
+
+    // 2. Validar si el usuario está dentro usando isMember de la clase Channel
+    if (!channel.isMember(clientFd))
+    {
+        response.prefix(getName())
+            .numeric(ERR_NOTONCHANNEL)
+            .target(client->getNick())
+            .trailing(nameChannel + " :You're not on that channel");
+        queueClientData(*client, response.build());
+        std::cerr << "[ircserver]: Error: ERR_NOTONCHANNEL en " << nameChannel << std::endl;
+        return;
+    }
+
+    // 3. Construir el mensaje de broadcast oficial de PART
+    std::string partMsg = ":" + client->getNick() + "!" + client->getUser() + "@" + client->getIp() + " PART " + nameChannel;
+    if (!reason.empty())
+        partMsg += " :" + reason;
+    partMsg += "\r\n";
+
+    // 4. Enviar el broadcast a TODOS en el canal
+    channel.broadcastAll(partMsg, this);
+
+    // 5. Sacar al cliente de la lista de miembros
+    channel.removeClient(clientFd);
+
+    // 6. CONTROL DE MEMORIA LIMPIO CON MAPAS (Adiós al bucle for)
+    // Si el canal se queda vacío, lo borramos directamente por su clave (nombre)
+    if (channel.isEmpty())
+    {
+        _channels_.erase(nameChannel); // El mapa se encarga de todo en una sola línea
+        std::cout << "[ircserver]: Channel " << nameChannel << " deleted de _channels_ (no members left)." << std::endl;
+    }
 }

@@ -48,6 +48,7 @@
 #define ERR_INVITEONLYCHAN  	473
 #define ERR_BADCHANNELKEY   	475
 #define ERR_BADCHANNAME			479
+#define ERR_NOTONCHANNEL        442
 
 // ============================================================
 // ERR — Privmsg
