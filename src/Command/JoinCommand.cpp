@@ -37,8 +37,6 @@ static bool parseChannName(std::string name)
 void JoinCommand::execute(Client *client, Server *server)
 {
 	ResponseBuilder response;
-	std::vector<std::string> chanNames;
-	std::vector<std::string> channPasword;
 
 	if (!client->isAuth())
 	{
@@ -65,6 +63,7 @@ void JoinCommand::execute(Client *client, Server *server)
 		return;
 	}
 	std::vector<std::string> chanNames = splitByComma(params_[0]);
+	std::vector<std::string> channPasword;
 
 	if (params_.size() >= 2)
 		channPasword = splitByComma(params_[1]);
