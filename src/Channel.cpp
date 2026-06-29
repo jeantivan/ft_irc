@@ -119,16 +119,16 @@ std::string Channel::getNickList() const
 
 	for (it = members_.begin(); it != members_.end(); it++)
 	{
-		if(it != members_.begin())
+		if (it != members_.begin())
 			nickList += " ";
 
-		if(operators_.find(it->second->getFd()) != operators_.end())
+		if (operators_.find(it->second->getFd()) != operators_.end())
 			nickList += "@";
 		else
 			nickList += "+";
 
 		nickList += it->second->getNick();
 	}
-std::cout << "[DEBUGG] ln 124" << nickList << std::endl; //BORRAESTO
+	std::cout << "[DEBUGG] ln 124" << nickList << std::endl; // BORRAESTO
 	return nickList;
 }
