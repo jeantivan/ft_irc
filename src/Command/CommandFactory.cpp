@@ -5,6 +5,8 @@
 #include <Command/CapCommand.hpp>
 #include "Command/JoinCommand.hpp"
 #include <Command/PrivMsgCommand.hpp>
+#include <Command/PartCommand.hpp>
+#include <Command/QuitCommand.hpp>
 
 CommandFactory::CommandFactory()
 {
@@ -14,6 +16,8 @@ CommandFactory::CommandFactory()
 	creators_["CAP"] = &CapCommand::create;
 	creators_["JOIN"] = &JoinCommand::create;
 	creators_["PRIVMSG"] = &PrivMsgCommand::create;
+	creators_["PART"] = &PartCommand::create;
+	creators_["QUIT"] = &QuitCommand::create;
 }
 
 CommandFactory::~CommandFactory() {}

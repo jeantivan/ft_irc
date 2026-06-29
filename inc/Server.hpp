@@ -108,6 +108,8 @@ public:
 	Channel *getChannel(const std::string &name);
 	Channel &createChannel(const std::string &name);
 	bool joinChannel(Client *client, const std::string &name, const std::string &password);
+	void leaveChannel(Client *client, const std::string &name, const std::string &reason);
+	std::map<std::string, Channel> &getChannels();
 
 	// Lanza uno o mas RPL_NAMEREPLY y un y RPL_ENDOFNAMES al final
 	void namreply(Client *client, Channel *channel);

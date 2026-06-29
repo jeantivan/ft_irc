@@ -22,6 +22,8 @@ FILES = main.cpp \
 		Command/CapCommand.cpp \
 		Command/JoinCommand.cpp \
 		Command/PrivMsgCommand.cpp \
+		Command/PartCommand.cpp \
+		Command/QuitCommand.cpp \
 		ResponseBuilder.cpp \
 		Channel.cpp
 
