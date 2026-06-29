@@ -26,19 +26,6 @@ Command *PartCommand::create(const std::string &type, const std::vector<std::str
     return new PartCommand(type, params);
 }
 
-static std::vector<std::string> splitByComma(const std::string& str)
-{
-    std::vector<std::string> tokens;
-    std::istringstream ss(str);
-    std::string token;
-
-    while (std::getline(ss, token, ','))
-    {
-        tokens.push_back(token);
-    }
-    return tokens;
-}
-
 void PartCommand::execute(Client *client, Server *server)
 {
     ResponseBuilder response;
