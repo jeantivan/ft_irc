@@ -18,8 +18,8 @@ public:
 	static Command *create(const std::string &type, const std::vector<std::string> &params);
 
 	std::string checkParams(Client *client, Server *server) const;
-	void handleUserResponse(Client *client, Server *server) const;
-	void handleChannelResponse(Client *client, Server *server) const;
+	void handleUserResponse(Client *client, Server *server, const std::string &target) const;
+	void handleChannelResponse(Client *client, Server *server, const std::string &target) const;
 };
 
 #endif // PRIVMSGCOMMAND_HPP

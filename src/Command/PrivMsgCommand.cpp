@@ -65,19 +65,19 @@ std::string PrivMsgCommand::checkParams(Client *client, Server *server) const
 	return "";
 }
 
-void PrivMsgCommand::handleUserResponse(Client *client, Server *server) const
+void PrivMsgCommand::handleUserResponse(Client *client, Server *server, const std::string &target) const
 {
 	ResponseBuilder response;
 
-	Client *recipient = server->findClientByNick(params_[0]);
+	Client *recipient = server->findClientByNick(target);
 
 	if (!recipient)
 	{
 		response.prefix(server->getName())
 			.numeric(ERR_NOSUCHNICK)
 			.target(client->getNick())
-			.params(params_[0])
-			.trailing("No such nick ");
+			.params(target)
+			.trailing("No such nick");
 		server->queueClientData(*client, response.build());
 		std::cout << "[ircserver]: Error ERR_NOSUCHNICK" << params_[0] << std::endl;
 
@@ -92,18 +92,18 @@ void PrivMsgCommand::handleUserResponse(Client *client, Server *server) const
 	std::cout << "[ircserver]: Good: " << response.build() << std::endl;
 }
 
-void PrivMsgCommand::handleChannelResponse(Client *client, Server *server) const
+void PrivMsgCommand::handleChannelResponse(Client *client, Server *server, const std::string &target) const
 {
 	ResponseBuilder response;
 
-	Channel *channel = server->getChannel(params_[0]);
+	Channel *channel = server->getChannel(target);
 
 	if (!channel)
 	{
 		response.prefix(server->getName())
 			.numeric(ERR_NOSUCHCHANNEL)
 			.target(client->getNick())
-			.params(params_[0])
+			.params(target)
 			.trailing("No such channel");
 		server->queueClientData(*client, response.build());
 		std::cout << "[ircserver]: Error ERR_NOSUCHCHANNEL" << std::endl;
@@ -112,9 +112,13 @@ void PrivMsgCommand::handleChannelResponse(Client *client, Server *server) const
 
 	if (!channel->isMember(client->getFd()))
 	{
-		response.prefix(server->getName()).numeric(ERR_NOTONCHANNEL).target(client->getNick()).params(params_[0]).trailing("You're not on that channel");
+		response.prefix(server->getName())
+			.numeric(ERR_NOTONCHANNEL)
+			.target(client->getNick())
+			.params(target)
+			.trailing("You're not on that channel");
 		server->queueClientData(*client, response.build());
-		std::cout << "[ircserver]: ERR_NOTONCHANNEL " << response.build() << std::endl;
+		std::cout << "[ircserver]: ERR_NOTONCHANNEL" << std::endl;
 		return;
 	}
 
@@ -129,8 +133,6 @@ void PrivMsgCommand::handleChannelResponse(Client *client, Server *server) const
 
 void PrivMsgCommand::execute(Client *client, Server *server)
 {
-
-	std::cout << "[ircserver]: PrivMsgCommand execute()" << std::endl;
 	std::string errorParams = checkParams(client, server);
 
 	if (!errorParams.empty())
@@ -139,11 +141,22 @@ void PrivMsgCommand::execute(Client *client, Server *server)
 		return;
 	}
 
-	if (params_[0][0] == '#')
-	{
-		handleChannelResponse(client, server);
-		return;
-	}
+	std::vector<std::string> targets = splitByComma(params_[0]);
 
-	handleUserResponse(client, server);
+	for (size_t i = 0; i < targets.size(); ++i)
+	{
+		std::string currentTarget = targets[i];
+
+		if (currentTarget.empty())
+			continue;
+
+		if (currentTarget[0] == '#')
+		{
+			handleChannelResponse(client, server, currentTarget);
+		}
+		else
+		{
+			handleUserResponse(client, server, currentTarget);
+		}
+	}
 }
