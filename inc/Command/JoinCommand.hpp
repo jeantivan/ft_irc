@@ -2,6 +2,7 @@
 #define JOINCOMMAND_HPP
 
 #include "Command.hpp"
+#include "utils.hpp"
 
 class JoinCommand : public Command
 {

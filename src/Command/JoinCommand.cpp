@@ -22,17 +22,7 @@ JoinCommand::~JoinCommand() {}
 
 JoinCommand::JoinCommand(const std::string &type, const std::vector<std::string> &params) : Command(type, params) {}
 
-// Funciones auxiliares a esecute()
-static void splitByComma(const std::string &str, std::vector<std::string> &tokens)
-{
-	std::istringstream ss(str);
-	std::string token;
-
-	while (std::getline(ss, token, ',')) {
-		tokens.push_back(token);
-	}
-}
-
+// Funciones auxiliares a execute()
 static bool parseChannName(std::string name)
 {
 	if (name[0] != '#')
@@ -62,11 +52,10 @@ void JoinCommand::execute(Client *client, Server *server)
 		return;
 	}
 
-
 	if (params_.size() < 1)
 	{
-		//TO DO:
-		// enviar NEDMOREPARAMS
+		// TO DO:
+		//  enviar NEDMOREPARAMS
 		response.prefix(server->getName())
 			.numeric(ERR_NEEDMOREPARAMS)
 			.target(client->getNick())
@@ -75,12 +64,12 @@ void JoinCommand::execute(Client *client, Server *server)
 		std::cerr << "[ircserver]: Error: ERR_NEEDMOREPARAMS" << std::endl;
 		return;
 	}
-	splitByComma(params_[0], chanNames);
+	std::vector<std::string> chanNames = splitByComma(params_[0]);
 
 	if (params_.size() >= 2)
-		splitByComma(params_[1], channPasword);
-	
-	for(size_t i = 0; i < chanNames.size(); i++)
+		channPasword = splitByComma(params_[1]);
+
+	for (size_t i = 0; i < chanNames.size(); i++)
 	{
 		if (!parseChannName(chanNames[i]))
 		{
