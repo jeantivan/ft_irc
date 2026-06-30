@@ -23,6 +23,7 @@
 * **Subtarea 6.2: Comando `KICK` (Expulsión):** Implementar la lógica para que un operador pueda sacar a un usuario del canal. El servidor debe verificar que quien ejecuta el comando es operador, que el objetivo está en el canal, sacarlo y notificar a todos (incluyendo al expulsado).
 * **Subtarea 6.3: Comando `INVITE` (Invitación):** Permitir a los usuarios (u operadores, dependiendo de los modos) invitar a otros al canal. Si el canal es "solo por invitación", el servidor debe guardar esta invitación en una lista blanca para permitir que el objetivo haga `JOIN` más tarde.
 * **Subtarea 6.4: Comando `TOPIC` (Tema del canal):** Permitir ver o cambiar el tema del canal. Debe respetar el modo `+t` (si está activo, solo los operadores pueden cambiarlo; si no, cualquiera puede).
+	> Recordatorio Antonio: gestionar RPL_TOPICWHOTIME en JOIN.
 * **Subtarea 6.5: Comando `MODE` (El jefe final):** Parsear y aplicar los cambios de configuración del canal. Debes soportar añadir (`+`) o quitar (`-`) exactamente estas banderas exigidas por el proyecto:
     * `i`: Canal solo por invitación.
     * `t`: Restricciones del comando TOPIC (solo operadores).

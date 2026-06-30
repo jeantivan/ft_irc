@@ -513,7 +513,7 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 	}
 	// WELCOME:
 	// - Broadcast :<nick>!<user>@<ip> JOIN #canal
-	channel->broadcastAll(client->getPrefix() + " JOIN " + nameChannel + "\r\n", this);
+	channel->broadcastAll(":" + client->getPrefix() + " JOIN " + nameChannel + "\r\n", this);
 	// - RPL_TOPIC o RPL_NOTOPIC.
 	queueClientData(*client, response.build());
 	// - Envia la lista de miembros con RPL_NAMREPLY y RPL_ENDOFNAMES

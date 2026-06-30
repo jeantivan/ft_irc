@@ -1,6 +1,6 @@
 #include "Client.hpp"
 
-Client::Client() : fd(-1), ip(""), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), password_(""), nick_(""), user_(""), realname_(""), toDisconnect_(false) {}
+Client::Client() : fd(-1), ip(""), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), password_(""), nick_("*"), user_(""), realname_(""), toDisconnect_(false) {}
 
 Client::Client(const Client &other) : fd(other.fd), ip(other.ip), readBuf_(other.readBuf_), writeBuf_(other.writeBuf_), authState_(other.authState_), auth_(other.auth_), password_(other.password_), nick_(other.nick_), user_(other.user_), realname_(other.realname_), toDisconnect_(other.toDisconnect_) {}
 
@@ -26,7 +26,7 @@ Client &Client::operator=(const Client &other)
 
 Client::~Client() {}
 
-Client::Client(int fd, const std::string &ip) : fd(fd), ip(ip), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), password_(""), nick_(""), user_(""), realname_(""), toDisconnect_(false) {}
+Client::Client(int fd, const std::string &ip) : fd(fd), ip(ip), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), password_(""), nick_("*"), user_(""), realname_(""), toDisconnect_(false) {}
 
 int Client::getFd() const
 {
@@ -156,6 +156,8 @@ void Client::eraseFromWriteBuf(size_t len)
 		writeBuf_ = writeBuf_.substr(len);
 }
 
+// notese que no contiene los :, debido a que ResponseBuilder::prefix() ya lo incluye.
+// sin embargo, Channel::brodacaslAll() no sabe si el mansaje llevara prefijo y no lo incluye
 std::string Client::getPrefix() const
 {
 	return nick_ + "!" + user_ + "@" + ip;
