@@ -113,12 +113,12 @@ void PrivMsgCommand::handleChannelResponse(Client *client, Server *server, const
 	if (!channel->isMember(client->getFd()))
 	{
 		response.prefix(server->getName())
-			.numeric(ERR_NOTONCHANNEL)
+			.numeric(ERR_CANNOTSENDTOCHAN)
 			.target(client->getNick())
 			.params(target)
 			.trailing("You're not on that channel");
 		server->queueClientData(*client, response.build());
-		std::cout << "[ircserver]: ERR_NOTONCHANNEL" << std::endl;
+		std::cout << "[ircserver]: ERR_CANNOTSENDTOCHAN " << response.build() << std::endl;
 		return;
 	}
 
