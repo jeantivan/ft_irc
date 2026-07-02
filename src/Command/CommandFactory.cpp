@@ -7,6 +7,7 @@
 #include <Command/PrivMsgCommand.hpp>
 #include <Command/PartCommand.hpp>
 #include <Command/QuitCommand.hpp>
+#include <Command/PingCommand.hpp>
 
 CommandFactory::CommandFactory()
 {
@@ -18,6 +19,7 @@ CommandFactory::CommandFactory()
 	creators_["PRIVMSG"] = &PrivMsgCommand::create;
 	creators_["PART"] = &PartCommand::create;
 	creators_["QUIT"] = &QuitCommand::create;
+	creators_["PING"] = &PingCommand::create;
 }
 
 CommandFactory::~CommandFactory() {}
