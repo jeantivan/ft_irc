@@ -28,6 +28,35 @@ Command *PingCommand::create(const std::string &type, const std::vector<std::str
 
 void PingCommand::execute(Client *client, Server *server)
 {
-	(void)client;
-	(void)server;
+	ResponseBuilder response;
+
+	if (params_.empty() || (params_.size() < 2 && params_[0].empty()))
+	{
+		response.prefix(server->getName())
+			.numeric(ERR_NOORIGIN)
+			.target(client->getNick().empty() ? "*" : client->getNick())
+			.trailing("No origin specified");
+		server->queueClientData(*client, response.build());
+		std::cout << "[ircserv]: ERR_NOORIGIN " << response.build() << std::endl;
+		return;
+	}
+
+	if (params_.size() > 1 && params_[1] != server->getName())
+	{
+		response.prefix(server->getName())
+			.numeric(ERR_NOSUCHSERVER)
+			.target(client->getNick().empty() ? "*" : client->getNick())
+			.params(params_[1])
+			.trailing("No such server");
+		server->queueClientData(*client, response.build());
+		std::cout << "[ircserv]: ERR_NOSUCHSERVER " << response.build() << std::endl;
+		return;
+	}
+
+	response.prefix(server->getName())
+		.target(server->getName())
+		.command("PONG")
+		.trailing(params_[0]);
+	server->queueClientData(*client, response.build());
+	std::cout << "[ircserv]: PONG response " << response.build() << std::endl;
 }
