@@ -42,6 +42,7 @@ void NickCommand::execute(Client *client, Server *server)
 {
 	ResponseBuilder response;
 
+	
 	// ERR_NOTREGISTERED (451)
 	if (!(client->getState() & AUTH_PASS))
 	{

@@ -52,7 +52,6 @@ void QuitCommand::execute(Client *client, Server *server)
         channels.erase(channelsToRemove[i]);
         std::cout << "[ircserver]: Channel " << channelsToRemove[i] << " deleted during QUIT (no members left)." << std::endl;
     }
-
 	// Comprobamos si hay datos pendientes de envio en writeBuf().
 	// - Si no los hay simplemente desconectamos al cliente.
 	// - Si hay datos pendientes de envio marcamos al cliente toDisconnect_ y suponemos que quien encolase esos datos tambien activase POLLOUT en pollfd->events

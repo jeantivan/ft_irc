@@ -663,6 +663,7 @@ void Server::leaveChannel(Client *client, const std::string &nameChannel, const 
 
 	// 5. Sacar al cliente de la lista de miembros
 	channel.removeClient(clientFd);
+	std::cout << "[ircserver]: " << client->getNick() << " leave " << nameChannel << "reason" << reason << std::endl;
 
 	// 6. CONTROL DE MEMORIA LIMPIO CON MAPAS (Adiós al bucle for)
 	// Si el canal se queda vacío, lo borramos directamente por su clave (nombre)
