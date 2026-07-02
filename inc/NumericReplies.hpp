@@ -64,4 +64,9 @@
 #define ERR_NOORIGIN			409
 #define ERR_NOSUCHSERVER		402
 
+// ============================================================
+// ERR — Unknown
+// ============================================================
+#define ERR_UNKNOWNCOMMAND		421
+
 #endif

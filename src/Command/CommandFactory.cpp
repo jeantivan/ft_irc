@@ -8,6 +8,7 @@
 #include <Command/PartCommand.hpp>
 #include <Command/QuitCommand.hpp>
 #include <Command/PingCommand.hpp>
+#include <Command/UnknownCommand.hpp>
 
 CommandFactory::CommandFactory()
 {
@@ -44,5 +45,6 @@ Command *CommandFactory::createCommand(const std::string &type, const std::vecto
 	{
 		return it->second(type, params);
 	}
-	return NULL;
+	Command *unknown = UnknownCommand::create(type, params);
+	return unknown;
 }
