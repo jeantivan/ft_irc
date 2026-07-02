@@ -58,4 +58,8 @@
 #define ERR_NOSUCHNICK			401
 #define ERR_CANNOTSENDTOCHAN	404
 
+// ============================================================
+// ERR — Ping/Pong
+// ============================================================
+#define ERR_NOORIGIN			409
 #endif
