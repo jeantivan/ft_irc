@@ -22,17 +22,7 @@ JoinCommand::~JoinCommand() {}
 
 JoinCommand::JoinCommand(const std::string &type, const std::vector<std::string> &params) : Command(type, params) {}
 
-// Funciones auxiliares a esecute()
-static void splitByComma(const std::string &str, std::vector<std::string> &tokens)
-{
-	std::istringstream ss(str);
-	std::string token;
-
-	while (std::getline(ss, token, ',')) {
-		tokens.push_back(token);
-	}
-}
-
+// Funciones auxiliares a execute()
 static bool parseChannName(std::string name)
 {
 	if (name[0] != '#')
@@ -47,8 +37,6 @@ static bool parseChannName(std::string name)
 void JoinCommand::execute(Client *client, Server *server)
 {
 	ResponseBuilder response;
-	std::vector<std::string> chanNames;
-	std::vector<std::string> channPasword;
 
 	if (!client->isAuth())
 	{
@@ -62,11 +50,10 @@ void JoinCommand::execute(Client *client, Server *server)
 		return;
 	}
 
-
 	if (params_.size() < 1)
 	{
-		//TO DO:
-		// enviar NEDMOREPARAMS
+		// TO DO:
+		//  enviar NEDMOREPARAMS
 		response.prefix(server->getName())
 			.numeric(ERR_NEEDMOREPARAMS)
 			.target(client->getNick())
@@ -75,13 +62,34 @@ void JoinCommand::execute(Client *client, Server *server)
 		std::cerr << "[ircserver]: Error: ERR_NEEDMOREPARAMS" << std::endl;
 		return;
 	}
-	splitByComma(params_[0], chanNames);
+
+
+
+	std::vector<std::string> chanNames = splitByComma(params_[0]);
+	std::vector<std::string> channPasword;
 
 	if (params_.size() >= 2)
-		splitByComma(params_[1], channPasword);
-	
-	for(size_t i = 0; i < chanNames.size(); i++)
+		channPasword = splitByComma(params_[1]);
+
+	for (size_t i = 0; i < chanNames.size(); i++)
 	{
+
+		if (chanNames[i] == "0") // el nombre chanNames[] queda mal aqui, tcnicamente 0 no es un nombre de canal
+		{
+			std::vector<std::string> channelsToLeave;
+			std::map<std::string, Channel> &channels = server->getChannels();
+			int clientFd = client->getFd();
+
+			for (std::map<std::string, Channel>::iterator it = channels.begin(); it != channels.end(); ++it)
+			{
+				if (it->second.isMember(clientFd))
+					channelsToLeave.push_back(it->first);
+			}
+			for (size_t i = 0; i < channelsToLeave.size(); ++i)
+				server->leaveChannel(client, channelsToLeave[i], "Left all channels");
+			continue;
+		}
+
 		if (!parseChannName(chanNames[i]))
 		{
 			response.prefix(server->getName())
@@ -90,7 +98,7 @@ void JoinCommand::execute(Client *client, Server *server)
 				.trailing("Illegal channel name");
 			std::cerr << "[ircserver]: Error: ERR_BADCHANNAME" << std::endl;
 			server->queueClientData(*client, response.build());
-			return;
+			continue; // OJOOO no descartar este cambio SI es importante, queremos continuar parseando nombres aunque uno de la lista este mal formado.
 		}
 		if (i < channPasword.size())
 			server->joinChannel(client, chanNames[i], channPasword[i]);

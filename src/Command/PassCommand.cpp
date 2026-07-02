@@ -31,7 +31,7 @@ void PassCommand::execute(Client *client, Server *server)
 	}
 	else if (client->isAuth() == true)
 	{
-		response.prefix(server->getName()).numeric(ERR_ALREADYREGISTRED).target("*").trailing("Unauthorized command (already registered)");
+		response.prefix(server->getName()).numeric(ERR_ALREADYREGISTRED).target(client->getNick()).trailing("Unauthorized command (already registered)");
 		std::cerr << "[ircserver]: Client <" << client->getFd() << " Error: Unauthorized command (already registered)" << std::endl;
 	}
 	else
