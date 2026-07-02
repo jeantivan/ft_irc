@@ -53,6 +53,15 @@ void QuitCommand::execute(Client *client, Server *server)
         std::cout << "[ircserver]: Channel " << channelsToRemove[i] << " deleted during QUIT (no members left)." << std::endl;
     }
 
+	// Comprobamos si hay datos pendientes de envio en writeBuf().
+	// - Si no los hay simplemente desconectamos al cliente.
+	// - Si hay datos pendientes de envio marcamos al cliente toDisconnect_ y suponemos que quien encolase esos datos tambien activase POLLOUT en pollfd->events
+	//
+	// Algunas cuestiones que señalar: 
+	// 	Tal vez esta lógica estaría mejor en un handler de Server "requestDisconection()".
+	//	La necesidad de usar toDisconnect() viene porque a veces necesitamos terminar de enviar
+	//respuestas a un cliente antes de desconectarle. Ademas, no podemos bloquear el proceso cuando el cliente pausa la
+	//lectura de datos del socket.
 	if (client->getWriteBuf().empty())
 	{
 		std::cout << "[ircserver]: Client " << client->getNick() << "  has no pending responses." << std::endl;

@@ -62,6 +62,22 @@ void JoinCommand::execute(Client *client, Server *server)
 		std::cerr << "[ircserver]: Error: ERR_NEEDMOREPARAMS" << std::endl;
 		return;
 	}
+
+	if (params_[0] == "0")
+	{
+		std::vector<std::string> channelsToLeave;
+		std::map<std::string, Channel> &channels = server->getChannels();
+
+		for (std::map<std::string, Channel>::iterator it = channels.begin(); it != channels.end(); ++it)
+		{
+			if (it->second.isMember(client->getFd()))
+				channelsToLeave.push_back(it->first);
+		}
+		for (size_t i = 0; i < channelsToLeave.size(); ++i)
+			server->leaveChannel(client, channelsToLeave[i], "Left all channels");
+		return;
+	}
+
 	std::vector<std::string> chanNames = splitByComma(params_[0]);
 	std::vector<std::string> channPasword;
 
