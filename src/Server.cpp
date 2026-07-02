@@ -228,7 +228,7 @@ void Server::receiveClientData(size_t client_index)
 	{
 		if (bytes_received == 0)
 		{
-			std::cout << "[ircserver]: Client " << client_fd << " disconnected" << std::endl;
+			std::cout << "[ircserver]: Client " << client_fd << " disconnected (Closed client end)" << std::endl; // ¿¿¿Es correcto el mensaje???
 		}
 		else
 		{
@@ -294,6 +294,7 @@ void Server::disconnectClient(int fd)
 			break;
 		}
 	}
+	std::cout << "[ircserver]: Client " << fd << " disconnected (The server did it)" << std::endl;
 }
 
 /*
@@ -662,6 +663,7 @@ void Server::leaveChannel(Client *client, const std::string &nameChannel, const 
 
 	// 5. Sacar al cliente de la lista de miembros
 	channel.removeClient(clientFd);
+	std::cout << "[ircserver]: " << client->getNick() << " leave " << nameChannel << "reason" << reason << std::endl;
 
 	// 6. CONTROL DE MEMORIA LIMPIO CON MAPAS (Adiós al bucle for)
 	// Si el canal se queda vacío, lo borramos directamente por su clave (nombre)
