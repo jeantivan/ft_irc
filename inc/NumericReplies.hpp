@@ -62,4 +62,6 @@
 // ERR — Ping/Pong
 // ============================================================
 #define ERR_NOORIGIN			409
+#define ERR_NOSUCHSERVER		402
+
 #endif
