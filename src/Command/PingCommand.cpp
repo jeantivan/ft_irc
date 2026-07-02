@@ -30,7 +30,7 @@ void PingCommand::execute(Client *client, Server *server)
 {
 	ResponseBuilder response;
 
-	if (params_.empty() || (params_.size() < 2 && params_[0].empty()))
+	if (params_.empty() || params_[0].empty())
 	{
 		response.prefix(server->getName())
 			.numeric(ERR_NOORIGIN)
