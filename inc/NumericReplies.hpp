@@ -67,6 +67,6 @@
 // ============================================================
 // ERR — Unknown
 // ============================================================
-#define ERR_UNKNOWNCOMMAND		421
+// ERR_UNKNOWNCOMMAND already defined above (keep a single definition)
 
 #endif
