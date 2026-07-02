@@ -53,8 +53,16 @@ void QuitCommand::execute(Client *client, Server *server)
         std::cout << "[ircserver]: Channel " << channelsToRemove[i] << " deleted during QUIT (no members left)." << std::endl;
     }
 
-    client->setToDisconnect(); //desconexion del cliente
-    std::cout << "[ircserver]: Client " << client->getNick() << " marked to disconnect via QUIT command." << std::endl;
+	if (client->getWriteBuf().empty())
+	{
+		std::cout << "[ircserver]: Client " << client->getNick() << "  has no pending responses." << std::endl;
+		server->disconnectClient(client->getFd());
+	}
+	else
+	{
+	    client->setToDisconnect(); //desconexion del cliente
+    	std::cout << "[ircserver]: Client " << client->getNick() << " marked to disconnect via QUIT command." << std::endl;
+	}
 }
 
 Command *QuitCommand::create(const std::string &type, const std::vector<std::string> &params)

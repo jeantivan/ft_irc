@@ -59,6 +59,8 @@ public:
 	void setNick(const std::string &nick);
 	void setUser(const std::string &user);
 	void setRealname(const std::string &realname);
+	/* Pospone la desconexion del cliente, al momento en que se vacie su buffer de salida.
+	POLLOUT debe estar activado en pollfd.events para que la desconexion surta efecto*/
 	void setToDisconnect();
 
 	bool hasCompleteCommand();
