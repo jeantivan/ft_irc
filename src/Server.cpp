@@ -646,7 +646,8 @@ void Server::leaveChannel(Client *client, const std::string &nameChannel, const 
 		response.prefix(getName())
 			.numeric(ERR_NOTONCHANNEL)
 			.target(client->getNick())
-			.trailing(nameChannel + " :You're not on that channel");
+			.params(nameChannel)
+			.trailing("You're not on that channel");
 		queueClientData(*client, response.build());
 		std::cerr << "[ircserver]: Error: ERR_NOTONCHANNEL en " << nameChannel << std::endl;
 		return;
