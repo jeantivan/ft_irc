@@ -25,6 +25,7 @@ void QuitCommand::execute(Client *client, Server *server)
     {
         reason = params_[0];
     }
+
     std::string quitMsg = ":" + client->getNick() + "!" + client->getUser() + "@" + client->getIp() + " QUIT :" + reason + "\r\n";
     std::map<std::string, Channel> &channels = server->getChannels(); 
     std::map<std::string, Channel>::iterator it = channels.begin();
@@ -36,8 +37,12 @@ void QuitCommand::execute(Client *client, Server *server)
         
         if (channel.isMember(client->getFd()))
         {
+            channel.removeClient(client->getFd());	/*¿Por que cambié esta linea de lugar?
+		Creo que el cliente que hizo QUIT no debe recibir los mensajes de broadcast, de cada canal al que
+		pertenecia:
+		"This message may also be sent from the server to a client to show that a client has exited from
+		the network. This is typically only dispatched to clients that share a channel with the exiting user." */
             channel.broadcastAll(quitMsg, server);
-            channel.removeClient(client->getFd());
             
             if (channel.isEmpty())
             {
@@ -52,25 +57,16 @@ void QuitCommand::execute(Client *client, Server *server)
         channels.erase(channelsToRemove[i]);
         std::cout << "[ircserver]: Channel " << channelsToRemove[i] << " deleted during QUIT (no members left)." << std::endl;
     }
-	// Comprobamos si hay datos pendientes de envio en writeBuf().
-	// - Si no los hay simplemente desconectamos al cliente.
-	// - Si hay datos pendientes de envio marcamos al cliente toDisconnect_ y suponemos que quien encolase esos datos tambien activase POLLOUT en pollfd->events
-	//
-	// Algunas cuestiones que señalar: 
-	// 	Tal vez esta lógica estaría mejor en un handler de Server "requestDisconection()".
-	//	La necesidad de usar toDisconnect() viene porque a veces necesitamos terminar de enviar
-	//respuestas a un cliente antes de desconectarle. Ademas, no podemos bloquear el proceso cuando el cliente pausa la
-	//lectura de datos del socket.
-	if (client->getWriteBuf().empty())
-	{
-		std::cout << "[ircserver]: Client " << client->getNick() << "  has no pending responses." << std::endl;
-		server->disconnectClient(client->getFd());
-	}
-	else
-	{
-	    client->setToDisconnect(); //desconexion del cliente
-    	std::cout << "[ircserver]: Client " << client->getNick() << " marked to disconnect via QUIT command." << std::endl;
-	}
+
+	/*ESTE ERROR NO ES UN ERROR, cito:
+		"The QUIT command is used to terminate a client’s connection to the server. The server acknowledges this
+		by replying with an ERROR message and closing the connection to the client."	
+		Fuente: https://modern.ircdocs.horse/#quit-message
+
+	Ademas, este mensaje activa POLLOUT, ahora un cliente puede hacer QUIT, aunque no haya terminado la fase
+		de registro, ni esté en ningun canal*/
+	server->queueClientData(*client, "ERROR :Closing Link: " + client->getNick() + "[" + client->getIp() + "] ( QUIT: " + reason + ")\r\n");
+	client->setToDisconnect();
 }
 
 Command *QuitCommand::create(const std::string &type, const std::vector<std::string> &params)
