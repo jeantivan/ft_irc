@@ -396,6 +396,9 @@ void Server::signalHandler(int signal)
 	Server::signal_received_ = true;
 }
 
+// Añade datos al writeBuf_ de client.
+// Activa POLLOUT para que poll() de paso al cliente en cuanto este disponible para recibir datos
+// Si el cliente esta marcado toDisconnect_ (teardown), no escribe en su buffer.
 void Server::queueClientData(Client &client, const std::string &data)
 {
 	size_t id = findConnectionByFd(client.getFd());
@@ -406,7 +409,8 @@ void Server::queueClientData(Client &client, const std::string &data)
 		return;
 	}
 	connections_[id].events |= POLLOUT;
-	client.appendToWriteBuf(data);
+	if (!client.getToDisconnect()) // No queremos seguir metiendo datos en el buffer de un cliente en teardown.
+		client.appendToWriteBuf(data);
 }
 
 // NICK COMMAND
