@@ -5,7 +5,7 @@
 #include <ctime>
 #include <sstream>
 
-Server::Server() : port_(""), listener_(-1), password_(""), nameServer_(NAME_SERVER), creationDate_(time(NULL)) {}
+Server::Server() : port_(""), listener_(-1), password_(""), nameServer_(NAME_SERVER), creationDate_(time(NULL)), checkZombiesDate_(creationDate_ + PERIODICCHECK) {}
 
 Server::~Server()
 {
@@ -31,7 +31,7 @@ Server::~Server()
 	used_nicks_.clear(); // Limpiar los nicks
 }
 
-Server::Server(const Server &other) : port_(other.port_), listener_(other.listener_), password_(other.password_), nameServer_(other.nameServer_), creationDate_(time(NULL)) {}
+Server::Server(const Server &other) : port_(other.port_), listener_(other.listener_), password_(other.password_), nameServer_(other.nameServer_), creationDate_(other.creationDate_), checkZombiesDate_(other.checkZombiesDate_) {}
 
 Server &Server::operator=(const Server &other)
 {
@@ -42,12 +42,13 @@ Server &Server::operator=(const Server &other)
 		password_ = other.password_;
 		nameServer_ = other.nameServer_;
 		creationDate_ = other.creationDate_;
+		checkZombiesDate_ = other.checkZombiesDate_;
 	}
 
 	return *this;
 }
 
-Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass), nameServer_(NAME_SERVER), creationDate_(time(NULL)), used_nicks_()
+Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass), nameServer_(NAME_SERVER), creationDate_(time(NULL)), checkZombiesDate_(creationDate_ + PERIODICCHECK), used_nicks_()
 {
 	init();
 
@@ -149,7 +150,7 @@ void Server::run()
 	std::cout << "[ircserver]: Waiting for connections" << std::endl;
 	while (Server::signal_received_ == false)
 	{
-		int pool_count = poll(&connections_[0], connections_.size(), -1);
+		int pool_count = poll(&connections_[0], connections_.size(), UNBLOCKPOLL);
 
 		if (pool_count == -1)
 		{
@@ -182,6 +183,15 @@ void Server::run()
 					// std::cerr << "Error: Not all client<" << connections_[i].fd << ", " << clients_[connections_[i].fd].getFd() << "> data could be sent" << std::endl;
 				}
 			}
+		}
+
+		//Limpiamos clientes toDisconnect desde mas de  TEARDOWNTIMEMAX segundos
+		if (time(NULL) > checkZombiesDate_)
+		{
+			dezombify();
+			// Programamos proximo checkeo
+			checkZombiesDate_ = time(NULL) + PERIODICCHECK;
+		
 		}
 	}
 }
@@ -677,4 +687,21 @@ void Server::leaveChannel(Client *client, const std::string &nameChannel, const 
 		_channels_.erase(nameChannel); // El mapa se encarga de todo en una sola línea
 		std::cout << "[ircserver]: Channel " << nameChannel << " deleted de _channels_ (no members left)." << std::endl;
 	}
+}
+
+void Server::dezombify()
+{
+	std::vector<int> toKill;
+	std::map<int, Client>::iterator it;
+	for(it = clients_.begin(); it != clients_.end(); ++it)
+	{
+		if(it->second.getToDisconnect()
+			&& it->second.getToDisconnectSinze() + TEARDOWNTIMEMAX < time(NULL))
+		{
+			toKill.push_back(it->first); // si hicieramos disconnectClient() aqui el iterador quedaria inconsistente
+		}
+	}
+
+	for (size_t i = 0; i < toKill.size(); ++i)
+        disconnectClient(toKill[i]);
 }

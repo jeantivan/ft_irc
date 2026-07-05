@@ -118,6 +118,7 @@ void Client::setRealname(const std::string &realname)
 void Client::setToDisconnect()
 {
 	toDisconnect_ = true;
+	toDisconnectSince_ = time(NULL);
 }
 
 bool Client::hasCompleteCommand()
@@ -161,4 +162,9 @@ void Client::eraseFromWriteBuf(size_t len)
 std::string Client::getPrefix() const
 {
 	return nick_ + "!" + user_ + "@" + ip;
+}
+
+time_t Client::getToDisconnectSinze() const
+{
+	return toDisconnectSince_;
 }
