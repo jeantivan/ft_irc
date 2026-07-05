@@ -1,8 +1,8 @@
 #include "Client.hpp"
 
-Client::Client() : fd(-1), ip(""), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), password_(""), nick_("*"), user_(""), realname_(""), toDisconnect_(false) {}
+Client::Client() : fd(-1), ip(""), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), password_(""), nick_("*"), user_(""), realname_(""), toDisconnect_(false), lastPong_(0) {}
 
-Client::Client(const Client &other) : fd(other.fd), ip(other.ip), readBuf_(other.readBuf_), writeBuf_(other.writeBuf_), authState_(other.authState_), auth_(other.auth_), password_(other.password_), nick_(other.nick_), user_(other.user_), realname_(other.realname_), toDisconnect_(other.toDisconnect_) {}
+Client::Client(const Client &other) : fd(other.fd), ip(other.ip), readBuf_(other.readBuf_), writeBuf_(other.writeBuf_), authState_(other.authState_), auth_(other.auth_), password_(other.password_), nick_(other.nick_), user_(other.user_), realname_(other.realname_), toDisconnect_(other.toDisconnect_), lastPong_(other.lastPong_) {}
 
 Client &Client::operator=(const Client &other)
 {
@@ -19,6 +19,7 @@ Client &Client::operator=(const Client &other)
 		user_ = other.user_;
 		realname_ = other.realname_;
 		toDisconnect_ = other.toDisconnect_;
+		lastPong_ = other.lastPong_;
 	}
 
 	return *this;
@@ -26,7 +27,7 @@ Client &Client::operator=(const Client &other)
 
 Client::~Client() {}
 
-Client::Client(int fd, const std::string &ip) : fd(fd), ip(ip), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), password_(""), nick_("*"), user_(""), realname_(""), toDisconnect_(false) {}
+Client::Client(int fd, const std::string &ip) : fd(fd), ip(ip), readBuf_(""), writeBuf_(""), authState_(AUTH_NONE), auth_(false), password_(""), nick_("*"), user_(""), realname_(""), toDisconnect_(false), lastPong_(0) {}
 
 int Client::getFd() const
 {
@@ -83,6 +84,11 @@ bool Client::getToDisconnect() const
 	return toDisconnect_;
 }
 
+time_t Client::getLastPong() const
+{
+	return lastPong_;
+}
+
 void Client::setAuth(bool auth)
 {
 	auth_ = auth;
@@ -118,6 +124,11 @@ void Client::setRealname(const std::string &realname)
 void Client::setToDisconnect()
 {
 	toDisconnect_ = true;
+}
+
+void Client::setLastPong(time_t pongRpl)
+{
+	lastPong_ = pongRpl;
 }
 
 bool Client::hasCompleteCommand()

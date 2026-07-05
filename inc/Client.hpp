@@ -29,6 +29,7 @@ private:
 	std::string user_;
 	std::string realname_;
 	bool toDisconnect_;
+	time_t lastPong_;
 
 public:
 	Client();
@@ -51,6 +52,7 @@ public:
 	const std::string &getRealname() const;
 	bool getToDisconnect() const;
 	std::string getPrefix() const;
+	time_t getLastPong() const;
 
 	// Setters;
 	void setAuthState(AuthState);
@@ -62,6 +64,7 @@ public:
 	/* Pospone la desconexion del cliente, al momento en que se vacie su buffer de salida.
 	POLLOUT debe estar activado en pollfd.events para que la desconexion surta efecto*/
 	void setToDisconnect();
+	void setLastPong(time_t pongRpl);
 
 	bool hasCompleteCommand();
 	std::string extractCommand();

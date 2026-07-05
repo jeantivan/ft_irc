@@ -28,6 +28,7 @@
 #define NAME_SERVER "IRC_Serv" //maximo 9 caracteres (RPL_s construidas con esa convencion)
 #define SERVER_VERSION "Beta"
 #define MAX_CHANNEL_MEMBERS 200
+#define PINGTIMEOUT 10 //SOLO TEST cambiar a 60
 
 class Channel;
 class Server
@@ -42,6 +43,10 @@ private:
 	std::map<int, Client> clients_;
 	std::set<std::string> used_nicks_;
 	std::map<std::string, Channel> _channels_;
+	//Ping date cumple dos funciones:
+	// - Se usa para decidir cuando checkear pings, y enviar nuevo ping.
+	// - Tambien se usa como token del propio ping
+	time_t pingDate_;
 
 	// Constructors private to avoid duplication of the Server
 	Server();
@@ -69,6 +74,14 @@ public:
 
 	// Main loop to handle connections and data.
 	void run();
+
+	// Recorre todo el atributo clients_ desconectando a los que no respondieran al ultimo ping
+	void checkPong();
+	
+	// Comprueba si pasaron 60 segundos desde el ultimo ping
+	// llama a checkpong, para que limpie qlientes zombies
+	// Lanza un nuevo ping
+	void pruneZombieClients();
 
 	// Accept new client connection
 	void acceptNewClient();

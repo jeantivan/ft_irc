@@ -5,7 +5,7 @@
 #include <ctime>
 #include <sstream>
 
-Server::Server() : port_(""), listener_(-1), password_(""), nameServer_(NAME_SERVER), creationDate_(time(NULL)) {}
+Server::Server() : port_(""), listener_(-1), password_(""), nameServer_(NAME_SERVER), creationDate_(time(NULL)), pingDate_(time(NULL)) {}
 
 Server::~Server()
 {
@@ -31,7 +31,7 @@ Server::~Server()
 	used_nicks_.clear(); // Limpiar los nicks
 }
 
-Server::Server(const Server &other) : port_(other.port_), listener_(other.listener_), password_(other.password_), nameServer_(other.nameServer_), creationDate_(time(NULL)) {}
+Server::Server(const Server &other) : port_(other.port_), listener_(other.listener_), password_(other.password_), nameServer_(other.nameServer_), creationDate_(time(NULL)), pingDate_(time(NULL)) {}
 
 Server &Server::operator=(const Server &other)
 {
@@ -42,12 +42,13 @@ Server &Server::operator=(const Server &other)
 		password_ = other.password_;
 		nameServer_ = other.nameServer_;
 		creationDate_ = other.creationDate_;
+		pingDate_ = other.pingDate_;
 	}
 
 	return *this;
 }
 
-Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass), nameServer_(NAME_SERVER), creationDate_(time(NULL)), used_nicks_()
+Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass), nameServer_(NAME_SERVER), creationDate_(time(NULL)), used_nicks_(), pingDate_(time(NULL))
 {
 	init();
 
@@ -144,12 +145,52 @@ void Server::init()
 	listener_ = listener;
 }
 
+void Server::checkPong()
+{
+    std::vector<int> toKill;
+    std::map<int, Client>::iterator it;
+    for (it = clients_.begin(); it != clients_.end(); ++it)
+    {
+        if (it->second.getLastPong() == 0)	//aun no se le envio ningun ping
+            it->second.setLastPong(1);		// marcamos que se leenviara su primer ping en breve
+        else if (it->second.getLastPong() != pingDate_)	// No contesto el pong adecuado a tiempo
+        {
+            if (it->second.getToDisconnect())	//Esta en teardown, y ademas no contesto el ultimo ping, nos lo cargamos.
+                toKill.push_back(it->first);
+            else
+            {
+                queueClientData(it->second, "ERROR :PING timeout");
+                it->second.setToDisconnect();
+            }
+        }
+    }
+    for (size_t i = 0; i < toKill.size(); ++i)
+        disconnectClient(toKill[i]);
+}
+
+void Server::pruneZombieClients()
+{
+	if ((pingDate_ + PINGTIMEOUT) <= time(NULL))  // ¿Ha caducado el ping anterior?
+	{
+		checkPong();
+		pingDate_ = time(NULL);
+		// lanza PING
+		std::ostringstream oss;
+		oss << "PING " << pingDate_;
+		std::map<int, Client>::iterator it;
+		for (it = clients_.begin(); it != clients_.end(); ++it)
+		{
+			queueClientData(it->second, oss.str());
+		}
+	}
+}
+
 void Server::run()
 {
 	std::cout << "[ircserver]: Waiting for connections" << std::endl;
 	while (Server::signal_received_ == false)
 	{
-		int pool_count = poll(&connections_[0], connections_.size(), -1);
+		int pool_count = poll(&connections_[0], connections_.size(), (PINGTIMEOUT * 1000)); // cada 60 segundos poll debe desbloquearse para hacer ping
 
 		if (pool_count == -1)
 		{
@@ -183,6 +224,10 @@ void Server::run()
 				}
 			}
 		}
+
+		pruneZombieClients();
+
+
 	}
 }
 
