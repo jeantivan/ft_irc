@@ -48,7 +48,7 @@ Server &Server::operator=(const Server &other)
 	return *this;
 }
 
-Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass), nameServer_(NAME_SERVER), creationDate_(time(NULL)), checkZombiesDate_(creationDate_ + PERIODICCHECK), used_nicks_()
+Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass), nameServer_(NAME_SERVER), creationDate_(time(NULL)), used_nicks_(), checkZombiesDate_(creationDate_ + PERIODICCHECK)
 {
 	init();
 
@@ -245,7 +245,9 @@ void Server::receiveClientData(size_t client_index)
 			std::cerr << "[ircserver]: recv failed on client " << client_fd << " " << std::strerror(errno) << std::endl;
 		}
 
-		disconnectClient(client_fd);
+
+		disconnectClient(client_fd); //esta dejando enlaces colgantes al cliente desconectado en los canales
+		//mejor emular un quitcommand, para eliminar al cliente de los canales
 		return;
 	}
 
@@ -691,17 +693,15 @@ void Server::leaveChannel(Client *client, const std::string &nameChannel, const 
 
 void Server::dezombify()
 {
-	std::vector<int> toKill;
-	std::map<int, Client>::iterator it;
-	for(it = clients_.begin(); it != clients_.end(); ++it)
-	{
-		if(it->second.getToDisconnect()
-			&& it->second.getToDisconnectSinze() + TEARDOWNTIMEMAX < time(NULL))
-		{
-			toKill.push_back(it->first); // si hicieramos disconnectClient() aqui el iterador quedaria inconsistente
-		}
-	}
+    std::map<int, Client>::iterator it = clients_.begin();
+    while (it != clients_.end())
+    {
+        int fd = it->first;
+        bool zombie = it->second.getToDisconnect()
+            && it->second.getToDisconnectSinze() + TEARDOWNTIMEMAX < time(NULL);
+        ++it;
 
-	for (size_t i = 0; i < toKill.size(); ++i)
-        disconnectClient(toKill[i]);
+        if (zombie)
+            disconnectClient(fd);
+    }
 }
