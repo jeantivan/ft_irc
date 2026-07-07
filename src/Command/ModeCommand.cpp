@@ -29,6 +29,45 @@ Command *ModeCommand::create(const std::string &type, const std::vector<std::str
 
 void ModeCommand::execute(Client *client, Server *server)
 {
-	(void)client;
-	(void)server;
+	ResponseBuilder response;
+
+	if (!client->isAuth())
+	{
+		response
+			.prefix(server->getName())
+			.numeric(ERR_NOTREGISTERED)
+			.target(client->getNick().empty() ? "*" : client->getNick())
+			.trailing("You have not registered");
+		server->queueClientData(*client, response.build());
+		std::cout << "[ircserver]: Error ERR_NOTREGISTERED " << type_ << std::endl;
+		return;
+	}
+
+	Channel *chan = server->getChannel(params_[0]);
+	if (!chan)
+	{
+		response.prefix(server->getName())
+			.numeric(ERR_NOSUCHCHANNEL)
+			.target(client->getNick())
+			.params(params_[0])
+			.trailing("No such channel");
+		server->queueClientData(*client, response.build());
+		std::cout << "[ircserver]: Error ERR_NOSUCHCHANNEL " << response.build() << std::endl;
+		return;
+	}
+
+	if (chan->isOperator(client->getFd()))
+	{
+		response
+			.prefix(server->getName())
+			.numeric(ERR_CHANOPRIVSNEEDED)
+			.target(client->getNick())
+			.params(chan->getName())
+			.trailing("You're not channel operator");
+		server->queueClientData(*client, response.build());
+		std::cout << "[ircserver]: Error ERR_CHANOPRIVSNEEDED " << response.build() << std::endl;
+		return;
+	}
+	//(void)client;
+	//(void)server;
 }
