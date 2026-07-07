@@ -65,8 +65,9 @@
 #define ERR_NOSUCHSERVER		402
 
 // ============================================================
-// ERR — Unknown
+// ERR - Mode 
 // ============================================================
-// ERR_UNKNOWNCOMMAND already defined above (keep a single definition)
+#define ERR_CHANOPRIVSNEEDED	482
+
 
 #endif
