@@ -486,18 +486,22 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 		}
 		else // NO es miembro todavía, hacer.
 		{
-			if (! _channels_[nameChannel].getPassword().compare(password)) // cuando no haya password estaremos comparando dos strings vacios
+			if (channel->getPassword().compare(password)) // cuando no haya password estaremos comparando dos strings vacios
 			{
 				//<client> <channel> :Bad Channel Mask
-				sendNumericReply(client, 475, client->getNick() + " " + nameChannel, "Cannot join channel (+k)");
+				sendNumericReply(client, ERR_BADCHANNELKEY, client->getNick() + " " + nameChannel, "Cannot join channel (+k)");
 				std::cout << "[ircserver]:" << client->getNick() << "send JOIN->"
 					<< nameChannel << ". But bad passkey" << std::endl;
 				return false;
 			}
-			/////////FASE 6///////////////////////////////////////////////////////////////////////////					//
-			// -¿El canal esta en modo +i?															//
-			//		-Comprobar invitacion "_chanNames_(chanNames[i]).getPasswd() == channPasword[i]"//
-			// 		-Si no lo esta mandar 473 ERR_INVITEONLYCHAN									//
+			if (channel->isInviteOnly())
+			{
+				if(! channel->isInvited(client->getFd()))
+				sendNumericReply(client, ERR_INVITEONLYCHAN, client->getNick() + " " + nameChannel, "Cannot join channel (+i)");
+				return false;
+			
+			}
+			/////////FASE 6///////////////////////////////////////////////////////////////////////////								//
 			// -¿El canal alcanzo el numero maximo de usuarios?										//
 			// 		-471 ERR_CHANNELISFULL															//
 			//////////////////////////////////////////////////////////////////////////////////////////
