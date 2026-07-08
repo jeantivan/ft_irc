@@ -3,9 +3,24 @@
 #include "Client.hpp"
 #include <algorithm>
 
-Channel::Channel() : name_(), topic_(), members_(), operators_() {}
+Channel::Channel() : name_(),
+					 topic_(), members_(),
+					 operators_(),
+					 inviteOnly_(false),
+					 topicRestricted_(true),
+					 password_(),
+					 userLimit_(0),
+					 invitedUsers_() {}
 
-Channel::Channel(const Channel &other) : name_(other.name_), topic_(other.topic_), members_(other.members_), operators_(other.operators_) {}
+Channel::Channel(const Channel &other) : name_(other.name_),
+										 topic_(other.topic_),
+										 members_(other.members_),
+										 operators_(other.operators_),
+										 inviteOnly_(other.inviteOnly_),
+										 topicRestricted_(other.topicRestricted_),
+										 password_(other.password_),
+										 userLimit_(other.userLimit_),
+										 invitedUsers_(other.invitedUsers_) {}
 
 Channel::~Channel() {}
 
@@ -17,12 +32,25 @@ Channel &Channel::operator=(const Channel &other)
 		topic_ = other.topic_;
 		members_ = other.members_;
 		operators_ = other.operators_;
+		inviteOnly_ = other.inviteOnly_;
+		topicRestricted_ = other.topicRestricted_;
+		password_ = other.password_;
+		userLimit_ = other.userLimit_;
+		invitedUsers_ = other.invitedUsers_;
 	}
 
 	return *this;
 }
 
-Channel::Channel(const std::string &name) : name_(name), topic_(), members_(), operators_() {}
+Channel::Channel(const std::string &name) : name_(name),
+											topic_(),
+											members_(),
+											operators_(),
+											inviteOnly_(false),
+											topicRestricted_(true),
+											password_(),
+											userLimit_(0),
+											invitedUsers_() {}
 
 // Getters
 const std::string &Channel::getName() const
@@ -40,10 +68,55 @@ const std::map<int, Client *> &Channel::getMembers() const
 	return members_;
 }
 
+bool Channel::isInviteOnly() const
+{
+	return inviteOnly_;
+}
+
+bool Channel::isTopicRestricted() const
+{
+	return topicRestricted_;
+}
+
+const std::string &Channel::getPassword() const
+{
+	return password_;
+}
+
+unsigned int Channel::getUserLimit() const
+{
+	return userLimit_;
+}
+
+bool Channel::isInvited(int fd) const
+{
+	return invitedUsers_.find(fd) != invitedUsers_.end();
+}
+
 // Setters
 void Channel::setTopic(const std::string &topic)
 {
 	topic_ = topic;
+}
+
+void Channel::setInviteOnly(bool state)
+{
+	inviteOnly_ = state;
+}
+
+void Channel::setTopicRestricted(bool state)
+{
+	topicRestricted_ = state;
+}
+
+void Channel::setPassword(const std::string &pass)
+{
+	password_ = pass;
+}
+
+void Channel::setUserLimit(unsigned int limit)
+{
+	userLimit_ = limit;
 }
 
 // Members
@@ -91,6 +164,16 @@ void Channel::removeOperator(int fd)
 bool Channel::isEmpty() const
 {
 	return members_.empty();
+}
+
+void Channel::addInvited(int fd)
+{
+	invitedUsers_.insert(fd);
+}
+
+void Channel::removeInvited(int fd)
+{
+	invitedUsers_.erase(fd);
 }
 
 // Messages
