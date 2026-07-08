@@ -473,64 +473,62 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 	Channel *channel;
 	std::string nickList;
 	ResponseBuilder response;
+	int clientFd = client->getFd();
+	std::string clientNick = client->getNick();
 
 	if (isAchannel(nameChannel)) // Ya existe el canal
 	{
 		channel = &(_channels_[nameChannel]);
 		// ¿Ya es miembro? Ignorar silenciosamente.
-		if (channel->getMembers().find(client->getFd()) != channel->getMembers().end())
+		if (channel->getMembers().find(clientFd) != channel->getMembers().end())
 		{
-			std::cout << "[ircserver]:" << client->getNick() << "send JOIN->"
+			std::cout << "[ircserver]:" << clientNick << "send JOIN->"
 					  << nameChannel << ". But he was already in the channel" << std::endl;
 			return false;
 		}
 		else // NO es miembro todavía, hacer.
 		{
+			// COMPROBACIONES RELACIONADAS CON MODE
 			if (channel->getPassword().compare(password)) // cuando no haya password estaremos comparando dos strings vacios
 			{
 				//<client> <channel> :Bad Channel Mask
-				sendNumericReply(client, ERR_BADCHANNELKEY, client->getNick() + " " + nameChannel, "Cannot join channel (+k)");
-				std::cout << "[ircserver]:" << client->getNick() << "send JOIN->"
+				sendNumericReply(client, ERR_BADCHANNELKEY, clientNick + " " + nameChannel, "Cannot join channel (+k)");
+				std::cout << "[ircserver]:" << clientNick << "send JOIN->"
 					<< nameChannel << ". But bad passkey" << std::endl;
 				return false;
 			}
 			if (channel->isInviteOnly())
 			{
-				if(! channel->isInvited(client->getFd()))
-				sendNumericReply(client, ERR_INVITEONLYCHAN, client->getNick() + " " + nameChannel, "Cannot join channel (+i)");
+				if(! channel->isInvited(clientFd))
+				sendNumericReply(client, ERR_INVITEONLYCHAN, clientNick + " " + nameChannel, "Cannot join channel (+i)");
 				return false;
 			
 			}
-			/////////FASE 6///////////////////////////////////////////////////////////////////////////								//
-			// -¿El canal alcanzo el numero maximo de usuarios?										//
-			// 		-471 ERR_CHANNELISFULL															//
-			//////////////////////////////////////////////////////////////////////////////////////////
-			//Limite maximo de miembros en cualquier canal (nada que ver conmode L)
-			if (channel->getMembers().size() > MAX_CHANNEL_MEMBERS) // falta impementar el limite de MODE "L"
-			{
-				std::cout << "[ircserver]:" << client->getNick() << "send JOIN->"
-						  << nameChannel << ". But Channel is full" << std::endl;
-				sendNumericReply(client, ERR_CHANNELISFULL, nameChannel, "Cannot join channel (channel is full)");
-				return false;
-			}
-
 			if (channel->getUserLimit() != 0 && /*un userLimit == 0 implicaria que no hay limite*/
 				channel->getUserLimit() >= channel->getMembers().size())
 			{
-				std::cout << "[ircserver]:" << client->getNick() << "send JOIN->"
+				std::cout << "[ircserver]:" << clientNick << "send JOIN->"
 						  << nameChannel << ". But Channel is full" << std::endl;
 				sendNumericReply(client, ERR_CHANNELISFULL, nameChannel, "Cannot join channel (channel is full)");
 				return false;
 			}
 
+			//Limite maximo de miembros en cualquier canal (nada que ver con mode L)
+			if (channel->getMembers().size() > MAX_CHANNEL_MEMBERS) // falta impementar el limite de MODE "L"
+			{
+				std::cout << "[ircserver]:" << clientNick << "send JOIN->"
+						  << nameChannel << ". But Channel is full" << std::endl;
+				sendNumericReply(client, ERR_CHANNELISFULL, nameChannel, "Cannot join channel (channel is full)");
+				return false;
+			}
 
 			channel->addClient(client);
-			std::cout << "[ircserver]: " << client->getNick() << " Join to: " << nameChannel << std::endl;
+			std::cout << "[ircserver]: " << clientNick << " Join to: " << nameChannel << std::endl;
 
 			// Cargar (sin enviar) RPL_TOPIC en response.
 			response.prefix(getName())
 				.numeric(RPL_TOPIC)
-				.target(client->getNick())
+				.target(clientNick)
 				.trailing(channel->getTopic());
 		}
 	}
@@ -541,11 +539,11 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 		// Añadir client al canal
 		channel->addClient(client);
 		// Añadir a client como operador al canal
-		channel->addOperator(client->getFd());
+		channel->addOperator(clientFd);
 		// Cargar (sin enviar) RPL_NOTOPIC en response.
 		response.prefix(getName())
 			.numeric(RPL_NOTOPIC)
-			.target(client->getNick())
+			.target(clientNick)
 			.trailing("No topic is set");
 	}
 	// WELCOME:
