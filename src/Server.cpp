@@ -474,17 +474,8 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 	std::string nickList;
 	ResponseBuilder response;
 
-	if (isAchannel(nameChannel))
+	if (isAchannel(nameChannel)) // Ya existe el canal
 	{
-		if (! _channels_[nameChannel].getPassword().compare(password)) // cuando no haya password estaremos comparando dos strings vacios
-		{
-			//<client> <channel> :Bad Channel Mask
-			sendNumericReply(client, 475, client->getNick() + " " + nameChannel, "Bad Channel Mask");
-			std::cout << "[ircserver]:" << client->getNick() << "send JOIN->"
-				<< nameChannel << ". But bad passkey" << std::endl;
-			return false;
-		}
-
 		channel = &(_channels_[nameChannel]);
 		// ¿Ya es miembro? Ignorar silenciosamente.
 		if (channel->getMembers().find(client->getFd()) != channel->getMembers().end())
@@ -495,10 +486,15 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 		}
 		else // NO es miembro todavía, hacer.
 		{
-			/////////FASE 6///////////////////////////////////////////////////////////////////////////
-			// -¿El canal esta en modo  +k?															//
-			//		-Cruza password																	//
-			//		-Si el pasword es malo, envia mensaje "475 ERR_BADCHANNELKEY"					//
+			if (! _channels_[nameChannel].getPassword().compare(password)) // cuando no haya password estaremos comparando dos strings vacios
+			{
+				//<client> <channel> :Bad Channel Mask
+				sendNumericReply(client, 475, client->getNick() + " " + nameChannel, "Cannot join channel (+k)");
+				std::cout << "[ircserver]:" << client->getNick() << "send JOIN->"
+					<< nameChannel << ". But bad passkey" << std::endl;
+				return false;
+			}
+			/////////FASE 6///////////////////////////////////////////////////////////////////////////					//
 			// -¿El canal esta en modo +i?															//
 			//		-Comprobar invitacion "_chanNames_(chanNames[i]).getPasswd() == channPasword[i]"//
 			// 		-Si no lo esta mandar 473 ERR_INVITEONLYCHAN									//
