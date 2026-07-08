@@ -294,6 +294,11 @@ void Server::disconnectClient(int fd)
 		}
 	}
 
+	//OJOO no esta sacando al cliente de la lista de miembros de los canales TO DO:
+	//	- recorrer canales, llamndo a Channel::removeClient(fd)
+	//	- borrar canales que queden desiertos a su salida
+	//	- tal vez hacer broadcast informando que el cliente salio, en algunos flujos de ejecucion	
+
 	close(fd);
 
 	clients_.erase(fd);
