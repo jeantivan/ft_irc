@@ -505,6 +505,7 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 			// -¿El canal alcanzo el numero maximo de usuarios?										//
 			// 		-471 ERR_CHANNELISFULL															//
 			//////////////////////////////////////////////////////////////////////////////////////////
+			//Limite maximo de miembros en cualquier canal (nada que ver conmode L)
 			if (channel->getMembers().size() > MAX_CHANNEL_MEMBERS) // falta impementar el limite de MODE "L"
 			{
 				std::cout << "[ircserver]:" << client->getNick() << "send JOIN->"
@@ -512,6 +513,16 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 				sendNumericReply(client, ERR_CHANNELISFULL, nameChannel, "Cannot join channel (channel is full)");
 				return false;
 			}
+
+			if (channel->getUserLimit() != 0 && /*un userLimit == 0 implicaria que no hay limite*/
+				channel->getUserLimit() >= channel->getMembers().size())
+			{
+				std::cout << "[ircserver]:" << client->getNick() << "send JOIN->"
+						  << nameChannel << ". But Channel is full" << std::endl;
+				sendNumericReply(client, ERR_CHANNELISFULL, nameChannel, "Cannot join channel (channel is full)");
+				return false;
+			}
+
 
 			channel->addClient(client);
 			std::cout << "[ircserver]: " << client->getNick() << " Join to: " << nameChannel << std::endl;
