@@ -470,17 +470,21 @@ std::map<std::string, Channel> &Server::getChannels()
 
 bool Server::joinChannel(Client *client, const std::string &nameChannel, const std::string &password)
 {
-
-	///////////////BORRAESTO como aun no implementamnos la logica de password, tengo que silenciar warning por parametro sin uso
-	(void)password;
-	///////////////
-
 	Channel *channel;
 	std::string nickList;
 	ResponseBuilder response;
 
 	if (isAchannel(nameChannel))
 	{
+		if (! _channels_[nameChannel].getPassword().compare(password)) // cuando no haya password estaremos comparando dos strings vacios
+		{
+			//<client> <channel> :Bad Channel Mask
+			sendNumericReply(client, 475, client->getNick() + " " + nameChannel, "Bad Channel Mask");
+			std::cout << "[ircserver]:" << client->getNick() << "send JOIN->"
+				<< nameChannel << ". But bad passkey" << std::endl;
+			return false;
+		}
+
 		channel = &(_channels_[nameChannel]);
 		// ¿Ya es miembro? Ignorar silenciosamente.
 		if (channel->getMembers().find(client->getFd()) != channel->getMembers().end())
