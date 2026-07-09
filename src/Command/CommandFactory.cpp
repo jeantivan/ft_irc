@@ -10,6 +10,7 @@
 #include <Command/PingCommand.hpp>
 #include <Command/UnknownCommand.hpp>
 #include <Command/ModeCommand.hpp>
+#include <Command/TopicCommand.hpp>
 
 CommandFactory::CommandFactory()
 {
@@ -22,6 +23,7 @@ CommandFactory::CommandFactory()
 	creators_["PART"] = &PartCommand::create;
 	creators_["QUIT"] = &QuitCommand::create;
 	creators_["PING"] = &PingCommand::create;
+	creators_["TOPIC"] = &TopicCommand::create;
 	// TODO: Quitar comentario creators_["MODE"] = &ModeCommand::create;
 }
 
