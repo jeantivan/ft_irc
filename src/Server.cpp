@@ -551,6 +551,8 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 	channel->broadcastAll(":" + client->getPrefix() + " JOIN " + nameChannel + "\r\n", this);
 	// - RPL_TOPIC o RPL_NOTOPIC.
 	queueClientData(*client, response.build());
+	if (!channel->getTopic().empty())
+		sendNumericReply(client, RPL_TOPICWHOTIME, channel->getTopicAuthor() + " " + channel->getTopicTime(), "");
 	// - Envia la lista de miembros con RPL_NAMREPLY y RPL_ENDOFNAMES
 	namreply(client, channel);
 	return true;
