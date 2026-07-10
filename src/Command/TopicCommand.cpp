@@ -67,7 +67,6 @@ void TopicCommand::execute(Client *client, Server *server)
 
 		//Si el canal tiene tema: El servidor responde con el valor numérico RPL_TOPIC (332)
 		server->sendNumericReply(client, RPL_TOPIC, "TOPIC " + params_[0], topic);
-		//TO DO: RPL_TOPICTIME (333)
 		server->sendNumericReply(client, RPL_TOPICWHOTIME, channel->getTopicAuthor() + " " + channel->getTopicTime(), "");
 		return;
 	}

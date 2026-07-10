@@ -4,7 +4,10 @@
 #include <algorithm>
 
 Channel::Channel() : name_(),
-					 topic_(), members_(),
+					 topic_(),
+					 topicAuthor_(),
+					 topicTime_(),
+					 members_(),
 					 operators_(),
 					 inviteOnly_(false),
 					 topicRestricted_(true),
@@ -14,6 +17,8 @@ Channel::Channel() : name_(),
 
 Channel::Channel(const Channel &other) : name_(other.name_),
 										 topic_(other.topic_),
+										 topicAuthor_(other.topicAuthor_),
+										 topicTime_(other.topicTime_),
 										 members_(other.members_),
 										 operators_(other.operators_),
 										 inviteOnly_(other.inviteOnly_),
@@ -30,6 +35,8 @@ Channel &Channel::operator=(const Channel &other)
 	{
 		name_ = other.name_;
 		topic_ = other.topic_;
+		topicAuthor_ = other.topicAuthor_;
+		topicTime_ = other.topicTime_;
 		members_ = other.members_;
 		operators_ = other.operators_;
 		inviteOnly_ = other.inviteOnly_;
@@ -44,6 +51,8 @@ Channel &Channel::operator=(const Channel &other)
 
 Channel::Channel(const std::string &name) : name_(name),
 											topic_(),
+					  						topicAuthor_(),
+											topicTime_(),
 											members_(),
 											operators_(),
 											inviteOnly_(false),

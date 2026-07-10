@@ -52,8 +52,6 @@ void JoinCommand::execute(Client *client, Server *server)
 
 	if (params_.size() < 1)
 	{
-		// TO DO:
-		//  enviar NEDMOREPARAMS
 		response.prefix(server->getName())
 			.numeric(ERR_NEEDMOREPARAMS)
 			.target(client->getNick())
