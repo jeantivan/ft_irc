@@ -556,6 +556,8 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 	return true;
 }
 
+// Extrae e incluye por si mismo prefix, numeric, target.
+// params puede ser una cadena vacia si no necesitas enviar mas parametros.
 void Server::sendNumericReply(Client *client, int numeric, const std::string &params, const std::string &trailing)
 {
 	ResponseBuilder response;

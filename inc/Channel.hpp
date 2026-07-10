@@ -13,6 +13,8 @@ class Channel
 private:
 	std::string name_;
 	std::string topic_;
+	std::string topicAuthor_;
+	std::string topicTime_;
 	std::map<int, Client *> members_; // fd → Client*
 	std::set<int> operators_;		  // fds de operadores
 
@@ -33,6 +35,8 @@ public:
 	// Getters
 	const std::string &getName() const;
 	const std::string &getTopic() const;
+	const std::string &getTopicAuthor() const;
+	const std::string &getTopicTime() const;
 	const std::map<int, Client *> &getMembers() const;
 	bool isInviteOnly() const;
 	bool isTopicRestricted() const;
@@ -41,7 +45,7 @@ public:
 	bool isInvited(int fd) const;
 
 	// Setters
-	void setTopic(const std::string &topic);
+	void setTopic(const std::string &topic, const std::string &nick);
 	void setInviteOnly(bool state);
 	void setTopicRestricted(bool state);
 	void setPassword(const std::string &pass);

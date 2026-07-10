@@ -1,0 +1,2 @@
+-Donde se usa el patron "nick_ + "!" + user_ + "@" + ip;" usar get prefix
+-Quiza sendNumericRpl() no era tan buena idea, podemos cambiar a ResponseBuilder()

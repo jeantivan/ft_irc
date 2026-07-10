@@ -26,6 +26,7 @@ FILES = main.cpp \
 		Command/QuitCommand.cpp \
 		Command/PingCommand.cpp \
 		Command/UnknownCommand.cpp \
+		Command/TopicCommand.cpp \
 		ResponseBuilder.cpp \
 		Channel.cpp
 

@@ -63,6 +63,17 @@ const std::string &Channel::getTopic() const
 	return topic_;
 }
 
+const std::string &Channel::getTopicAuthor() const
+{
+	return topicAuthor_;
+}
+
+
+const std::string &Channel::getTopicTime() const
+{
+	return topicTime_;
+}
+
 const std::map<int, Client *> &Channel::getMembers() const
 {
 	return members_;
@@ -94,9 +105,11 @@ bool Channel::isInvited(int fd) const
 }
 
 // Setters
-void Channel::setTopic(const std::string &topic)
+void Channel::setTopic(const std::string &topic, const std::string &nick)
 {
 	topic_ = topic;
+	topicAuthor_ = nick;
+	topicTime_ = time(NULL);
 }
 
 void Channel::setInviteOnly(bool state)
