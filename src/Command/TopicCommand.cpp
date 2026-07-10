@@ -26,9 +26,18 @@ void TopicCommand::execute(Client *client, Server *server)
 	ResponseBuilder response;
 	int clientFd = client->getFd();
 
+	if (!client->isAuth())
+	{
+		// enviar ERR_NOTREGISTERED
+		response.prefix(server->getName())
+			.numeric(ERR_NOTREGISTERED)
+			.target(client->getNick())
+			.trailing("You have not registered");
+		server->queueClientData(*client, response.build());
+		std::cerr << "[ircserver]: Error: ERR_NOTREGISTERED" << std::endl;
+		return;
+	}
 
-	// response.prefix(server->getName()).numeric(___________).target("*").params("__").trailing("____");
-	// std::cerr << "__________" << std::endl;
 	if (params_.size() == 0)
 	{
 		server->sendNumericReply(client, ERR_NEEDMOREPARAMS, "TOPIC", "Not enough parameters");
@@ -39,7 +48,7 @@ void TopicCommand::execute(Client *client, Server *server)
 	//Verifica si el canal existe.
 	if (channel == NULL)
 	{
-		server->sendNumericReply(client, ERR_NOSUCHCHANNEL, "TOPIC " + params_[0], "No such channel");
+		server->sendNumericReply(client, ERR_NOSUCHCHANNEL, params_[0], "No such channel");
 		return;
 	}
 	std::string channName = channel->getName();
@@ -54,19 +63,19 @@ void TopicCommand::execute(Client *client, Server *server)
 		miembros. Me he quedado con solo para miembros. */
 		if(!channel->isMember(clientFd))
 		{
-			server->sendNumericReply(client, ERR_NOTONCHANNEL, "TOPIC " + params_[0], "You're not on that channel");
+			server->sendNumericReply(client, ERR_NOTONCHANNEL, params_[0], "You're not on that channel");
 			return;
 		}
 		std::string topic = channel->getTopic();
 		//Si el canal NO tiene tema: El servidor responde con RPL_NOTOPIC (331) (ej. #canal :No topic is set).
 		if (topic.empty())
 		{
-			server->sendNumericReply(client, RPL_NOTOPIC, "TOPIC " + params_[0], "No topic is set");
+			server->sendNumericReply(client, RPL_NOTOPIC, params_[0], "No topic is set");
 			return;
 		}
 
 		//Si el canal tiene tema: El servidor responde con el valor numérico RPL_TOPIC (332)
-		server->sendNumericReply(client, RPL_TOPIC, "TOPIC " + params_[0], topic);
+		server->sendNumericReply(client, RPL_TOPIC, params_[0], topic);
 		server->sendNumericReply(client, RPL_TOPICWHOTIME, channel->getTopicAuthor() + " " + channel->getTopicTime(), "");
 		return;
 	}
@@ -75,14 +84,14 @@ void TopicCommand::execute(Client *client, Server *server)
 	{
 		if(!channel->isMember(clientFd))
 		{
-			server->sendNumericReply(client, ERR_NOTONCHANNEL, "TOPIC " + params_[0], "You're not on that channel");
+			server->sendNumericReply(client, ERR_NOTONCHANNEL, params_[0], "You're not on that channel");
 			return;
 		}
 
 		// Si el canal tiene el modo +t activo: Solo los operadores del canal (@) pueden cambiar el tema. Si un usuario normal lo intenta, el servidor deniega la acción y devuelve ERR_CHANOPRIVSNEEDED (482).
 		if (channel->isTopicRestricted() && !channel->isOperator(clientFd))
 		{
-			server->sendNumericReply(client, ERR_CHANOPRIVSNEEDED, "TOPIC " + params_[0], "You're not channel operator");
+			server->sendNumericReply(client, ERR_CHANOPRIVSNEEDED, params_[0], "You're not channel operator");
 			return;
 		}
 

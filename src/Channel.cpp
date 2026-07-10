@@ -160,6 +160,9 @@ void Channel::removeClient(int fd)
 	{
 		removeOperator(fd);
 	}
+
+	// OJO:
+	// TO DO eliminar al cliente de la lista invitedUsers_ si estuviera
 }
 
 bool Channel::isMember(int fd) const
