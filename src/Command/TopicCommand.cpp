@@ -3,7 +3,7 @@
 #include "Client.hpp"
 #include "ResponseBuilder.hpp"
 
-TopicCommand::TopicCommand() : Command("Topic", std::vector<std::string>()) {}
+TopicCommand::TopicCommand() : Command("TOPIC", std::vector<std::string>()) {}
 
 TopicCommand::TopicCommand(const TopicCommand &other) : Command(other) {}
 
@@ -63,19 +63,19 @@ void TopicCommand::execute(Client *client, Server *server)
 		miembros. Me he quedado con solo para miembros. */
 		if(!channel->isMember(clientFd))
 		{
-			server->sendNumericReply(client, ERR_NOTONCHANNEL, params_[0], "You're not on that channel");
+			server->sendNumericReply(client, ERR_NOTONCHANNEL, channName, "You're not on that channel");
 			return;
 		}
 		std::string topic = channel->getTopic();
 		//Si el canal NO tiene tema: El servidor responde con RPL_NOTOPIC (331) (ej. #canal :No topic is set).
 		if (topic.empty())
 		{
-			server->sendNumericReply(client, RPL_NOTOPIC, params_[0], "No topic is set");
+			server->sendNumericReply(client, RPL_NOTOPIC, channName, "No topic is set");
 			return;
 		}
 
 		//Si el canal tiene tema: El servidor responde con el valor numérico RPL_TOPIC (332)
-		server->sendNumericReply(client, RPL_TOPIC, params_[0], topic);
+		server->sendNumericReply(client, RPL_TOPIC, channName, topic);
 		server->sendNumericReply(client, RPL_TOPICWHOTIME, channel->getTopicAuthor() + " " + channel->getTopicTime(), "");
 		return;
 	}
@@ -84,28 +84,22 @@ void TopicCommand::execute(Client *client, Server *server)
 	{
 		if(!channel->isMember(clientFd))
 		{
-			server->sendNumericReply(client, ERR_NOTONCHANNEL, params_[0], "You're not on that channel");
+			server->sendNumericReply(client, ERR_NOTONCHANNEL, channName, "You're not on that channel");
 			return;
 		}
 
 		// Si el canal tiene el modo +t activo: Solo los operadores del canal (@) pueden cambiar el tema. Si un usuario normal lo intenta, el servidor deniega la acción y devuelve ERR_CHANOPRIVSNEEDED (482).
 		if (channel->isTopicRestricted() && !channel->isOperator(clientFd))
 		{
-			server->sendNumericReply(client, ERR_CHANOPRIVSNEEDED, params_[0], "You're not channel operator");
+			server->sendNumericReply(client, ERR_CHANOPRIVSNEEDED, channName, "You're not channel operator");
 			return;
 		}
 
 		// Aplicación del cambio: El servidor actualiza el string del tema en la memoria/base de datos, guarda el nickname del autor y el timestamp actual.
 		channel->setTopic(params_[1], client->getNick());
 		// Broadcast con nuevo topic:
-		ResponseBuilder response;
-		response.prefix(client->getPrefix()).command("TOPIC").target(params_[0]).trailing(params_[1]);
+		response.prefix(client->getPrefix()).command("TOPIC").target(channName).trailing(params_[1]);
 		channel->broadcastAll(response.build(), server);
-
-// Cuando un usuario envía TOPIC #canal : (el parámetro del tema está vacío después de los dos puntos) hay que dejar el topic vacio
-// PROBLEMA el parser se carga los ":", de todas formas debe quedar un params_[0] vacio. pero hay que probar bien este caso.
-// quiza realmente la unica forma de enviar un parametro vacio sea como trailing, puesto que "COMMANDO    :foo" simplemente ignora los espacios vacios
-
 	}
 	return;
 }

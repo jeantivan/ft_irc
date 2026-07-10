@@ -118,7 +118,10 @@ void Channel::setTopic(const std::string &topic, const std::string &nick)
 {
 	topic_ = topic;
 	topicAuthor_ = nick;
-	topicTime_ = time(NULL);
+
+	std::ostringstream oss;
+	oss << time(NULL);
+	topicTime_ = oss.str();
 }
 
 void Channel::setInviteOnly(bool state)
