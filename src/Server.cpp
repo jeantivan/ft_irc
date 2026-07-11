@@ -715,7 +715,7 @@ void Server::dezombify()
     {
         int fd = it->first;
         bool zombie = it->second.getToDisconnect()
-            && it->second.getToDisconnectSinze() + TEARDOWNTIMEMAX < time(NULL);
+            && it->second.getToDisconnectSince() + TEARDOWNTIMEMAX < time(NULL);
         ++it;
 
         if (zombie)

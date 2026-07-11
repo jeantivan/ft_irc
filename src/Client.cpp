@@ -164,7 +164,7 @@ std::string Client::getPrefix() const
 	return nick_ + "!" + user_ + "@" + ip;
 }
 
-time_t Client::getToDisconnectSinze() const
+time_t Client::getToDisconnectSince() const
 {
 	return toDisconnectSince_;
 }

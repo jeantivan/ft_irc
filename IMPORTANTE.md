@@ -51,8 +51,8 @@ inmediata dentro de cada comando. Ahora hay un mecanismo periódico centralizado
 **Qué añadí:**
 
 - **`Client`** (`Client.hpp` / `Client.cpp`): nuevo miembro `toDisconnectSince_` (timestamp) que se
-  fija dentro de `setToDisconnect()`, y nuevo getter `getToDisconnectSinze()`
-  *(sí, con la errata "Sinze" en el nombre)*.
+  fija dentro de `setToDisconnect()`, y nuevo getter `getToDisconnecSince()`
+  *(sí, con la errata "Since" en el nombre)*.
 - **`Server.hpp`**: nuevos `#define` → `UNBLOCKPOLL` (10000 ms), `PERIODICCHECK` (10 s),
   `TEARDOWNTIMEMAX` (20 s). Nuevo miembro `checkZombiesDate_`.
 - **`Server::run()`**: `poll()` pasa de bloquear indefinidamente (`-1`) a usar timeout
