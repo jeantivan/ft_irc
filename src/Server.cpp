@@ -529,6 +529,7 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 			response.prefix(getName())
 				.numeric(RPL_TOPIC)
 				.target(clientNick)
+				.params(nameChannel)
 				.trailing(channel->getTopic());
 		}
 	}
@@ -544,6 +545,7 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 		response.prefix(getName())
 			.numeric(RPL_NOTOPIC)
 			.target(clientNick)
+			.params(nameChannel)
 			.trailing("No topic is set");
 	}
 	// WELCOME:
@@ -552,7 +554,7 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 	// - RPL_TOPIC o RPL_NOTOPIC.
 	queueClientData(*client, response.build());
 	if (!channel->getTopic().empty())
-		sendNumericReply(client, RPL_TOPICWHOTIME, channel->getTopicAuthor() + " " + channel->getTopicTime(), "");
+		sendNumericReply(client, RPL_TOPICWHOTIME, nameChannel + " " + channel->getTopicAuthor() + " " + channel->getTopicTime(), "");
 	// - Envia la lista de miembros con RPL_NAMREPLY y RPL_ENDOFNAMES
 	namreply(client, channel);
 	return true;
@@ -560,6 +562,8 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 
 // Extrae e incluye por si mismo prefix, numeric, target.
 // params puede ser una cadena vacia si no necesitas enviar mas parametros.
+// Si trailing es un string vacío, no llamara a response.trailing() y los : al final no seran insertados,
+// es decir, esta funcion no sirve para enviar un argumento vacío.
 void Server::sendNumericReply(Client *client, int numeric, const std::string &params, const std::string &trailing)
 {
 	ResponseBuilder response;

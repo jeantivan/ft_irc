@@ -29,11 +29,7 @@ void TopicCommand::execute(Client *client, Server *server)
 	if (!client->isAuth())
 	{
 		// enviar ERR_NOTREGISTERED
-		response.prefix(server->getName())
-			.numeric(ERR_NOTREGISTERED)
-			.target(client->getNick())
-			.trailing("You have not registered");
-		server->queueClientData(*client, response.build());
+		server->sendNumericReply(client, ERR_NOTREGISTERED, "", "You have not registered");
 		std::cerr << "[ircserver]: Error: ERR_NOTREGISTERED" << std::endl;
 		return;
 	}
@@ -76,7 +72,7 @@ void TopicCommand::execute(Client *client, Server *server)
 
 		//Si el canal tiene tema: El servidor responde con el valor numérico RPL_TOPIC (332)
 		server->sendNumericReply(client, RPL_TOPIC, channName, topic);
-		server->sendNumericReply(client, RPL_TOPICWHOTIME, channel->getTopicAuthor() + " " + channel->getTopicTime(), "");
+		server->sendNumericReply(client, RPL_TOPICWHOTIME, channName + channel->getTopicAuthor() + " " + channel->getTopicTime(), "");
 		return;
 	}
 // Modificación del Tema (Dos parámetros)
