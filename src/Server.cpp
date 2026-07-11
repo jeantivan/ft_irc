@@ -4,6 +4,7 @@
 #include "Channel.hpp"
 #include <ctime>
 #include <sstream>
+#include "Command/TopicCommand.hpp"
 
 Server::Server() : port_(""), listener_(-1), password_(""), nameServer_(NAME_SERVER), creationDate_(time(NULL)), checkZombiesDate_(creationDate_ + PERIODICCHECK) {}
 
@@ -335,7 +336,7 @@ void Server::requestRegistration(Client &client)
 			response.prefix(getName()).numeric(1).target(client.getNick()).trailing("Welcome to the Internet Relay Network " + client.getNick() + "!" + client.getUser() + "@" + client.getIp());
 			queueClientData(client, response.build());
 			// 002	YOURHOST		"Your host is <servername>, running version <ver>"
-			response.numeric(2).trailing("Your host is " + getName() + ", running version" + SERVER_VERSION);
+			response.numeric(2).trailing("Your host is " + getName() + ", running version " + SERVER_VERSION);
 			queueClientData(client, response.build());
 			// 003    RPL_CREATED	"This server was created <date>"
 			char date[64];
@@ -524,13 +525,7 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 
 			channel->addClient(client);
 			std::cout << "[ircserver]: " << clientNick << " Join to: " << nameChannel << std::endl;
-
-			// Cargar (sin enviar) RPL_TOPIC en response.
-			response.prefix(getName())
-				.numeric(RPL_TOPIC)
-				.target(clientNick)
-				.params(nameChannel)
-				.trailing(channel->getTopic());
+//////////////
 		}
 	}
 	else // (El canal no existe)
@@ -541,20 +536,16 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 		channel->addClient(client);
 		// Añadir a client como operador al canal
 		channel->addOperator(clientFd);
-		// Cargar (sin enviar) RPL_NOTOPIC en response.
-		response.prefix(getName())
-			.numeric(RPL_NOTOPIC)
-			.target(clientNick)
-			.params(nameChannel)
-			.trailing("No topic is set");
+////////////
 	}
 	// WELCOME:
 	// - Broadcast :<nick>!<user>@<ip> JOIN #canal
 	channel->broadcastAll(":" + client->getPrefix() + " JOIN " + nameChannel + "\r\n", this);
-	// - RPL_TOPIC o RPL_NOTOPIC.
-	queueClientData(*client, response.build());
-	if (!channel->getTopic().empty())
-		sendNumericReply(client, RPL_TOPICWHOTIME, nameChannel + " " + channel->getTopicAuthor() + " " + channel->getTopicTime(), "");
+	// - RPL_TOPIC o RPL_NOTOPIC, creando y ejecutando un objeto TopicCommand
+	std::vector<std::string> topicVect;
+	topicVect.push_back(nameChannel);
+	TopicCommand topic("TOPIC", topicVect);
+	topic.execute(client, this);
 	// - Envia la lista de miembros con RPL_NAMREPLY y RPL_ENDOFNAMES
 	namreply(client, channel);
 	return true;

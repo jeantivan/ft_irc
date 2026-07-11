@@ -72,7 +72,7 @@ void TopicCommand::execute(Client *client, Server *server)
 
 		//Si el canal tiene tema: El servidor responde con el valor numérico RPL_TOPIC (332)
 		server->sendNumericReply(client, RPL_TOPIC, channName, topic);
-		server->sendNumericReply(client, RPL_TOPICWHOTIME, channName + channel->getTopicAuthor() + " " + channel->getTopicTime(), "");
+		server->sendNumericReply(client, RPL_TOPICWHOTIME, channName + " " + channel->getTopicAuthor() + " " + channel->getTopicTime(), "");
 		return;
 	}
 // Modificación del Tema (Dos parámetros)
