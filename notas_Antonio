@@ -1,2 +1,1 @@
 -Donde se usa el patron "nick_ + "!" + user_ + "@" + ip;" usar get prefix
--¿pongo RPL_TOPICWHOTIME en JOIN??
