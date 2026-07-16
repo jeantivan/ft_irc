@@ -2,7 +2,10 @@
 
 ModeHandler::ModeHandler() {}
 
-ModeHandler::ModeHandler(const ModeHandler &other) {}
+ModeHandler::ModeHandler(const ModeHandler &other)
+{
+	(void)other;
+}
 
 ModeHandler::~ModeHandler() {}
 
