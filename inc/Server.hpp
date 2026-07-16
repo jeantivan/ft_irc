@@ -25,7 +25,9 @@
 #include <ctime>
 #include "Channel.hpp"
 
-#define NAME_SERVER "IRC_Serv" //maximo 9 caracteres (RPL_s construidas con esa convencion)
+#include "Mode/ModeHandler.hpp"
+
+#define NAME_SERVER "IRC_Serv" // maximo 9 caracteres (RPL_s construidas con esa convencion)
 #define SERVER_VERSION "Beta"
 #define MAX_CHANNEL_MEMBERS 200
 
@@ -42,6 +44,9 @@ private:
 	std::map<int, Client> clients_;
 	std::set<std::string> used_nicks_;
 	std::map<std::string, Channel> _channels_;
+
+	// ModeHandler
+	std::map<std::string, ModeHandler *> modeHandlers_;
 
 	// Constructors private to avoid duplication of the Server
 	Server();
@@ -88,7 +93,6 @@ public:
 	// Istancia un objeto ResponseBuilder con los parametros recibidos y lo pone en cola del writeBuf del cliente
 	void sendNumericReply(Client *client, int numeric, const std::string &params, const std::string &trailing);
 
-
 	// Send client data, los datos almacendos en el buffer desalida con la funcion anterior
 	bool sendClientData(size_t client_index);
 
@@ -116,6 +120,9 @@ public:
 
 	// PrivMsg Command
 	Client *findClientByNick(const std::string &nick_to_find);
+
+	// ModeHandler
+	ModeHandler *getModeHandler(const std::string &mode) const;
 };
 
 #endif // SERVER_HPP

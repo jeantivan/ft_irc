@@ -4,8 +4,12 @@
 #include "Channel.hpp"
 #include <ctime>
 #include <sstream>
+#include "Mode/InviteOnlyMode.hpp"
 
-Server::Server() : port_(""), listener_(-1), password_(""), nameServer_(NAME_SERVER), creationDate_(time(NULL)) {}
+Server::Server() : port_(""), listener_(-1), password_(""), nameServer_(NAME_SERVER), creationDate_(time(NULL)), connections_(), clients_(), used_nicks_(), _channels_(), modeHandlers_()
+{
+	modeHandlers_["i"] = new InviteOnlyMode();
+}
 
 Server::~Server()
 {
@@ -47,8 +51,10 @@ Server &Server::operator=(const Server &other)
 	return *this;
 }
 
-Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass), nameServer_(NAME_SERVER), creationDate_(time(NULL)), used_nicks_()
+Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass), nameServer_(NAME_SERVER), creationDate_(time(NULL)), used_nicks_(), _channels_(), modeHandlers_()
 {
+	// TODO: Buscar forma mas ordenada de registrar los modeHandlers;
+	modeHandlers_["i"] = new InviteOnlyMode();
 	init();
 
 	struct pollfd listener_poll;
@@ -673,4 +679,17 @@ void Server::leaveChannel(Client *client, const std::string &nameChannel, const 
 		_channels_.erase(nameChannel); // El mapa se encarga de todo en una sola línea
 		std::cout << "[ircserver]: Channel " << nameChannel << " deleted de _channels_ (no members left)." << std::endl;
 	}
+}
+
+// TODO: PASAR A UN ARCHIVO NUEVO DENTRO DE src/Server/Modes
+ModeHandler *Server::getModeHandler(const std::string &mode) const
+{
+	std::map<std::string, ModeHandler *>::const_iterator it = modeHandlers_.find(mode);
+
+	if (it != modeHandlers_.end())
+	{
+		return it->second;
+	}
+
+	return NULL;
 }
