@@ -9,7 +9,7 @@ private:
 public:
 	InviteOnlyMode();
 	InviteOnlyMode(const InviteOnlyMode &other);
-	~InviteOnlyMode();
+	virtual ~InviteOnlyMode();
 	InviteOnlyMode &operator=(const InviteOnlyMode &other);
 
 	virtual bool change(Channel *channel, bool isAdding, const std::string &param);
