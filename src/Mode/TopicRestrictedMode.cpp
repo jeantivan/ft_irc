@@ -21,6 +21,7 @@ TopicRestrictedMode &TopicRestrictedMode::operator=(const TopicRestrictedMode &o
 
 bool TopicRestrictedMode::requiresParam(bool isAdding) const
 {
+	(void)isAdding;
 	return false;
 }
 
