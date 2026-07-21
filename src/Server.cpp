@@ -6,11 +6,13 @@
 #include <sstream>
 #include "Mode/InviteOnlyMode.hpp"
 #include "Mode/TopicRestrictedMode.hpp"
+#include "Mode/PasswordMode.hpp"
 
 Server::Server() : port_(""), listener_(-1), password_(""), nameServer_(NAME_SERVER), creationDate_(time(NULL)), connections_(), clients_(), used_nicks_(), _channels_(), modeHandlers_()
 {
 	modeHandlers_['i'] = new InviteOnlyMode();
 	modeHandlers_['t'] = new TopicRestrictedMode();
+	modeHandlers_['k'] = new PasswordMode();
 }
 
 Server::~Server()
@@ -58,6 +60,7 @@ Server::Server(const char *port, const char *pass) : port_(port), listener_(-1),
 	// TODO: Buscar forma mas ordenada de registrar los modeHandlers;
 	modeHandlers_['i'] = new InviteOnlyMode();
 	modeHandlers_['t'] = new TopicRestrictedMode();
+	modeHandlers_['k'] = new PasswordMode();
 	init();
 
 	struct pollfd listener_poll;
