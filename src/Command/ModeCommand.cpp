@@ -32,8 +32,6 @@ void ModeCommand::execute(Client *client, Server *server)
 {
 	ResponseBuilder response;
 
-	std::cout << "Point 1" << std::endl;
-
 	if (!client->isAuth())
 	{
 		response
@@ -45,7 +43,6 @@ void ModeCommand::execute(Client *client, Server *server)
 		std::cout << "[ircserver]: Error ERR_NOTREGISTERED " << type_ << std::endl;
 		return;
 	}
-	std::cout << "Point 2" << std::endl;
 
 	std::string target = params_[0];
 
@@ -60,8 +57,6 @@ void ModeCommand::execute(Client *client, Server *server)
 		return;
 	}
 
-	std::cout << "Point 3" << std::endl;
-
 	Channel *chan = server->getChannel(params_[0]);
 	if (!chan)
 	{
@@ -74,8 +69,6 @@ void ModeCommand::execute(Client *client, Server *server)
 		std::cout << "[ircserver]: Error ERR_NOSUCHCHANNEL " << response.build() << std::endl;
 		return;
 	}
-
-	std::cout << "Point 4" << std::endl;
 
 	if (!chan->isOperator(client->getFd()))
 	{
@@ -95,12 +88,10 @@ void ModeCommand::execute(Client *client, Server *server)
 	bool isAdding = true;
 	size_t paramIndex = 2;
 
-	// Save changes aplies
+	// Save changes applies
 	std::string appliedModes = "";
 	std::string appliedArgs = "";
 	char lastSign = '\0';
-
-	std::cout << "Point 4 executing" << std::endl;
 
 	for (size_t i = 0; i < modes.length(); ++i)
 	{
@@ -143,7 +134,6 @@ void ModeCommand::execute(Client *client, Server *server)
 			}
 			else
 			{
-				std::cout << "BREAK" << std::endl;
 				continue;
 			}
 		}
@@ -170,10 +160,7 @@ void ModeCommand::execute(Client *client, Server *server)
 				appliedArgs += modeParam;
 			}
 		}
-		std::cout << "handler change things " << changed << std::endl;
 	}
-
-	std::cout << "Point 5" << std::endl;
 
 	if (!appliedModes.empty())
 	{
@@ -191,5 +178,4 @@ void ModeCommand::execute(Client *client, Server *server)
 		std::cout << "[ircserver]: Mode Command response " << response.build() << std::endl;
 		chan->broadcastAll(response.build(), server);
 	}
-	std::cout << "Point 7 end" << std::endl;
 }
