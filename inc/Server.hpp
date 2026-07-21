@@ -46,7 +46,7 @@ private:
 	std::map<std::string, Channel> _channels_;
 
 	// ModeHandler
-	std::map<std::string, ModeHandler *> modeHandlers_;
+	std::map<char, ModeHandler *> modeHandlers_;
 
 	// Constructors private to avoid duplication of the Server
 	Server();
@@ -122,7 +122,7 @@ public:
 	Client *findClientByNick(const std::string &nick_to_find);
 
 	// ModeHandler
-	ModeHandler *getModeHandler(const std::string &mode) const;
+	ModeHandler *getModeHandler(const char &mode) const;
 };
 
 #endif // SERVER_HPP

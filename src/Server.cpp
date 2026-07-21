@@ -9,8 +9,8 @@
 
 Server::Server() : port_(""), listener_(-1), password_(""), nameServer_(NAME_SERVER), creationDate_(time(NULL)), connections_(), clients_(), used_nicks_(), _channels_(), modeHandlers_()
 {
-	modeHandlers_["i"] = new InviteOnlyMode();
-	modeHandlers_["t"] = new TopicRestrictedMode();
+	modeHandlers_['i'] = new InviteOnlyMode();
+	modeHandlers_['t'] = new TopicRestrictedMode();
 }
 
 Server::~Server()
@@ -56,8 +56,8 @@ Server &Server::operator=(const Server &other)
 Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass), nameServer_(NAME_SERVER), creationDate_(time(NULL)), used_nicks_(), _channels_(), modeHandlers_()
 {
 	// TODO: Buscar forma mas ordenada de registrar los modeHandlers;
-	modeHandlers_["i"] = new InviteOnlyMode();
-	modeHandlers_["t"] = new TopicRestrictedMode();
+	modeHandlers_['i'] = new InviteOnlyMode();
+	modeHandlers_['t'] = new TopicRestrictedMode();
 	init();
 
 	struct pollfd listener_poll;
@@ -685,9 +685,9 @@ void Server::leaveChannel(Client *client, const std::string &nameChannel, const 
 }
 
 // TODO: PASAR A UN ARCHIVO NUEVO DENTRO DE src/Server/Modes
-ModeHandler *Server::getModeHandler(const std::string &mode) const
+ModeHandler *Server::getModeHandler(const char &mode) const
 {
-	std::map<std::string, ModeHandler *>::const_iterator it = modeHandlers_.find(mode);
+	std::map<char, ModeHandler *>::const_iterator it = modeHandlers_.find(mode);
 
 	if (it != modeHandlers_.end())
 	{
