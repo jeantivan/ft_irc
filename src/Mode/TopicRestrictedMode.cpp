@@ -29,6 +29,9 @@ bool TopicRestrictedMode::change(Channel *channel, bool isAdding, const std::str
 {
 	(void)params;
 
+	if (channel->isTopicRestricted() == isAdding)
+		return false;
+
 	channel->setTopicRestricted(isAdding);
 	return true;
 }

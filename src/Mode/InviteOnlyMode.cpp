@@ -26,6 +26,9 @@ bool InviteOnlyMode::change(Channel *channel, bool isAdding, const std::string &
 {
 	(void)param;
 
+	if (channel->isInviteOnly() == isAdding)
+		return false;
+
 	channel->setInviteOnly(isAdding);
 	return true;
 }
