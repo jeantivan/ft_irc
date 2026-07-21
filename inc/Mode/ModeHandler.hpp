@@ -2,6 +2,7 @@
 #define MODEHANDLER_HPP
 
 #include <string>
+#include <iostream>
 
 #include "Channel.hpp"
 
