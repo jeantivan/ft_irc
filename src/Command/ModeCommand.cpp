@@ -151,7 +151,7 @@ void ModeCommand::execute(Client *client, Server *server)
 
 			appliedModes += c;
 
-			if (modeParam.empty())
+			if (!modeParam.empty())
 			{
 				if (!appliedArgs.empty())
 				{
@@ -164,7 +164,6 @@ void ModeCommand::execute(Client *client, Server *server)
 
 	if (!appliedModes.empty())
 	{
-		std::cout << appliedModes << std::endl;
 		response.prefix(client->getPrefix())
 			.command("MODE")
 			.target(chan->getName())
