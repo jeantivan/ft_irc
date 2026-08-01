@@ -22,7 +22,7 @@ bool OperatorMode::requiresParam(bool isAdding) const
 	return true;
 }
 
-bool OperatorMode::change(Channel *channel, bool isAdding, const std::string &param)
+bool OperatorMode::change(Channel *channel, bool isAdding, const std::string &param, Client *client, Server *server)
 {
 
 	return true;

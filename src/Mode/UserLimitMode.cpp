@@ -25,9 +25,10 @@ bool UserLimitMode::requiresParam(bool isAdding) const
 	return isAdding;
 }
 
-bool UserLimitMode::change(Channel *channel, bool isAdding, const std::string &param)
+bool UserLimitMode::change(Channel *channel, bool isAdding, const std::string &param, Client *client, Server *server)
 {
-	(void)param;
+	(void)client;
+	(void)server;
 
 	if (isAdding)
 	{

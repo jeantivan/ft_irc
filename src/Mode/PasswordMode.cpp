@@ -25,9 +25,11 @@ bool PasswordMode::requiresParam(bool isAdding) const
 	return true;
 }
 
-bool PasswordMode::change(Channel *channel, bool isAdding, const std::string &param)
+bool PasswordMode::change(Channel *channel, bool isAdding, const std::string &param, Client *client, Server *server)
 {
 	(void)isAdding;
+	(void)client;
+	(void)server;
 
 	// Si agrega y param es igual a pass -> false
 	if (isAdding && channel->getPassword() == param)

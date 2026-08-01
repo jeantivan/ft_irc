@@ -22,9 +22,11 @@ bool InviteOnlyMode::requiresParam(bool isAdding) const
 	return false;
 }
 
-bool InviteOnlyMode::change(Channel *channel, bool isAdding, const std::string &param)
+bool InviteOnlyMode::change(Channel *channel, bool isAdding, const std::string &param, Client *client, Server *server)
 {
 	(void)param;
+	(void)client;
+	(void)server;
 
 	if (channel->isInviteOnly() == isAdding)
 		return false;

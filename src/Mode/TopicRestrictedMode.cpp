@@ -25,9 +25,11 @@ bool TopicRestrictedMode::requiresParam(bool isAdding) const
 	return false;
 }
 
-bool TopicRestrictedMode::change(Channel *channel, bool isAdding, const std::string &params)
+bool TopicRestrictedMode::change(Channel *channel, bool isAdding, const std::string &param, Client *client, Server *server)
 {
-	(void)params;
+	(void)param;
+	(void)client;
+	(void)server;
 
 	if (channel->isTopicRestricted() == isAdding)
 		return false;

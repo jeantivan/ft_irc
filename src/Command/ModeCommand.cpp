@@ -70,6 +70,18 @@ void ModeCommand::execute(Client *client, Server *server)
 		return;
 	}
 
+	if (!chan->isMember(client->getFd()))
+	{
+		response.prefix(server->getName())
+			.numeric(ERR_NOTONCHANNEL)
+			.target(client->getNick())
+			.params(params_[0])
+			.trailing("You are not member of this channel");
+		server->queueClientData(*client, response.build());
+		std::cout << "[ircserver]: Error ERR_NOTONCHANNEL " << response.build() << std::endl;
+		return;
+	}
+
 	if (!chan->isOperator(client->getFd()))
 	{
 		response
@@ -138,7 +150,7 @@ void ModeCommand::execute(Client *client, Server *server)
 			}
 		}
 
-		bool changed = handler->change(chan, isAdding, modeParam);
+		bool changed = handler->change(chan, isAdding, modeParam, client, server);
 		if (changed)
 		{
 			char currSign = isAdding ? '+' : '-';
