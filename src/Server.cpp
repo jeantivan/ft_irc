@@ -8,6 +8,7 @@
 #include "Mode/TopicRestrictedMode.hpp"
 #include "Mode/PasswordMode.hpp"
 #include "Mode/UserLimitMode.hpp"
+#include "Mode/OperatorMode.hpp"
 
 Server::Server() : port_(""), listener_(-1), password_(""), nameServer_(NAME_SERVER), creationDate_(time(NULL)), connections_(), clients_(), used_nicks_(), _channels_(), modeHandlers_()
 {
@@ -15,6 +16,7 @@ Server::Server() : port_(""), listener_(-1), password_(""), nameServer_(NAME_SER
 	modeHandlers_['t'] = new TopicRestrictedMode();
 	modeHandlers_['k'] = new PasswordMode();
 	modeHandlers_['l'] = new UserLimitMode();
+	modeHandlers_['o'] = new OperatorMode();
 }
 
 Server::~Server()
@@ -64,6 +66,8 @@ Server::Server(const char *port, const char *pass) : port_(port), listener_(-1),
 	modeHandlers_['t'] = new TopicRestrictedMode();
 	modeHandlers_['k'] = new PasswordMode();
 	modeHandlers_['l'] = new UserLimitMode();
+	modeHandlers_['o'] = new OperatorMode();
+
 	init();
 
 	struct pollfd listener_poll;
