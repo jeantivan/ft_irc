@@ -33,7 +33,8 @@ FILES = main.cpp \
 		Mode/InviteOnlyMode.cpp \
 		Mode/TopicRestrictedMode.cpp \
 		Mode/PasswordMode.cpp \
-		Mode/UserLimitMode.cpp
+		Mode/UserLimitMode.cpp \
+		Mode/OperatorMode.cpp
 
 SRC_FILES = $(addprefix $(SRC_DIR)/, $(FILES))
 OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRC_FILES))
