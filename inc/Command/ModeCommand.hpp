@@ -16,6 +16,9 @@ public:
 	virtual void execute(Client *client, Server *server);
 
 	static Command *create(const std::string &type, const std::vector<std::string> &params);
+
+	void handleChannelMode(Channel *channel, Client *client, Server *server) const;
+	void applyChanges(Channel *channel, Client *client, Server *server) const;
 };
 
 #endif // MODECOMMAND_HPP

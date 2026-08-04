@@ -28,72 +28,48 @@ Command *ModeCommand::create(const std::string &type, const std::vector<std::str
 	return new ModeCommand(type, params);
 }
 
-void ModeCommand::execute(Client *client, Server *server)
+void ModeCommand::handleChannelMode(Channel *channel, Client *client, Server *server) const
 {
 	ResponseBuilder response;
+	std::string activesModes = "+";
+	std::string modeArgs = "";
 
-	if (!client->isAuth())
+	if (channel->isInviteOnly())
+		activesModes += "i";
+
+	if (channel->isTopicRestricted())
+		activesModes += "t";
+
+	if (!channel->getPassword().empty())
 	{
-		response
-			.prefix(server->getName())
-			.numeric(ERR_NOTREGISTERED)
-			.target(client->getNick().empty() ? "*" : client->getNick())
-			.trailing("You have not registered");
-		server->queueClientData(*client, response.build());
-		std::cout << "[ircserver]: Error ERR_NOTREGISTERED " << type_ << std::endl;
-		return;
+		activesModes += "k";
+		modeArgs += " " + channel->getPassword();
 	}
 
-	std::string target = params_[0];
-
-	// Do nothing if target is and User/client
-	// if (target[0] != '#')
-	// 	return;
-
-	// TODO: Send RPL_CHANNELMODEIS when "MODE #channel"
-	if (params_.size() == 1)
+	if (channel->getUserLimit() > 0)
 	{
-		std::cout << "[ircserver]: MODE " << target << " received" << std::endl;
-		return;
+		activesModes += "l";
+
+		std::stringstream ss;
+		ss << channel->getUserLimit();
+		modeArgs += " " + ss.str();
 	}
 
-	Channel *chan = server->getChannel(params_[0]);
-	if (!chan)
-	{
-		response.prefix(server->getName())
-			.numeric(ERR_NOSUCHCHANNEL)
-			.target(client->getNick())
-			.params(params_[0])
-			.trailing("No such channel");
-		server->queueClientData(*client, response.build());
-		std::cout << "[ircserver]: Error ERR_NOSUCHCHANNEL " << response.build() << std::endl;
-		return;
-	}
+	if (activesModes == "+")
+		activesModes = "";
 
-	if (!chan->isMember(client->getFd()))
-	{
-		response.prefix(server->getName())
-			.numeric(ERR_NOTONCHANNEL)
-			.target(client->getNick())
-			.params(params_[0])
-			.trailing("You are not member of this channel");
-		server->queueClientData(*client, response.build());
-		std::cout << "[ircserver]: Error ERR_NOTONCHANNEL " << response.build() << std::endl;
-		return;
-	}
+	response.prefix(server->getName())
+		.numeric(RPL_CHANNELMODEIS)
+		.target(client->getNick())
+		.params(channel->getName() + " " + activesModes + modeArgs);
 
-	if (!chan->isOperator(client->getFd()))
-	{
-		response
-			.prefix(server->getName())
-			.numeric(ERR_CHANOPRIVSNEEDED)
-			.target(client->getNick())
-			.params(chan->getName())
-			.trailing("You're not channel operator");
-		server->queueClientData(*client, response.build());
-		std::cout << "[ircserver]: Error ERR_CHANOPRIVSNEEDED " << response.build() << std::endl;
-		return;
-	}
+	server->queueClientData(*client, response.build());
+	std::cout << "[ircserver]: Replied with RPL_CHANNELMODEIS for " << channel->getName() << std::endl;
+}
+
+void ModeCommand::applyChanges(Channel *channel, Client *client, Server *server) const
+{
+	ResponseBuilder response;
 
 	// Parse Modes
 	std::string modes = params_[1];
@@ -128,7 +104,7 @@ void ModeCommand::execute(Client *client, Server *server)
 				.prefix(server->getName())
 				.numeric(ERR_UNKNOWNCOMMAND)
 				.target(client->getNick())
-				.params(chan->getName())
+				.params(channel->getName())
 				.trailing("Unknown mode comand");
 			server->queueClientData(*client, response.build());
 			std::cout << "[ircserver]: Error ERR_UNKNOWNCOMMAND " << response.build() << std::endl;
@@ -150,7 +126,7 @@ void ModeCommand::execute(Client *client, Server *server)
 			}
 		}
 
-		bool changed = handler->change(chan, isAdding, modeParam, client, server);
+		bool changed = handler->change(channel, isAdding, modeParam, client, server);
 		if (changed)
 		{
 			char currSign = isAdding ? '+' : '-';
@@ -178,7 +154,7 @@ void ModeCommand::execute(Client *client, Server *server)
 	{
 		response.prefix(client->getPrefix())
 			.command("MODE")
-			.target(chan->getName())
+			.target(channel->getName())
 			.params(appliedModes);
 
 		if (!appliedArgs.empty())
@@ -187,6 +163,75 @@ void ModeCommand::execute(Client *client, Server *server)
 		}
 
 		std::cout << "[ircserver]: Mode Command response " << response.build() << std::endl;
-		chan->broadcastAll(response.build(), server);
+		channel->broadcastAll(response.build(), server);
 	}
+}
+
+void ModeCommand::execute(Client *client, Server *server)
+{
+	ResponseBuilder response;
+
+	if (!client->isAuth())
+	{
+		response
+			.prefix(server->getName())
+			.numeric(ERR_NOTREGISTERED)
+			.target(client->getNick().empty() ? "*" : client->getNick())
+			.trailing("You have not registered");
+		server->queueClientData(*client, response.build());
+		std::cout << "[ircserver]: Error ERR_NOTREGISTERED " << type_ << std::endl;
+		return;
+	}
+
+	std::string target = params_[0];
+
+	if (target[0] != '#')
+		return;
+
+	Channel *channel = server->getChannel(params_[0]);
+	if (!channel)
+	{
+		response.prefix(server->getName())
+			.numeric(ERR_NOSUCHCHANNEL)
+			.target(client->getNick())
+			.params(params_[0])
+			.trailing("No such channel");
+		server->queueClientData(*client, response.build());
+		std::cout << "[ircserver]: Error ERR_NOSUCHCHANNEL " << response.build() << std::endl;
+		return;
+	}
+
+	if (!channel->isMember(client->getFd()))
+	{
+		response.prefix(server->getName())
+			.numeric(ERR_NOTONCHANNEL)
+			.target(client->getNick())
+			.params(params_[0])
+			.trailing("You are not member of this channel");
+		server->queueClientData(*client, response.build());
+		std::cout << "[ircserver]: Error ERR_NOTONCHANNEL " << response.build() << std::endl;
+		return;
+	}
+
+	// TODO: Send RPL_CHANNELMODEIS when "MODE #channel"
+	if (params_.size() == 1)
+	{
+		handleChannelMode(channel, client, server);
+		return;
+	}
+
+	if (!channel->isOperator(client->getFd()))
+	{
+		response
+			.prefix(server->getName())
+			.numeric(ERR_CHANOPRIVSNEEDED)
+			.target(client->getNick())
+			.params(channel->getName())
+			.trailing("You're not channel operator");
+		server->queueClientData(*client, response.build());
+		std::cout << "[ircserver]: Error ERR_CHANOPRIVSNEEDED " << response.build() << std::endl;
+		return;
+	}
+
+	applyChanges(channel, client, server);
 }
