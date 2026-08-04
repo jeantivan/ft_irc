@@ -1,6 +1,7 @@
 #include "Command/ModeCommand.hpp"
 #include "Server.hpp"
 #include "Client.hpp"
+#include "Channel.hpp"
 #include "ResponseBuilder.hpp"
 #include "NumericReplies.hpp"
 #include "Mode/ModeHandler.hpp"

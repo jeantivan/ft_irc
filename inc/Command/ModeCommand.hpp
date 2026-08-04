@@ -3,6 +3,8 @@
 
 #include "Command/Command.hpp"
 
+class Channel;
+
 class ModeCommand : public Command
 {
 private:
