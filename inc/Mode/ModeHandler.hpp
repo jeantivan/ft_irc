@@ -6,6 +6,9 @@
 
 #include "Channel.hpp"
 
+class Client;
+class Server;
+
 class ModeHandler
 {
 private:
