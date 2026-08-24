@@ -56,7 +56,7 @@ void ModeCommand::execute(Client *client, Server *server)
 		return;
 	}
 
-	if (chan->isOperator(client->getFd()))
+	if (!chan->isOperator(client->getFd()))
 	{
 		response
 			.prefix(server->getName())

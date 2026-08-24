@@ -69,5 +69,13 @@
 // ============================================================
 #define ERR_CHANOPRIVSNEEDED	482
 
+// ============================================================
+// ERR - Kick/Invite
+// ============================================================
+#define RPL_INVITING            341
+#define ERR_USERNOTINCHANNEL    441
+#define ERR_USERONCHANNEL       443
+#define ERR_CHANOPRIVSNEEDED    482
+
 
 #endif
