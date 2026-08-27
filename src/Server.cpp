@@ -521,12 +521,14 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 			if (channel->isInviteOnly())
 			{
 				if(! channel->isInvited(clientFd))
-				sendNumericReply(client, ERR_INVITEONLYCHAN, clientNick + " " + nameChannel, "Cannot join channel (+i)");
-				return false;
+				{
+					sendNumericReply(client, ERR_INVITEONLYCHAN, clientNick + " " + nameChannel, "Cannot join channel (+i)");
+					return false;
+				}
 			
 			}
 			if (channel->getUserLimit() != 0 && /*un userLimit == 0 implicaria que no hay limite*/
-				channel->getUserLimit() >= channel->getMembers().size())
+				channel->getUserLimit() <= channel->getMembers().size())
 			{
 				std::cout << "[ircserver]:" << clientNick << "send JOIN->"
 						  << nameChannel << ". But Channel is full" << std::endl;

@@ -43,11 +43,11 @@ private:
 	std::string password_;
 	std::string nameServer_;
 	time_t creationDate_;
+	time_t checkZombiesDate_;
 	std::vector<struct pollfd> connections_;
 	std::map<int, Client> clients_;
 	std::set<std::string> used_nicks_;
 	std::map<std::string, Channel> _channels_;
-	time_t checkZombiesDate_;
 
 	// ModeHandler
 	std::map<char, ModeHandler *> modeHandlers_;
