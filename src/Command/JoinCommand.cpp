@@ -98,7 +98,7 @@ void JoinCommand::execute(Client *client, Server *server)
 				.trailing("Illegal channel name");
 			std::cerr << "[ircserver]: Error: ERR_BADCHANNAME" << std::endl;
 			server->queueClientData(*client, response.build());
-			continue; // OJOOO no descartar este cambio SI es importante, queremos continuar parseando nombres aunque uno de la lista este mal formado.
+			continue;
 		}
 		if (i < channPasword.size())
 			server->joinChannel(client, chanNames[i], channPasword[i]);
