@@ -1,5 +1,6 @@
 #include "Server.hpp"
 #include "Command/CommandFactory.hpp"
+#include "Command/TopicCommand.hpp"
 #include "ResponseBuilder.hpp"
 #include "Channel.hpp"
 #include <ctime>
