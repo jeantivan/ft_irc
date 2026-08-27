@@ -513,7 +513,7 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 			if (channel->getPassword().compare(password)) // cuando no haya password estaremos comparando dos strings vacios
 			{
 				//<client> <channel> :Bad Channel Mask
-				sendNumericReply(client, ERR_BADCHANNELKEY, clientNick + " " + nameChannel, "Cannot join channel (+k)");
+				sendNumericReply(client, ERR_BADCHANNELKEY, nameChannel, "Cannot join channel (+k)");
 				std::cout << "[ircserver]:" << clientNick << "send JOIN->"
 					<< nameChannel << ". But bad passkey" << std::endl;
 				return false;
@@ -522,10 +522,9 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 			{
 				if(! channel->isInvited(clientFd))
 				{
-					sendNumericReply(client, ERR_INVITEONLYCHAN, clientNick + " " + nameChannel, "Cannot join channel (+i)");
+					sendNumericReply(client, ERR_INVITEONLYCHAN, nameChannel, "Cannot join channel (+i)");
 					return false;
 				}
-			
 			}
 			if (channel->getUserLimit() != 0 && /*un userLimit == 0 implicaria que no hay limite*/
 				channel->getUserLimit() <= channel->getMembers().size())
@@ -537,7 +536,7 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 			}
 
 			//Limite maximo de miembros en cualquier canal (nada que ver con mode L)
-			if (channel->getMembers().size() > MAX_CHANNEL_MEMBERS) // falta impementar el limite de MODE "L"
+			if (channel->getMembers().size() >= MAX_CHANNEL_MEMBERS) // falta impementar el limite de MODE "L"
 			{
 				std::cout << "[ircserver]:" << clientNick << "send JOIN->"
 						  << nameChannel << ". But Channel is full" << std::endl;

@@ -23,8 +23,10 @@ JoinCommand::~JoinCommand() {}
 JoinCommand::JoinCommand(const std::string &type, const std::vector<std::string> &params) : Command(type, params) {}
 
 // Funciones auxiliares a execute()
-static bool parseChannName(std::string name)
+static bool parseChannName(const std::string name)
 {
+    if (name.empty())
+        return false;
 	if (name[0] != '#')
 		return false;
 	if (name.length() > 50 || name.length() < 2)

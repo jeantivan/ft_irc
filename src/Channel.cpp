@@ -163,9 +163,13 @@ void Channel::removeClient(int fd)
 	{
 		removeOperator(fd);
 	}
+	// si usamos el fd como iddentificador de cliente, no queda mas remedio
+	// que hacer las invitaciones consumibles. Es decir, un invitado que sale del canal
+	// necesitara una nueva invitacion para volver a entrar. De otra manera, su fd
+	// podria ser reutilizado por otro cliente, el cual tendria acceso sin haber sido invitado
+	if (isInvited(fd))
+		removeInvited(fd);
 
-	// OJO:
-	// TO DO eliminar al cliente de la lista invitedUsers_ si estuviera
 }
 
 bool Channel::isMember(int fd) const
