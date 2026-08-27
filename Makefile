@@ -27,8 +27,15 @@ FILES = main.cpp \
 		Command/PingCommand.cpp \
 		Command/UnknownCommand.cpp \
 		Command/TopicCommand.cpp \
+		Command/ModeCommand.cpp \
 		ResponseBuilder.cpp \
-		Channel.cpp
+		Channel.cpp \
+		Mode/ModeHandler.cpp \
+		Mode/InviteOnlyMode.cpp \
+		Mode/TopicRestrictedMode.cpp \
+		Mode/PasswordMode.cpp \
+		Mode/UserLimitMode.cpp \
+		Mode/OperatorMode.cpp
 
 SRC_FILES = $(addprefix $(SRC_DIR)/, $(FILES))
 OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRC_FILES))

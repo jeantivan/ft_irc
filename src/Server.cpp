@@ -4,9 +4,20 @@
 #include "Channel.hpp"
 #include <ctime>
 #include <sstream>
-#include "Command/TopicCommand.hpp"
+#include "Mode/InviteOnlyMode.hpp"
+#include "Mode/TopicRestrictedMode.hpp"
+#include "Mode/PasswordMode.hpp"
+#include "Mode/UserLimitMode.hpp"
+#include "Mode/OperatorMode.hpp"
 
-Server::Server() : port_(""), listener_(-1), password_(""), nameServer_(NAME_SERVER), creationDate_(time(NULL)), checkZombiesDate_(creationDate_ + PERIODICCHECK) {}
+Server::Server() : port_(""), listener_(-1), password_(""), nameServer_(NAME_SERVER), creationDate_(time(NULL)), checkZombiesDate_(creationDate_ + PERIODICCHECK), connections_(), clients_(), used_nicks_(), _channels_(), modeHandlers_()
+{
+	modeHandlers_['i'] = new InviteOnlyMode();
+	modeHandlers_['t'] = new TopicRestrictedMode();
+	modeHandlers_['k'] = new PasswordMode();
+	modeHandlers_['l'] = new UserLimitMode();
+	modeHandlers_['o'] = new OperatorMode();
+}
 
 Server::~Server()
 {
@@ -49,8 +60,16 @@ Server &Server::operator=(const Server &other)
 	return *this;
 }
 
-Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass), nameServer_(NAME_SERVER), creationDate_(time(NULL)), used_nicks_(), checkZombiesDate_(creationDate_ + PERIODICCHECK)
+
+Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass), nameServer_(NAME_SERVER), creationDate_(time(NULL)), checkZombiesDate_(creationDate_ + PERIODICCHECK), used_nicks_(), _channels_(), modeHandlers_()
 {
+	// TODO: Buscar forma mas ordenada de registrar los modeHandlers;
+	modeHandlers_['i'] = new InviteOnlyMode();
+	modeHandlers_['t'] = new TopicRestrictedMode();
+	modeHandlers_['k'] = new PasswordMode();
+	modeHandlers_['l'] = new UserLimitMode();
+	modeHandlers_['o'] = new OperatorMode();
+
 	init();
 
 	struct pollfd listener_poll;
@@ -721,4 +740,16 @@ void Server::dezombify()
         if (zombie)
             disconnectClient(fd);
     }
+}
+// TODO: PASAR A UN ARCHIVO NUEVO DENTRO DE src/Server/Modes
+ModeHandler *Server::getModeHandler(const char &mode) const
+{
+	std::map<char, ModeHandler *>::const_iterator it = modeHandlers_.find(mode);
+
+	if (it != modeHandlers_.end())
+	{
+		return it->second;
+	}
+
+	return NULL;
 }
