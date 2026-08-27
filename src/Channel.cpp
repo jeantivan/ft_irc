@@ -244,6 +244,5 @@ std::string Channel::getNickList() const
 
 		nickList += it->second->getNick();
 	}
-	std::cout << "[DEBUGG] ln 124" << nickList << std::endl; // BORRAESTO
 	return nickList;
 }

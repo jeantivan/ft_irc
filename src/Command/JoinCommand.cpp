@@ -26,7 +26,7 @@ JoinCommand::JoinCommand(const std::string &type, const std::vector<std::string>
 static bool parseChannName(const std::string name)
 {
     if (name.empty())
-        return false;
+		return false;
 	if (name[0] != '#')
 		return false;
 	if (name.length() > 50 || name.length() < 2)
