@@ -275,6 +275,15 @@ void Server::receiveClientData(size_t client_index)
 	std::cout << "[ircserver]: Received " << bytes_received << " bytes from client " << client_fd << std::endl;
 	client.appendToReadBuf(buffer, bytes_received);
 
+	// Si acumulamos mas de MAX_READBUF bytes y todavia no hay un "\r\n", la linea rompe el protocolo (cliente roto o ataque).
+	if (client.getReadBuf().size() > MAX_READBUF && !client.hasCompleteCommand())
+	{
+		std::cerr << "[ircserver]: Client " << client_fd << " input line too long (" << client.getReadBuf().size() << " bytes), disconnecting" << std::endl;
+		queueClientData(client, "ERROR :Input line too long\r\n");
+		client.setToDisconnect();
+		return;
+	}
+
 	// TODO: May be this will be deleted
 	while (client.hasCompleteCommand() && !client.getToDisconnect()) // && !client.getToDisconnect() evita seguir ejecutando comandos acumulados en buffer de salida, cuando el cliente fué marcado toDisconnect_
 	{
