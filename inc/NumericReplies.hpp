@@ -21,6 +21,7 @@
 #define RPL_TOPIC           	332
 #define RPL_NOTOPIC         	331
 #define RPL_NAMREPLY			353			
+#define RPL_TOPICWHOTIME		333
 
 
 // ============================================================
@@ -68,6 +69,16 @@
 // ERR - Mode 
 // ============================================================
 #define ERR_CHANOPRIVSNEEDED	482
+#define ERR_USERNOTINCHANNEL	441
+#define RPL_CHANNELMODEIS		324
+
+// ============================================================
+// ERR - Kick/Invite
+// ============================================================
+#define RPL_INVITING            341
+#define ERR_USERNOTINCHANNEL    441
+#define ERR_USERONCHANNEL       443
+#define ERR_CHANOPRIVSNEEDED    482
 
 
 #endif

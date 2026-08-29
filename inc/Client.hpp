@@ -29,6 +29,7 @@ private:
 	std::string user_;
 	std::string realname_;
 	bool toDisconnect_;
+	time_t toDisconnectSince_;
 
 public:
 	Client();
@@ -51,6 +52,7 @@ public:
 	const std::string &getRealname() const;
 	bool getToDisconnect() const;
 	std::string getPrefix() const;
+	time_t getToDisconnectSince() const;
 
 	// Setters;
 	void setAuthState(AuthState);

@@ -55,9 +55,16 @@ ResponseBuilder &ResponseBuilder::target(const std::string &target)
 	return *this;
 }
 
+// AVISO: llamar a  ResponseBuilder::trailing("") con una cadena vacia, introducirá " :" al final
+// de ResponseBuilder.build().
+// Esos ":" finales marcan que un argumento existe y esta vacío, que no es lo mismo que
+// no tener argumento.
+// Por ejemplo, cuando queremos borrar el topic de un canal
+// mandamos ":user!username@ip TOPIC #test :"
+
 ResponseBuilder &ResponseBuilder::trailing(const std::string &trailing)
 {
-	trailing_ = trailing;
+	trailing_ = " :" + trailing;
 	return *this;
 }
 
@@ -93,7 +100,7 @@ const std::string ResponseBuilder::build() const
 		result += " " + params_;
 
 	if (!trailing_.empty())
-		result += " :" + trailing_;//trailing() ya introdujo ":"
+		result += trailing_;//trailing() ya introdujo " :"
 
 	result += "\r\n";
 

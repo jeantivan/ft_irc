@@ -25,9 +25,15 @@
 #include <ctime>
 #include "Channel.hpp"
 
-#define NAME_SERVER "IRC_Serv" //maximo 9 caracteres (RPL_s construidas con esa convencion)
+#include "Mode/ModeHandler.hpp"
+
+#define NAME_SERVER "IRC_Serv" // maximo 9 caracteres (RPL_s construidas con esa convencion)
 #define SERVER_VERSION "Beta"
 #define MAX_CHANNEL_MEMBERS 200
+#define MAX_READBUF 512 // una linea de mallor tamaño probablemente esta buscando desbordar writeBuf_
+#define UNBLOCKPOLL 10000 // tiempo en milisegundos que tarda poll en desbloquearse cuando no hay actividad
+#define PERIODICCHECK 10
+#define TEARDOWNTIMEMAX 20 //cuando un cliente es marcado toDisconnect, y supera este periodo de gracia, sera desconectado aun cuando quedasen datos sin enviar en su buffer de salida
 
 class Channel;
 class Server
@@ -38,10 +44,14 @@ private:
 	std::string password_;
 	std::string nameServer_;
 	time_t creationDate_;
+	time_t checkZombiesDate_;
 	std::vector<struct pollfd> connections_;
 	std::map<int, Client> clients_;
 	std::set<std::string> used_nicks_;
 	std::map<std::string, Channel> _channels_;
+
+	// ModeHandler
+	std::map<char, ModeHandler *> modeHandlers_;
 
 	// Constructors private to avoid duplication of the Server
 	Server();
@@ -88,7 +98,6 @@ public:
 	// Istancia un objeto ResponseBuilder con los parametros recibidos y lo pone en cola del writeBuf del cliente
 	void sendNumericReply(Client *client, int numeric, const std::string &params, const std::string &trailing);
 
-
 	// Send client data, los datos almacendos en el buffer desalida con la funcion anterior
 	bool sendClientData(size_t client_index);
 
@@ -116,6 +125,11 @@ public:
 
 	// PrivMsg Command
 	Client *findClientByNick(const std::string &nick_to_find);
+	
+	void dezombify();
+
+	// ModeHandler
+	ModeHandler *getModeHandler(const char &mode) const;
 };
 
 #endif // SERVER_HPP

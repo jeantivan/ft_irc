@@ -23,8 +23,10 @@ JoinCommand::~JoinCommand() {}
 JoinCommand::JoinCommand(const std::string &type, const std::vector<std::string> &params) : Command(type, params) {}
 
 // Funciones auxiliares a execute()
-static bool parseChannName(std::string name)
+static bool parseChannName(const std::string name)
 {
+    if (name.empty())
+		return false;
 	if (name[0] != '#')
 		return false;
 	if (name.length() > 50 || name.length() < 2)
@@ -52,8 +54,6 @@ void JoinCommand::execute(Client *client, Server *server)
 
 	if (params_.size() < 1)
 	{
-		// TO DO:
-		//  enviar NEDMOREPARAMS
 		response.prefix(server->getName())
 			.numeric(ERR_NEEDMOREPARAMS)
 			.target(client->getNick())
@@ -98,7 +98,7 @@ void JoinCommand::execute(Client *client, Server *server)
 				.trailing("Illegal channel name");
 			std::cerr << "[ircserver]: Error: ERR_BADCHANNAME" << std::endl;
 			server->queueClientData(*client, response.build());
-			continue; // OJOOO no descartar este cambio SI es importante, queremos continuar parseando nombres aunque uno de la lista este mal formado.
+			continue;
 		}
 		if (i < channPasword.size())
 			server->joinChannel(client, chanNames[i], channPasword[i]);

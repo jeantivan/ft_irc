@@ -1,11 +1,24 @@
 #include "Server.hpp"
 #include "Command/CommandFactory.hpp"
+#include "Command/TopicCommand.hpp"
 #include "ResponseBuilder.hpp"
 #include "Channel.hpp"
 #include <ctime>
 #include <sstream>
+#include "Mode/InviteOnlyMode.hpp"
+#include "Mode/TopicRestrictedMode.hpp"
+#include "Mode/PasswordMode.hpp"
+#include "Mode/UserLimitMode.hpp"
+#include "Mode/OperatorMode.hpp"
 
-Server::Server() : port_(""), listener_(-1), password_(""), nameServer_(NAME_SERVER), creationDate_(time(NULL)) {}
+Server::Server() : port_(""), listener_(-1), password_(""), nameServer_(NAME_SERVER), creationDate_(time(NULL)), checkZombiesDate_(creationDate_ + PERIODICCHECK), connections_(), clients_(), used_nicks_(), _channels_(), modeHandlers_()
+{
+	modeHandlers_['i'] = new InviteOnlyMode();
+	modeHandlers_['t'] = new TopicRestrictedMode();
+	modeHandlers_['k'] = new PasswordMode();
+	modeHandlers_['l'] = new UserLimitMode();
+	modeHandlers_['o'] = new OperatorMode();
+}
 
 Server::~Server()
 {
@@ -31,7 +44,7 @@ Server::~Server()
 	used_nicks_.clear(); // Limpiar los nicks
 }
 
-Server::Server(const Server &other) : port_(other.port_), listener_(other.listener_), password_(other.password_), nameServer_(other.nameServer_), creationDate_(time(NULL)) {}
+Server::Server(const Server &other) : port_(other.port_), listener_(other.listener_), password_(other.password_), nameServer_(other.nameServer_), creationDate_(other.creationDate_), checkZombiesDate_(other.checkZombiesDate_) {}
 
 Server &Server::operator=(const Server &other)
 {
@@ -42,13 +55,22 @@ Server &Server::operator=(const Server &other)
 		password_ = other.password_;
 		nameServer_ = other.nameServer_;
 		creationDate_ = other.creationDate_;
+		checkZombiesDate_ = other.checkZombiesDate_;
 	}
 
 	return *this;
 }
 
-Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass), nameServer_(NAME_SERVER), creationDate_(time(NULL)), used_nicks_()
+
+Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass), nameServer_(NAME_SERVER), creationDate_(time(NULL)), checkZombiesDate_(creationDate_ + PERIODICCHECK), used_nicks_(), _channels_(), modeHandlers_()
 {
+	// TODO: Buscar forma mas ordenada de registrar los modeHandlers;
+	modeHandlers_['i'] = new InviteOnlyMode();
+	modeHandlers_['t'] = new TopicRestrictedMode();
+	modeHandlers_['k'] = new PasswordMode();
+	modeHandlers_['l'] = new UserLimitMode();
+	modeHandlers_['o'] = new OperatorMode();
+
 	init();
 
 	struct pollfd listener_poll;
@@ -149,7 +171,7 @@ void Server::run()
 	std::cout << "[ircserver]: Waiting for connections" << std::endl;
 	while (Server::signal_received_ == false)
 	{
-		int pool_count = poll(&connections_[0], connections_.size(), -1);
+		int pool_count = poll(&connections_[0], connections_.size(), UNBLOCKPOLL);
 
 		if (pool_count == -1)
 		{
@@ -182,6 +204,15 @@ void Server::run()
 					// std::cerr << "Error: Not all client<" << connections_[i].fd << ", " << clients_[connections_[i].fd].getFd() << "> data could be sent" << std::endl;
 				}
 			}
+		}
+
+		//Limpiamos clientes toDisconnect desde mas de  TEARDOWNTIMEMAX segundos
+		if (time(NULL) > checkZombiesDate_)
+		{
+			dezombify();
+			// Programamos proximo checkeo
+			checkZombiesDate_ = time(NULL) + PERIODICCHECK;
+		
 		}
 	}
 }
@@ -235,12 +266,23 @@ void Server::receiveClientData(size_t client_index)
 			std::cerr << "[ircserver]: recv failed on client " << client_fd << " " << std::strerror(errno) << std::endl;
 		}
 
-		disconnectClient(client_fd);
+
+		disconnectClient(client_fd); //esta dejando enlaces colgantes al cliente desconectado en los canales
+		//mejor emular un quitcommand, para eliminar al cliente de los canales
 		return;
 	}
 
 	std::cout << "[ircserver]: Received " << bytes_received << " bytes from client " << client_fd << std::endl;
 	client.appendToReadBuf(buffer, bytes_received);
+
+	// Si acumulamos mas de MAX_READBUF bytes y todavia no hay un "\r\n", la linea rompe el protocolo (cliente roto o ataque).
+	if (client.getReadBuf().size() > MAX_READBUF && !client.hasCompleteCommand())
+	{
+		std::cerr << "[ircserver]: Client " << client_fd << " input line too long (" << client.getReadBuf().size() << " bytes), disconnecting" << std::endl;
+		queueClientData(client, "ERROR :Input line too long\r\n");
+		client.setToDisconnect();
+		return;
+	}
 
 	// TODO: May be this will be deleted
 	while (client.hasCompleteCommand() && !client.getToDisconnect()) // && !client.getToDisconnect() evita seguir ejecutando comandos acumulados en buffer de salida, cuando el cliente fué marcado toDisconnect_
@@ -282,6 +324,11 @@ void Server::disconnectClient(int fd)
 		}
 	}
 
+	//OJOO no esta sacando al cliente de la lista de miembros de los canales TO DO:
+	//	- recorrer canales, llamndo a Channel::removeClient(fd)
+	//	- borrar canales que queden desiertos a su salida
+	//	- tal vez hacer broadcast informando que el cliente salio, en algunos flujos de ejecucion	
+
 	close(fd);
 
 	clients_.erase(fd);
@@ -318,7 +365,7 @@ void Server::requestRegistration(Client &client)
 			response.prefix(getName()).numeric(1).target(client.getNick()).trailing("Welcome to the Internet Relay Network " + client.getNick() + "!" + client.getUser() + "@" + client.getIp());
 			queueClientData(client, response.build());
 			// 002	YOURHOST		"Your host is <servername>, running version <ver>"
-			response.numeric(2).trailing("Your host is " + getName() + ", running version" + SERVER_VERSION);
+			response.numeric(2).trailing("Your host is " + getName() + ", running version " + SERVER_VERSION);
 			queueClientData(client, response.build());
 			// 003    RPL_CREATED	"This server was created <date>"
 			char date[64];
@@ -396,6 +443,9 @@ void Server::signalHandler(int signal)
 	Server::signal_received_ = true;
 }
 
+// Añade datos al writeBuf_ de client.
+// Activa POLLOUT para que poll() de paso al cliente en cuanto este disponible para recibir datos
+// Si el cliente esta marcado toDisconnect_ (teardown), no escribe en su buffer.
 void Server::queueClientData(Client &client, const std::string &data)
 {
 	size_t id = findConnectionByFd(client.getFd());
@@ -406,7 +456,8 @@ void Server::queueClientData(Client &client, const std::string &data)
 		return;
 	}
 	connections_[id].events |= POLLOUT;
-	client.appendToWriteBuf(data);
+	if (!client.getToDisconnect()) // No queremos seguir metiendo datos en el buffer de un cliente en teardown.
+		client.appendToWriteBuf(data);
 }
 
 // NICK COMMAND
@@ -449,53 +500,62 @@ std::map<std::string, Channel> &Server::getChannels()
 
 bool Server::joinChannel(Client *client, const std::string &nameChannel, const std::string &password)
 {
-
-	///////////////BORRAESTO como aun no implementamnos la logica de password, tengo que silenciar warning por parametro sin uso
-	(void)password;
-	///////////////
-
 	Channel *channel;
 	std::string nickList;
 	ResponseBuilder response;
+	int clientFd = client->getFd();
+	std::string clientNick = client->getNick();
 
-	if (isAchannel(nameChannel))
+	if (isAchannel(nameChannel)) // Ya existe el canal
 	{
 		channel = &(_channels_[nameChannel]);
 		// ¿Ya es miembro? Ignorar silenciosamente.
-		if (channel->getMembers().find(client->getFd()) != channel->getMembers().end())
+		if (channel->getMembers().find(clientFd) != channel->getMembers().end())
 		{
-			std::cout << "[ircserver]:" << client->getNick() << "send JOIN->"
+			std::cout << "[ircserver]:" << clientNick << "send JOIN->"
 					  << nameChannel << ". But he was already in the channel" << std::endl;
 			return false;
 		}
 		else // NO es miembro todavía, hacer.
 		{
-			/////////FASE 6///////////////////////////////////////////////////////////////////////////
-			// -¿El canal esta en modo  +k?															//
-			//		-Cruza password																	//
-			//		-Si el pasword es malo, envia mensaje "475 ERR_BADCHANNELKEY"					//
-			// -¿El canal esta en modo +i?															//
-			//		-Comprobar invitacion "_chanNames_(chanNames[i]).getPasswd() == channPasword[i]"//
-			// 		-Si no lo esta mandar 473 ERR_INVITEONLYCHAN									//
-			// -¿El canal alcanzo el numero maximo de usuarios?										//
-			// 		-471 ERR_CHANNELISFULL															//
-			//////////////////////////////////////////////////////////////////////////////////////////
-			if (channel->getMembers().size() > MAX_CHANNEL_MEMBERS) // falta impementar el limite de MODE "L"
+			// COMPROBACIONES RELACIONADAS CON MODE
+			if (channel->getPassword().compare(password)) // cuando no haya password estaremos comparando dos strings vacios
 			{
-				std::cout << "[ircserver]:" << client->getNick() << "send JOIN->"
+				//<client> <channel> :Bad Channel Mask
+				sendNumericReply(client, ERR_BADCHANNELKEY, nameChannel, "Cannot join channel (+k)");
+				std::cout << "[ircserver]:" << clientNick << "send JOIN->"
+					<< nameChannel << ". But bad passkey" << std::endl;
+				return false;
+			}
+			if (channel->isInviteOnly())
+			{
+				if(! channel->isInvited(clientFd))
+				{
+					sendNumericReply(client, ERR_INVITEONLYCHAN, nameChannel, "Cannot join channel (+i)");
+					return false;
+				}
+			}
+			if (channel->getUserLimit() != 0 && /*un userLimit == 0 implicaria que no hay limite*/
+				channel->getUserLimit() <= channel->getMembers().size())
+			{
+				std::cout << "[ircserver]:" << clientNick << "send JOIN->"
+						  << nameChannel << ". But Channel is full" << std::endl;
+				sendNumericReply(client, ERR_CHANNELISFULL, nameChannel, "Cannot join channel (channel is full)");
+				return false;
+			}
+
+			//Limite maximo de miembros en cualquier canal (nada que ver con mode L)
+			if (channel->getMembers().size() >= MAX_CHANNEL_MEMBERS) // falta impementar el limite de MODE "L"
+			{
+				std::cout << "[ircserver]:" << clientNick << "send JOIN->"
 						  << nameChannel << ". But Channel is full" << std::endl;
 				sendNumericReply(client, ERR_CHANNELISFULL, nameChannel, "Cannot join channel (channel is full)");
 				return false;
 			}
 
 			channel->addClient(client);
-			std::cout << "[ircserver]: " << client->getNick() << " Join to: " << nameChannel << std::endl;
-
-			// Cargar (sin enviar) RPL_TOPIC en response.
-			response.prefix(getName())
-				.numeric(RPL_TOPIC)
-				.target(client->getNick())
-				.trailing(channel->getTopic());
+			std::cout << "[ircserver]: " << clientNick << " Join to: " << nameChannel << std::endl;
+//////////////
 		}
 	}
 	else // (El canal no existe)
@@ -505,23 +565,26 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 		// Añadir client al canal
 		channel->addClient(client);
 		// Añadir a client como operador al canal
-		channel->addOperator(client->getFd());
-		// Cargar (sin enviar) RPL_NOTOPIC en response.
-		response.prefix(getName())
-			.numeric(RPL_NOTOPIC)
-			.target(client->getNick())
-			.trailing("No topic is set");
+		channel->addOperator(clientFd);
+////////////
 	}
 	// WELCOME:
 	// - Broadcast :<nick>!<user>@<ip> JOIN #canal
 	channel->broadcastAll(":" + client->getPrefix() + " JOIN " + nameChannel + "\r\n", this);
-	// - RPL_TOPIC o RPL_NOTOPIC.
-	queueClientData(*client, response.build());
+	// - RPL_TOPIC o RPL_NOTOPIC, creando y ejecutando un objeto TopicCommand
+	std::vector<std::string> topicVect;
+	topicVect.push_back(nameChannel);
+	TopicCommand topic("TOPIC", topicVect);
+	topic.execute(client, this);
 	// - Envia la lista de miembros con RPL_NAMREPLY y RPL_ENDOFNAMES
 	namreply(client, channel);
 	return true;
 }
 
+// Extrae e incluye por si mismo prefix, numeric, target.
+// params puede ser una cadena vacia si no necesitas enviar mas parametros.
+// Si trailing es un string vacío, no llamara a response.trailing() y los : al final no seran insertados,
+// es decir, esta funcion no sirve para enviar un argumento vacío.
 void Server::sendNumericReply(Client *client, int numeric, const std::string &params, const std::string &trailing)
 {
 	ResponseBuilder response;
@@ -673,4 +736,31 @@ void Server::leaveChannel(Client *client, const std::string &nameChannel, const 
 		_channels_.erase(nameChannel); // El mapa se encarga de todo en una sola línea
 		std::cout << "[ircserver]: Channel " << nameChannel << " deleted de _channels_ (no members left)." << std::endl;
 	}
+}
+
+void Server::dezombify()
+{
+    std::map<int, Client>::iterator it = clients_.begin();
+    while (it != clients_.end())
+    {
+        int fd = it->first;
+        bool zombie = it->second.getToDisconnect()
+            && it->second.getToDisconnectSince() + TEARDOWNTIMEMAX < time(NULL);
+        ++it;
+
+        if (zombie)
+            disconnectClient(fd);
+    }
+}
+// TODO: PASAR A UN ARCHIVO NUEVO DENTRO DE src/Server/Modes
+ModeHandler *Server::getModeHandler(const char &mode) const
+{
+	std::map<char, ModeHandler *>::const_iterator it = modeHandlers_.find(mode);
+
+	if (it != modeHandlers_.end())
+	{
+		return it->second;
+	}
+
+	return NULL;
 }

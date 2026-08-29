@@ -4,7 +4,10 @@
 #include <algorithm>
 
 Channel::Channel() : name_(),
-					 topic_(), members_(),
+					 topic_(),
+					 topicAuthor_(),
+					 topicTime_(),
+					 members_(),
 					 operators_(),
 					 inviteOnly_(false),
 					 topicRestricted_(true),
@@ -14,6 +17,8 @@ Channel::Channel() : name_(),
 
 Channel::Channel(const Channel &other) : name_(other.name_),
 										 topic_(other.topic_),
+										 topicAuthor_(other.topicAuthor_),
+										 topicTime_(other.topicTime_),
 										 members_(other.members_),
 										 operators_(other.operators_),
 										 inviteOnly_(other.inviteOnly_),
@@ -30,6 +35,8 @@ Channel &Channel::operator=(const Channel &other)
 	{
 		name_ = other.name_;
 		topic_ = other.topic_;
+		topicAuthor_ = other.topicAuthor_;
+		topicTime_ = other.topicTime_;
 		members_ = other.members_;
 		operators_ = other.operators_;
 		inviteOnly_ = other.inviteOnly_;
@@ -44,6 +51,8 @@ Channel &Channel::operator=(const Channel &other)
 
 Channel::Channel(const std::string &name) : name_(name),
 											topic_(),
+					  						topicAuthor_(),
+											topicTime_(),
 											members_(),
 											operators_(),
 											inviteOnly_(false),
@@ -61,6 +70,17 @@ const std::string &Channel::getName() const
 const std::string &Channel::getTopic() const
 {
 	return topic_;
+}
+
+const std::string &Channel::getTopicAuthor() const
+{
+	return topicAuthor_;
+}
+
+
+const std::string &Channel::getTopicTime() const
+{
+	return topicTime_;
 }
 
 const std::map<int, Client *> &Channel::getMembers() const
@@ -94,9 +114,14 @@ bool Channel::isInvited(int fd) const
 }
 
 // Setters
-void Channel::setTopic(const std::string &topic)
+void Channel::setTopic(const std::string &topic, const std::string &nick)
 {
 	topic_ = topic;
+	topicAuthor_ = nick;
+
+	std::ostringstream oss;
+	oss << time(NULL);
+	topicTime_ = oss.str();
 }
 
 void Channel::setInviteOnly(bool state)
@@ -138,6 +163,13 @@ void Channel::removeClient(int fd)
 	{
 		removeOperator(fd);
 	}
+	// si usamos el fd como iddentificador de cliente, no queda mas remedio
+	// que hacer las invitaciones consumibles. Es decir, un invitado que sale del canal
+	// necesitara una nueva invitacion para volver a entrar. De otra manera, su fd
+	// podria ser reutilizado por otro cliente, el cual tendria acceso sin haber sido invitado
+	if (isInvited(fd))
+		removeInvited(fd);
+
 }
 
 bool Channel::isMember(int fd) const
@@ -212,6 +244,5 @@ std::string Channel::getNickList() const
 
 		nickList += it->second->getNick();
 	}
-	std::cout << "[DEBUGG] ln 124" << nickList << std::endl; // BORRAESTO
 	return nickList;
 }
