@@ -9,8 +9,10 @@
 #include <Command/QuitCommand.hpp>
 #include <Command/PingCommand.hpp>
 #include <Command/UnknownCommand.hpp>
+#include <Command/InviteCommand.hpp>
 #include <Command/ModeCommand.hpp>
 #include <Command/TopicCommand.hpp>
+#include <Command/KickCommand.hpp>
 
 CommandFactory::CommandFactory()
 {
@@ -26,6 +28,8 @@ CommandFactory::CommandFactory()
 	creators_["TOPIC"] = &TopicCommand::create;
 	// TODO: Quitar comentario creators_["MODE"] = &ModeCommand::create;
 	creators_["MODE"] = &ModeCommand::create;
+	creators_["KICK"] = &KickCommand::create;
+	creators_["INVITE"] = &InviteCommand::create;
 }
 
 CommandFactory::~CommandFactory() {}
