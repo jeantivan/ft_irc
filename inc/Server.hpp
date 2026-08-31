@@ -30,10 +30,10 @@
 #define NAME_SERVER "IRC_Serv" // maximo 9 caracteres (RPL_s construidas con esa convencion)
 #define SERVER_VERSION "Beta"
 #define MAX_CHANNEL_MEMBERS 200
-#define MAX_READBUF 512 // una linea de mallor tamaño probablemente esta buscando desbordar writeBuf_
+#define MAX_READBUF 512	  // una linea de mallor tamaño probablemente esta buscando desbordar writeBuf_
 #define UNBLOCKPOLL 10000 // tiempo en milisegundos que tarda poll en desbloquearse cuando no hay actividad
 #define PERIODICCHECK 10
-#define TEARDOWNTIMEMAX 20 //cuando un cliente es marcado toDisconnect, y supera este periodo de gracia, sera desconectado aun cuando quedasen datos sin enviar en su buffer de salida
+#define TEARDOWNTIMEMAX 20 // cuando un cliente es marcado toDisconnect, y supera este periodo de gracia, sera desconectado aun cuando quedasen datos sin enviar en su buffer de salida
 
 class Channel;
 class Server
@@ -59,7 +59,7 @@ private:
 	Server &operator=(const Server &other);
 
 	// Flag for a Graceful Shutdown
-	static bool signal_received_;
+	static volatile sig_atomic_t signal_received_;
 
 public:
 	~Server();
@@ -125,7 +125,7 @@ public:
 
 	// PrivMsg Command
 	Client *findClientByNick(const std::string &nick_to_find);
-	
+
 	void dezombify();
 
 	// ModeHandler

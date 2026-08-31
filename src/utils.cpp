@@ -72,7 +72,10 @@ bool parse(std::string &raw_cmd, std::string &type, std::vector<std::string> &pa
 		return false;
 
 	// Remove "\r\n" from the raw command
-	raw_cmd = raw_cmd.substr(0, raw_cmd.size() - 2);
+	if (raw_cmd.size() >= 2)
+		raw_cmd = raw_cmd.substr(0, raw_cmd.size() - 2);
+	else
+		raw_cmd.clear();
 
 	size_t pos = 0;
 

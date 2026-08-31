@@ -30,8 +30,8 @@ Server::~Server()
 
 		if (fd != listener_)
 		{
-			std::string bye = "Error: Server is shutting down. Goodbye!\r\n";
-			send(fd, bye.c_str(), bye.size(), 0);
+			const char *bye = "Error: Server is shutting down. Goodbye!\r\n";
+			send(fd, bye, 42, 0);
 			close(fd);
 
 			std::cout << "[ircserver]: Client " << fd << " disconnected gracefully." << std::endl;
@@ -42,6 +42,11 @@ Server::~Server()
 		close(listener_);
 
 	used_nicks_.clear(); // Limpiar los nicks
+	delete modeHandlers_['i'];
+	delete modeHandlers_['t'];
+	delete modeHandlers_['k'];
+	delete modeHandlers_['l'];
+	delete modeHandlers_['o'];
 }
 
 Server::Server(const Server &other) : port_(other.port_), listener_(other.listener_), password_(other.password_), nameServer_(other.nameServer_), creationDate_(other.creationDate_), checkZombiesDate_(other.checkZombiesDate_) {}
@@ -60,7 +65,6 @@ Server &Server::operator=(const Server &other)
 
 	return *this;
 }
-
 
 Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass), nameServer_(NAME_SERVER), creationDate_(time(NULL)), checkZombiesDate_(creationDate_ + PERIODICCHECK), used_nicks_(), _channels_(), modeHandlers_()
 {
@@ -206,13 +210,12 @@ void Server::run()
 			}
 		}
 
-		//Limpiamos clientes toDisconnect desde mas de  TEARDOWNTIMEMAX segundos
+		// Limpiamos clientes toDisconnect desde mas de  TEARDOWNTIMEMAX segundos
 		if (time(NULL) > checkZombiesDate_)
 		{
 			dezombify();
 			// Programamos proximo checkeo
 			checkZombiesDate_ = time(NULL) + PERIODICCHECK;
-		
 		}
 	}
 }
@@ -266,9 +269,8 @@ void Server::receiveClientData(size_t client_index)
 			std::cerr << "[ircserver]: recv failed on client " << client_fd << " " << std::strerror(errno) << std::endl;
 		}
 
-
-		disconnectClient(client_fd); //esta dejando enlaces colgantes al cliente desconectado en los canales
-		//mejor emular un quitcommand, para eliminar al cliente de los canales
+		disconnectClient(client_fd); // esta dejando enlaces colgantes al cliente desconectado en los canales
+		// mejor emular un quitcommand, para eliminar al cliente de los canales
 		return;
 	}
 
@@ -324,10 +326,10 @@ void Server::disconnectClient(int fd)
 		}
 	}
 
-	//OJOO no esta sacando al cliente de la lista de miembros de los canales TO DO:
+	// OJOO no esta sacando al cliente de la lista de miembros de los canales TO DO:
 	//	- recorrer canales, llamndo a Channel::removeClient(fd)
 	//	- borrar canales que queden desiertos a su salida
-	//	- tal vez hacer broadcast informando que el cliente salio, en algunos flujos de ejecucion	
+	//	- tal vez hacer broadcast informando que el cliente salio, en algunos flujos de ejecucion
 
 	close(fd);
 
@@ -435,7 +437,7 @@ bool Server::sendClientData(size_t client_index)
 }
 
 // TODO: Separar a otro archivo
-bool Server::signal_received_ = false;
+volatile sig_atomic_t Server::signal_received_ = false;
 
 void Server::signalHandler(int signal)
 {
@@ -524,12 +526,12 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 				//<client> <channel> :Bad Channel Mask
 				sendNumericReply(client, ERR_BADCHANNELKEY, nameChannel, "Cannot join channel (+k)");
 				std::cout << "[ircserver]:" << clientNick << "send JOIN->"
-					<< nameChannel << ". But bad passkey" << std::endl;
+						  << nameChannel << ". But bad passkey" << std::endl;
 				return false;
 			}
 			if (channel->isInviteOnly())
 			{
-				if(! channel->isInvited(clientFd))
+				if (!channel->isInvited(clientFd))
 				{
 					sendNumericReply(client, ERR_INVITEONLYCHAN, nameChannel, "Cannot join channel (+i)");
 					return false;
@@ -544,7 +546,7 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 				return false;
 			}
 
-			//Limite maximo de miembros en cualquier canal (nada que ver con mode L)
+			// Limite maximo de miembros en cualquier canal (nada que ver con mode L)
 			if (channel->getMembers().size() >= MAX_CHANNEL_MEMBERS) // falta impementar el limite de MODE "L"
 			{
 				std::cout << "[ircserver]:" << clientNick << "send JOIN->"
@@ -555,7 +557,7 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 
 			channel->addClient(client);
 			std::cout << "[ircserver]: " << clientNick << " Join to: " << nameChannel << std::endl;
-//////////////
+			//////////////
 		}
 	}
 	else // (El canal no existe)
@@ -566,7 +568,7 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 		channel->addClient(client);
 		// Añadir a client como operador al canal
 		channel->addOperator(clientFd);
-////////////
+		////////////
 	}
 	// WELCOME:
 	// - Broadcast :<nick>!<user>@<ip> JOIN #canal
@@ -740,17 +742,16 @@ void Server::leaveChannel(Client *client, const std::string &nameChannel, const 
 
 void Server::dezombify()
 {
-    std::map<int, Client>::iterator it = clients_.begin();
-    while (it != clients_.end())
-    {
-        int fd = it->first;
-        bool zombie = it->second.getToDisconnect()
-            && it->second.getToDisconnectSince() + TEARDOWNTIMEMAX < time(NULL);
-        ++it;
+	std::map<int, Client>::iterator it = clients_.begin();
+	while (it != clients_.end())
+	{
+		int fd = it->first;
+		bool zombie = it->second.getToDisconnect() && it->second.getToDisconnectSince() + TEARDOWNTIMEMAX < time(NULL);
+		++it;
 
-        if (zombie)
-            disconnectClient(fd);
-    }
+		if (zombie)
+			disconnectClient(fd);
+	}
 }
 // TODO: PASAR A UN ARCHIVO NUEVO DENTRO DE src/Server/Modes
 ModeHandler *Server::getModeHandler(const char &mode) const
