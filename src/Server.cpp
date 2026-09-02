@@ -138,13 +138,18 @@ void Server::run()
 		{
 			if (connections_[i].revents & (POLLIN | POLLHUP))
 			{
-				if (connections_[i].fd == listener_)
+				int fd = connections_[i].fd;
+
+				try
 				{
-					acceptNewClient();
+					if (fd == listener_)
+						acceptNewClient();
+					else
+						receiveClientData(i);
 				}
-				else
+				catch (const std::exception &e)
 				{
-					receiveClientData(i);
+					std::cerr << "[ircserver]: error handling fd " << fd << ": " << e.what() << std::endl;
 				}
 			}
 		}
@@ -155,31 +160,38 @@ void Server::acceptNewClient()
 {
 	struct sockaddr_storage remoteaddr;
 	socklen_t addrlen = sizeof(remoteaddr);
-	int new_fd;
 
-	new_fd = accept(listener_, reinterpret_cast<struct sockaddr *>(&remoteaddr), &addrlen);
+	int new_fd = accept(listener_, reinterpret_cast<struct sockaddr *>(&remoteaddr), &addrlen);
 
 	if (new_fd == -1)
 	{
-		throw std::runtime_error("accept failed " + std::string(std::strerror(errno)));
+		std::cerr << "[ircserver]: accept failed, ignoring this connection attempt" << std::endl;
+		return;
 	}
 
 	fcntl(new_fd, F_SETFL, O_NONBLOCK);
 
-	struct pollfd new_connection;
+	try
+	{
+		std::string remoteIp = getIpStr(reinterpret_cast<struct sockaddr *>(&remoteaddr));
 
-	new_connection.fd = new_fd;
-	new_connection.events = POLLIN;
-	new_connection.revents = 0;
+		Client client(new_fd, remoteIp);
+		clients_.insert(std::make_pair(new_fd, client));
 
-	connections_.push_back(new_connection);
-	std::string remoteIp = getIpStr(reinterpret_cast<struct sockaddr *>(&remoteaddr));
+		struct pollfd new_connection;
+		new_connection.fd = new_fd;
+		new_connection.events = POLLIN;
+		new_connection.revents = 0;
+		connections_.push_back(new_connection);
 
-	// TODO: Create Client object and add it to the clients_ map
-	Client client(new_fd, remoteIp);
-	clients_[new_fd] = client;
-
-	std::cout << "[ircserver]: New connection from " << remoteIp << " on socket " << new_fd << std::endl;
+		std::cout << "[ircserver]: New connection from " << remoteIp << " on socket " << new_fd << std::endl;
+	}
+	catch (...)
+	{
+		clients_.erase(new_fd);
+		close(new_fd);
+		throw;
+	}
 }
 
 void Server::receiveClientData(size_t client_index)
