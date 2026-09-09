@@ -184,20 +184,30 @@ void Server::run()
 
 			throw std::runtime_error("poll failed " + std::string(std::strerror(errno)));
 		}
+
 		for (int i = connections_.size() - 1; i >= 0; i--)
 		{
-
-			// PLACEHOLDER bloque logica POLLOUT si o no
-
 			if (connections_[i].revents & (POLLIN | POLLHUP))
 			{
-				if (connections_[i].fd == listener_)
+				int fd = connections_[i].fd;
+
+				try
 				{
-					acceptNewClient();
+					if (fd == listener_)
+						acceptNewClient();
+					else
+						receiveClientData(i);
 				}
-				else
+				catch (const std::exception &e)
 				{
-					receiveClientData(i);
+					std::cerr << "[ircserver]: Error handling client " << fd << ": " << e.what() << std::endl;
+
+					// If the throw was caused by the listener socket is probably a critical error, so we rethrow it to terminate the server.
+					if (fd == listener_)
+						throw;
+
+					// Disconnect the client abruptly to try to recover from the error and continue serving other clients.
+					disconnectClient(fd);
 				}
 			}
 			else if (connections_[i].revents & POLLOUT)
@@ -230,24 +240,33 @@ void Server::acceptNewClient()
 
 	if (new_fd == -1)
 	{
-		throw std::runtime_error("accept failed " + std::string(std::strerror(errno)));
+		std::cerr << "[ircserver]: accept failed, ignoring this connection attempt" << std::endl;
+		return;
 	}
 
 	fcntl(new_fd, F_SETFL, O_NONBLOCK);
 
-	struct pollfd new_connection;
+	try
+	{
+		struct pollfd new_connection;
 
-	new_connection.fd = new_fd;
-	new_connection.events = POLLIN; // ----- "| POLLOUT" Necesario??
-	new_connection.revents = 0;
+		new_connection.fd = new_fd;
+		new_connection.events = POLLIN;
+		new_connection.revents = 0;
 
-	connections_.push_back(new_connection);
-	std::string remoteIp = getIpStr(reinterpret_cast<struct sockaddr *>(&remoteaddr));
+		connections_.push_back(new_connection);
+		std::string remoteIp = getIpStr(reinterpret_cast<struct sockaddr *>(&remoteaddr));
 
-	// TODO: Create Client object and add it to the clients_ map
-	clients_[new_fd] = Client(new_fd, remoteIp);
+		clients_[new_fd] = Client(new_fd, remoteIp);
 
-	std::cout << "[ircserver]: New connection from " << remoteIp << " on socket " << new_fd << std::endl;
+		std::cout << "[ircserver]: New connection from " << remoteIp << " on socket " << new_fd << std::endl;
+	}
+	catch (...)
+	{
+		clients_.erase(new_fd);
+		close(new_fd);
+		throw;
+	}
 }
 
 void Server::receiveClientData(size_t client_index)
@@ -303,12 +322,17 @@ void Server::receiveClientData(size_t client_index)
 
 		Command *cmd = factory.createCommand(type, params); // cmd es obligatoriamente un puntero, es lo que posibilita polimorfismo.
 		if (!cmd)
-		{
-			// TODO: Handle undefined command;
-			std::cerr << "Undefined command" << std::endl;
 			continue;
+
+		try
+		{
+			cmd->execute(&client, this);
 		}
-		cmd->execute(&client, this);
+		catch (...)
+		{
+			delete cmd;
+			throw;
+		}
 		delete cmd;
 	}
 }
