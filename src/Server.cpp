@@ -11,7 +11,7 @@
 #include "Mode/UserLimitMode.hpp"
 #include "Mode/OperatorMode.hpp"
 
-Server::Server() : port_(""), listener_(-1), password_(""), nameServer_(NAME_SERVER), creationDate_(time(NULL)), checkZombiesDate_(creationDate_ + PERIODICCHECK), connections_(), clients_(), used_nicks_(), _channels_(), modeHandlers_()
+Server::Server() : port_(""), listener_(-1), dummySocket_(-1), password_(""), nameServer_(NAME_SERVER), creationDate_(time(NULL)), checkZombiesDate_(creationDate_ + PERIODICCHECK), connections_(), clients_(), used_nicks_(), _channels_(), modeHandlers_()
 {
 	modeHandlers_['i'] = new InviteOnlyMode();
 	modeHandlers_['t'] = new TopicRestrictedMode();
@@ -41,6 +41,9 @@ Server::~Server()
 	if (listener_ != -1)
 		close(listener_);
 
+	if (dummySocket_ != -1)
+		close(dummySocket_);
+
 	used_nicks_.clear(); // Limpiar los nicks
 	delete modeHandlers_['i'];
 	delete modeHandlers_['t'];
@@ -49,7 +52,7 @@ Server::~Server()
 	delete modeHandlers_['o'];
 }
 
-Server::Server(const Server &other) : port_(other.port_), listener_(other.listener_), password_(other.password_), nameServer_(other.nameServer_), creationDate_(other.creationDate_), checkZombiesDate_(other.checkZombiesDate_) {}
+Server::Server(const Server &other) : port_(other.port_), listener_(other.listener_), dummySocket_(other.dummySocket_), password_(other.password_), nameServer_(other.nameServer_), creationDate_(other.creationDate_), checkZombiesDate_(other.checkZombiesDate_) {}
 
 Server &Server::operator=(const Server &other)
 {
@@ -57,6 +60,7 @@ Server &Server::operator=(const Server &other)
 	{
 		port_ = other.port_;
 		listener_ = other.listener_;
+		dummySocket_ = other.dummySocket_;
 		password_ = other.password_;
 		nameServer_ = other.nameServer_;
 		creationDate_ = other.creationDate_;
@@ -66,7 +70,7 @@ Server &Server::operator=(const Server &other)
 	return *this;
 }
 
-Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), password_(pass), nameServer_(NAME_SERVER), creationDate_(time(NULL)), checkZombiesDate_(creationDate_ + PERIODICCHECK), used_nicks_(), _channels_(), modeHandlers_()
+Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), dummySocket_(-1), password_(pass), nameServer_(NAME_SERVER), creationDate_(time(NULL)), checkZombiesDate_(creationDate_ + PERIODICCHECK), used_nicks_(), _channels_(), modeHandlers_()
 {
 	// TODO: Buscar forma mas ordenada de registrar los modeHandlers;
 	modeHandlers_['i'] = new InviteOnlyMode();
@@ -168,6 +172,13 @@ void Server::init()
 	}
 
 	listener_ = listener;
+
+	dummySocket_ = socket(AF_INET, SOCK_STREAM, 0);
+
+	if (dummySocket_ == -1)
+	{
+		throw std::runtime_error("failed to open dummy socket");
+	}
 }
 
 void Server::run()
@@ -179,8 +190,9 @@ void Server::run()
 
 		if (pool_count == -1)
 		{
-			if (errno == EINTR)
-				continue;
+			// WARN: ESTO NO DEBE USARSE;
+			// if (errno == EINTR)
+			// 	continue;
 
 			throw std::runtime_error("poll failed " + std::string(std::strerror(errno)));
 		}
@@ -230,6 +242,26 @@ void Server::run()
 	}
 }
 
+void Server::rejectConnection()
+{
+	if (dummySocket_ != -1)
+	{
+		close(dummySocket_);
+	}
+
+	int overflowFd = accept(listener_, NULL, NULL);
+	if (overflowFd != -1)
+	{
+		close(overflowFd);
+	}
+
+	dummySocket_ = socket(AF_INET, SOCK_STREAM, 0);
+	if (dummySocket_ == -1)
+	{
+		throw std::runtime_error("Failed to open dummy socket after rejection");
+	}
+}
+
 void Server::acceptNewClient()
 {
 	struct sockaddr_storage remoteaddr;
@@ -240,7 +272,9 @@ void Server::acceptNewClient()
 
 	if (new_fd == -1)
 	{
-		std::cerr << "[ircserver]: accept failed, ignoring this connection attempt" << std::endl;
+
+		rejectConnection();
+		std::cerr << "[ircserver]: accept failed. Possibly FDs limit reached" << std::endl;
 		return;
 	}
 

@@ -40,7 +40,8 @@ class Server
 {
 private:
 	std::string port_;
-	int listener_; // Socket fd
+	int listener_;	  // Socket fd
+	int dummySocket_; // To reject connections when open fd limits are reached
 	std::string password_;
 	std::string nameServer_;
 	time_t creationDate_;
@@ -130,6 +131,8 @@ public:
 
 	// ModeHandler
 	ModeHandler *getModeHandler(const char &mode) const;
+
+	void rejectConnection();
 };
 
 #endif // SERVER_HPP
