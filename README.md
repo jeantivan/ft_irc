@@ -59,17 +59,17 @@ To leave a channel or conversation: ```/part channelname```.
 * [QUIT](https://irssi.org/documentation/help/1.4/quit/) leaves every channel and closes the client.
 * [TOPIC](https://irssi.org/documentation/help/1.4/topic/) shows/changes the channel's information.
 * [MODE](https://irssi.org/documentation/help/1.4/mode/)
-	· i Enables invite-only mode.
-	· t Prevents non-operator users from changing the channel topic.
-	· k Protects a channel with a key.
-	· o Grants operator status to a user.
-	· l Sets a maximum number of users.
+	- i Enables invite-only mode.
+	- t Prevents non-operator users from changing the channel topic.
+	- k Protects a channel with a key.
+	- o Grants operator status to a user.
+	- l Sets a maximum number of users.
 
 # Resources
-Reference document for the IRC protocol https://www.rfc-editor.org/info/rfc1459/
-A clearer reference focused on client communication https://modern.ircdocs.horse/
+- Reference document for the IRC protocol https://www.rfc-editor.org/info/rfc1459/
+- A clearer reference focused on client communication https://modern.ircdocs.horse/
 irssi user manual https://irssi.org/documentation/manual/
-AI tools were used only to help research and understand theoretical concepts
+- AI tools were used only to help research and understand theoretical concepts
 around the project.
 They were also used to translate this document from Spanish.
 
