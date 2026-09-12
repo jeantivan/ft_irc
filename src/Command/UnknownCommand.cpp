@@ -27,7 +27,6 @@ Command *UnknownCommand::create(const std::string &type, const std::vector<std::
 	return new UnknownCommand(type, params);
 }
 
-// TODO: Tal vez no lo necesitemos
 void UnknownCommand::execute(Client *client, Server *server)
 {
 	ResponseBuilder response;

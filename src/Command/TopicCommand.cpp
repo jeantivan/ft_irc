@@ -52,25 +52,20 @@ void TopicCommand::execute(Client *client, Server *server)
 // Consulta del Tema Actual (Un solo parámetro)
 	if (params_.size() == 1)
 	{
-		/*	"If the client sending this command is not joined to the given channel, and tries to view
-			its’ topic, the server MAY return the ERR_NOTONCHANNEL (442) numeric and have the command
-			fail."
-		-Ese MAY implica que podemos implementar que el topic sea accesible para todos o solo para
-		miembros. Me he quedado con solo para miembros. */
 		if(!channel->isMember(clientFd))
 		{
 			server->sendNumericReply(client, ERR_NOTONCHANNEL, channName, "You're not on that channel");
 			return;
 		}
 		std::string topic = channel->getTopic();
-		//Si el canal NO tiene tema: El servidor responde con RPL_NOTOPIC (331) (ej. #canal :No topic is set).
+		// Si el canal NO tiene tema: El servidor responde con RPL_NOTOPIC (331) (ej. #canal :No topic is set).
 		if (topic.empty())
 		{
 			server->sendNumericReply(client, RPL_NOTOPIC, channName, "No topic is set");
 			return;
 		}
 
-		//Si el canal tiene tema: El servidor responde con el valor numérico RPL_TOPIC (332)
+		// Si el canal tiene tema: El servidor responde con el valor numérico RPL_TOPIC (332)
 		server->sendNumericReply(client, RPL_TOPIC, channName, topic);
 		server->sendNumericReply(client, RPL_TOPICWHOTIME, channName + " " + channel->getTopicAuthor() + " " + channel->getTopicTime(), "");
 		return;

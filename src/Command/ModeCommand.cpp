@@ -214,7 +214,6 @@ void ModeCommand::execute(Client *client, Server *server)
 		return;
 	}
 
-	// TODO: Send RPL_CHANNELMODEIS when "MODE #channel"
 	if (params_.size() == 1)
 	{
 		handleChannelMode(channel, client, server);

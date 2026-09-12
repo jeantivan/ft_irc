@@ -19,4 +19,4 @@ public:
 	static Command *create(const std::string &type, const std::vector<std::string> &params);
 };
 
-#endif // TopicCOMMAND_HPP
+#endif // TOPICCOMMAND_HPP

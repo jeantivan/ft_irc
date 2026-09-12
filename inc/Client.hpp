@@ -11,7 +11,7 @@ enum AuthState
 	AUTH_PASS = 1 << 0, // 0001 (1)
 	AUTH_NICK = 1 << 1, // 0010 (2)
 	AUTH_USER = 1 << 2, // 0100 (4)
-	AUTH_COMPLETE = 7	// 0111 (1 | 2 | 4) Se instanciaron todos los campos, no significa autentificado
+	AUTH_COMPLETE = 7	// 0111 (1 | 2 | 4)
 };
 
 class Client
@@ -61,15 +61,12 @@ public:
 	void setNick(const std::string &nick);
 	void setUser(const std::string &user);
 	void setRealname(const std::string &realname);
-	/* Pospone la desconexion del cliente, al momento en que se vacie su buffer de salida.
-	POLLOUT debe estar activado en pollfd.events para que la desconexion surta efecto*/
 	void setToDisconnect();
 
 	bool hasCompleteCommand();
 	std::string extractCommand();
 
 	void appendToReadBuf(const char *data, size_t len);
-	// NO USAR sin gestionar POLLOUT, puedes usar Server::queueClientData() en su lugar
 	void appendToWriteBuf(const std::string &response);
 	void eraseFromWriteBuf(size_t len);
 };

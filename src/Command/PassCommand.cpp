@@ -36,28 +36,10 @@ void PassCommand::execute(Client *client, Server *server)
 	}
 	else
 	{
-		client->setPassword(params_[0]); //el cliente guarda su password, durante el registro Server lo compara al password real
+		client->setPassword(params_[0]);
 		client->setAuthState(AUTH_PASS);
-//		server->requestRegistration(*client); // BORRAR El proceso de registro nunca termina con PASS (ver NOTAS_antofern)
 		return;
 	}
-// No se valida el PASSWORD hasta tener todos los campos completos, Un PASS incorrecto, puede ser
-// corregido con un segundo PASS correcto mientras no haya terminado el proceso de registro
-/*	else if (params_[0] != server->getPassword())
-	{
-
-		response.prefix(server->getName()).numeric(ERR_PASSWDMISMATCH).target("*").trailing("Password incorrect");
-		std::cerr<< "[ircserver]--->" << client->getFd() << " Error: Password incorrect" << std::endl;		
-		//server->disconnectClient(client->getFd());
-		client->setToDisconnect();
-	}
-	else
-	{
-		client->setAuthState(AUTH_PASS);
-		std::cout << "[ircserver]: Client <" << client->getFd() << ", " << client->getIp() << "> is authenticated" << std::endl;
-		return;	
-	}
-*/
 	server->queueClientData(*client, response.build());
 	return;
 }

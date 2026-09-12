@@ -74,7 +74,7 @@ void JoinCommand::execute(Client *client, Server *server)
 	for (size_t i = 0; i < chanNames.size(); i++)
 	{
 
-		if (chanNames[i] == "0") // el nombre chanNames[] queda mal aqui, tcnicamente 0 no es un nombre de canal
+		if (chanNames[i] == "0")
 		{
 			std::vector<std::string> channelsToLeave;
 			std::map<std::string, Channel> &channels = server->getChannels();

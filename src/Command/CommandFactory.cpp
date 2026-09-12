@@ -26,7 +26,6 @@ CommandFactory::CommandFactory()
 	creators_["QUIT"] = &QuitCommand::create;
 	creators_["PING"] = &PingCommand::create;
 	creators_["TOPIC"] = &TopicCommand::create;
-	// TODO: Quitar comentario creators_["MODE"] = &ModeCommand::create;
 	creators_["MODE"] = &ModeCommand::create;
 	creators_["KICK"] = &KickCommand::create;
 	creators_["INVITE"] = &InviteCommand::create;

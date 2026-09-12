@@ -27,13 +27,13 @@
 
 #include "Mode/ModeHandler.hpp"
 
-#define NAME_SERVER "IRC_Serv" // maximo 9 caracteres (RPL_s construidas con esa convencion)
+#define NAME_SERVER "IRC_Serv" // Maximum of 9 characters (RPL_s built using that convention)
 #define SERVER_VERSION "Beta"
 #define MAX_CHANNEL_MEMBERS 200
-#define MAX_READBUF 512	  // una linea de mallor tamaño probablemente esta buscando desbordar writeBuf_
-#define UNBLOCKPOLL 10000 // tiempo en milisegundos que tarda poll en desbloquearse cuando no hay actividad
+#define MAX_READBUF 512	  // A larger line is probably trying to overflow `writeBuf_`
+#define UNBLOCKPOLL 10000 // The time, in milliseconds, it takes for poll to unlock when there is no activity
 #define PERIODICCHECK 10
-#define TEARDOWNTIMEMAX 20 // cuando un cliente es marcado toDisconnect, y supera este periodo de gracia, sera desconectado aun cuando quedasen datos sin enviar en su buffer de salida
+#define TEARDOWNTIMEMAX 20 // When a client is marked as “toDisconnect” and exceeds this grace period, it will be disconnected even if there is data remaining in its output buffer.
 
 class Channel;
 class Server
@@ -72,7 +72,7 @@ public:
 	const std::string &getPassword() const;
 	const std::string &getName() const;
 
-	// Busca a que elemento en connections_ pertenece un fd
+	// Find the element in `connections_` to which an FD belongs
 	size_t findConnectionByFd(int fd) const;
 
 	// Bind listener to port
@@ -92,14 +92,14 @@ public:
 
 	void requestRegistration(Client &client);
 
-	// Envia datos al bufer de salida de client, activa el evento POLLOUT para ese cliente
+	// Sends data to the client's output buffer and triggers the POLLOUT event for that client
 	void queueClientData(Client &client, const std::string &data);
 
-	// Respuestas listas y encoladas en una sola funcion.
-	// Istancia un objeto ResponseBuilder con los parametros recibidos y lo pone en cola del writeBuf del cliente
+	/* Responses prepared and queued in a single function.
+     Instantiates a ResponseBuilder object with the received parameters and adds it to the client's writeBuf queue*/
 	void sendNumericReply(Client *client, int numeric, const std::string &params, const std::string &trailing);
 
-	// Send client data, los datos almacendos en el buffer desalida con la funcion anterior
+	// Send the data stored in the output buffer using the previous function
 	bool sendClientData(size_t client_index);
 
 	// Static signal handler;
@@ -121,7 +121,7 @@ public:
 	void leaveChannel(Client *client, const std::string &name, const std::string &reason);
 	std::map<std::string, Channel> &getChannels();
 
-	// Lanza uno o mas RPL_NAMEREPLY y un y RPL_ENDOFNAMES al final
+	// Insert one or more RPL_NAMEREPLY statements and one RPL_ENDOFNAMES statement at the end
 	void namreply(Client *client, Channel *channel);
 
 	// PrivMsg Command

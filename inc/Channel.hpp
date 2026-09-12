@@ -16,7 +16,7 @@ private:
 	std::string topicAuthor_;
 	std::string topicTime_;
 	std::map<int, Client *> members_; // fd → Client*
-	std::set<int> operators_;		  // fds de operadores
+	std::set<int> operators_;		  // Operator FDSs
 
 	// Modes
 	bool inviteOnly_;			 // i mode
@@ -51,7 +51,7 @@ public:
 	void setPassword(const std::string &pass);
 	void setUserLimit(unsigned int limit);
 
-	// Miembros
+	// Members
 	void addClient(Client *client);
 	void removeClient(int fd);
 	bool isMember(int fd) const;

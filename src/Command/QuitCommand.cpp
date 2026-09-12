@@ -37,11 +37,7 @@ void QuitCommand::execute(Client *client, Server *server)
         
         if (channel.isMember(client->getFd()))
         {
-            channel.removeClient(client->getFd());	/*¿Por que cambié esta linea de lugar?
-		Creo que el cliente que hizo QUIT no debe recibir los mensajes de broadcast, de cada canal al que
-		pertenecia:
-		"This message may also be sent from the server to a client to show that a client has exited from
-		the network. This is typically only dispatched to clients that share a channel with the exiting user." */
+            channel.removeClient(client->getFd());
             channel.broadcastAll(quitMsg, server);
             
             if (channel.isEmpty())
@@ -58,13 +54,6 @@ void QuitCommand::execute(Client *client, Server *server)
         std::cout << "[ircserver]: Channel " << channelsToRemove[i] << " deleted during QUIT (no members left)." << std::endl;
     }
 
-	/*ESTE ERROR NO ES UN ERROR, cito:
-		"The QUIT command is used to terminate a client’s connection to the server. The server acknowledges this
-		by replying with an ERROR message and closing the connection to the client."	
-		Fuente: https://modern.ircdocs.horse/#quit-message
-
-	Ademas, este mensaje activa POLLOUT, ahora un cliente puede hacer QUIT, aunque no haya terminado la fase
-		de registro, ni esté en ningun canal*/
 	server->queueClientData(*client, "ERROR :Closing Link: " + client->getNick() + "[" + client->getIp() + "] ( QUIT: " + reason + ")\r\n");
 	client->setToDisconnect();
 }

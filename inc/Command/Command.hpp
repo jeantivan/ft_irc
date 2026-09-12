@@ -19,7 +19,7 @@ protected:
 	std::vector<std::string> params_;
 
 public:
-	// Forma Canónica Ortodoxa
+	// Ortodox Canonical Form
 	Command();
 	Command(const Command &other);
 	virtual ~Command();

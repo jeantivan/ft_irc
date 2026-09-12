@@ -25,7 +25,7 @@
 
 
 // ============================================================
-// ERR — Registro
+// ERR — Registration
 // ============================================================
 #define ERR_NONICKNAMEGIVEN     431
 #define ERR_ERRONEUSNICKNAME    432
@@ -35,7 +35,7 @@
 #define ERR_PASSWDMISMATCH      464
 
 // ============================================================
-// ERR — Permisos generales
+// ERR — General Permissions
 // ============================================================
 #define ERR_UNKNOWNCOMMAND      421
 #define ERR_NOTREGISTERED       451

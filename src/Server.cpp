@@ -72,7 +72,6 @@ Server &Server::operator=(const Server &other)
 
 Server::Server(const char *port, const char *pass) : port_(port), listener_(-1), dummySocket_(-1), password_(pass), nameServer_(NAME_SERVER), creationDate_(time(NULL)), checkZombiesDate_(creationDate_ + PERIODICCHECK), used_nicks_(), _channels_(), modeHandlers_()
 {
-	// TODO: Buscar forma mas ordenada de registrar los modeHandlers;
 	modeHandlers_['i'] = new InviteOnlyMode();
 	modeHandlers_['t'] = new TopicRestrictedMode();
 	modeHandlers_['k'] = new PasswordMode();
@@ -226,8 +225,7 @@ void Server::run()
 			{
 				if (sendClientData(i))
 				{
-					// TODO: Mejorar mensaje de error
-					// std::cerr << "Error: Not all client<" << connections_[i].fd << ", " << clients_[connections_[i].fd].getFd() << "> data could be sent" << std::endl;
+					std::cerr << "Error: Not all client<" << connections_[i].fd << ", " << clients_[connections_[i].fd].getFd() << "> data could be sent" << std::endl;
 				}
 			}
 		}
@@ -322,7 +320,7 @@ void Server::receiveClientData(size_t client_index)
 			std::cerr << "[ircserver]: recv failed on client " << client_fd << " " << std::strerror(errno) << std::endl;
 		}
 
-		disconnectClient(client_fd); // esta dejando enlaces colgantes al cliente desconectado en los canales
+		disconnectClient(client_fd); // TODO esta dejando enlaces colgantes al cliente desconectado en los canales
 		// mejor emular un quitcommand, para eliminar al cliente de los canales
 		return;
 	}
@@ -373,21 +371,40 @@ void Server::receiveClientData(size_t client_index)
 
 void Server::disconnectClient(int fd)
 {
-	// AÑADIDO NUEVO Liberar nick
-	if (clients_.count(fd) > 0)
+	std::map<int, Client>::iterator clientIt = clients_.find(fd);
+	if (clientIt != clients_.end())
 	{
-		std::string nick = clients_[fd].getNick();
+		Client &client = clientIt->second;
+
+		// Liberar nick
+		std::string nick = client.getNick();
 		if (!nick.empty())
 		{
 			removeNick(nick);
-			// std::cout << "[ircserver]: Nick '" << nick << "' freed from client " << fd << std::endl;
+		}
+
+		std::string quitMsg = ":" + client.getNick() + "!" + client.getUser() + "@" + client.getIp() + " QUIT :Connection reset\r\n";
+		std::vector<std::string> channelsToRemove;
+
+		for (std::map<std::string, Channel>::iterator it = _channels_.begin(); it != _channels_.end(); ++it)
+		{
+			Channel &channel = it->second;
+			if (channel.isMember(fd))
+			{
+				channel.removeClient(fd);
+				channel.broadcastAll(quitMsg, this);
+
+				if (channel.isEmpty())
+					channelsToRemove.push_back(it->first);
+			}
+		}
+
+		for (size_t i = 0; i < channelsToRemove.size(); ++i)
+		{
+			_channels_.erase(channelsToRemove[i]);
+			std::cout << "[ircserver]: Channel " << channelsToRemove[i] << " deleted during disconnect (no members left)." << std::endl;
 		}
 	}
-
-	// OJOO no esta sacando al cliente de la lista de miembros de los canales TO DO:
-	//	- recorrer canales, llamndo a Channel::removeClient(fd)
-	//	- borrar canales que queden desiertos a su salida
-	//	- tal vez hacer broadcast informando que el cliente salio, en algunos flujos de ejecucion
 
 	close(fd);
 

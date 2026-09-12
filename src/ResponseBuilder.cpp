@@ -100,7 +100,7 @@ const std::string ResponseBuilder::build() const
 		result += " " + params_;
 
 	if (!trailing_.empty())
-		result += trailing_;//trailing() ya introdujo " :"
+		result += trailing_; //trailing() ya introdujo " :"
 
 	result += "\r\n";
 
