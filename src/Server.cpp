@@ -30,11 +30,8 @@ Server::~Server()
 
 		if (fd != listener_)
 		{
-			const char *bye = "Error: Server is shutting down. Goodbye!\r\n";
-			send(fd, bye, 42, 0);
-			close(fd);
-
 			std::cout << "[ircserver]: Client " << fd << " disconnected gracefully." << std::endl;
+			close(fd);
 		}
 	}
 
