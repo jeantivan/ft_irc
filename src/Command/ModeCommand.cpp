@@ -184,6 +184,17 @@ void ModeCommand::execute(Client *client, Server *server)
 		return;
 	}
 
+	if (params_.size() < 1)
+	{
+		response.prefix(server->getName())
+			.numeric(ERR_NEEDMOREPARAMS)
+			.target(client->getNick())
+			.trailing("Not enough parameters");
+		server->queueClientData(*client, response.build());
+		std::cout << "[ircserver]: Error: ERR_NEEDMOREPARAMS" << std::endl;
+		return;
+	}
+
 	std::string target = params_[0];
 
 	if (target[0] != '#')
