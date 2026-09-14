@@ -107,6 +107,7 @@ void Server::receiveClientData(size_t client_index)
 		if (!parse(raw_cmd, type, params))
 		{
 			std::cerr << "Bad command" << std::endl;
+			continue;
 		}
 
 		CommandFactory factory;
