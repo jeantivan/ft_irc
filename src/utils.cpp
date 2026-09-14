@@ -71,7 +71,6 @@ bool parse(std::string &raw_cmd, std::string &type, std::vector<std::string> &pa
 	if (raw_cmd.empty())
 		return false;
 
-	// Remove "\r\n" from the raw command
 	if (raw_cmd.size() >= 2)
 		raw_cmd = raw_cmd.substr(0, raw_cmd.size() - 2);
 	else
@@ -79,11 +78,9 @@ bool parse(std::string &raw_cmd, std::string &type, std::vector<std::string> &pa
 
 	size_t pos = 0;
 
-	// Skip initial spaces
 	while (pos < raw_cmd.size() && raw_cmd[pos] == ' ')
 		pos++;
 
-	// Handle prefix
 	if (pos < raw_cmd.size() && raw_cmd[pos] == ':')
 	{
 		pos = raw_cmd.find(' ', pos);
@@ -95,7 +92,6 @@ bool parse(std::string &raw_cmd, std::string &type, std::vector<std::string> &pa
 	if (pos == std::string::npos || pos >= raw_cmd.size())
 		return false;
 
-	// Extract Command type
 	size_t cmd_end = raw_cmd.find(' ', pos);
 	if (cmd_end == std::string::npos)
 	{
@@ -106,7 +102,6 @@ bool parse(std::string &raw_cmd, std::string &type, std::vector<std::string> &pa
 	type = raw_cmd.substr(pos, cmd_end - pos);
 	pos = cmd_end;
 
-	// Extract Command params
 	while (pos < raw_cmd.size())
 	{
 
