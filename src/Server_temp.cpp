@@ -3,8 +3,6 @@
 #include "Command/TopicCommand.hpp"
 #include "ResponseBuilder.hpp"
 #include "Channel.hpp"
-#include <ctime>
-#include <sstream>
 #include "Mode/InviteOnlyMode.hpp"
 #include "Mode/TopicRestrictedMode.hpp"
 #include "Mode/PasswordMode.hpp"
@@ -484,15 +482,6 @@ bool Server::sendClientData(size_t client_index)
 	else
 		std::cerr << "[INFO] client in shocket:" << fd << "send() return 0;" << std::endl;
 	return false;
-}
-
-// TODO: Separar a otro archivo
-volatile sig_atomic_t Server::signal_received_ = false;
-
-void Server::signalHandler(int signal)
-{
-	(void)signal;
-	Server::signal_received_ = true;
 }
 
 void Server::queueClientData(Client &client, const std::string &data)

@@ -12,7 +12,6 @@ OBJ_DIR = obj
 
 FILES = main.cpp \
 		utils.cpp \
-		Server.cpp \
 		Client.cpp \
 		Command/Command.cpp \
 		Command/CommandFactory.cpp \
@@ -37,7 +36,11 @@ FILES = main.cpp \
 		Mode/TopicRestrictedMode.cpp \
 		Mode/PasswordMode.cpp \
 		Mode/UserLimitMode.cpp \
-		Mode/OperatorMode.cpp
+		Mode/OperatorMode.cpp \
+		Server/Lifecycle.cpp \
+		Server/Network.cpp \
+		Server/Clients.cpp \
+		Server/Channels.cpp
 
 SRC_FILES = $(addprefix $(SRC_DIR)/, $(FILES))
 OBJ_FILES = $(patsubst $(SRC_DIR)/%.cpp, $(OBJ_DIR)/%.o, $(SRC_FILES))
