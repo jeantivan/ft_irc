@@ -98,7 +98,6 @@ void Client::setUser(const std::string &user)
 	user_ = user;
 }
 
-// En realidad AÑADE estados no cambia quiza mejor nombre addAuthState()
 void Client::setAuthState(AuthState adding)
 {
 	authState_ = static_cast<AuthState>(
@@ -157,8 +156,6 @@ void Client::eraseFromWriteBuf(size_t len)
 		writeBuf_ = writeBuf_.substr(len);
 }
 
-// notese que no contiene los :, debido a que ResponseBuilder::prefix() ya lo incluye.
-// sin embargo, Channel::brodacaslAll() no sabe si el mansaje llevara prefijo y no lo incluye
 std::string Client::getPrefix() const
 {
 	return nick_ + "!" + user_ + "@" + ip;

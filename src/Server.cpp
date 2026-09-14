@@ -44,7 +44,7 @@ Server::~Server()
 	if (dummySocket_ != -1)
 		close(dummySocket_);
 
-	used_nicks_.clear(); // Limpiar los nicks
+	used_nicks_.clear();
 	delete modeHandlers_['i'];
 	delete modeHandlers_['t'];
 	delete modeHandlers_['k'];
@@ -118,7 +118,7 @@ size_t Server::findConnectionByFd(int fd) const
 		if (connections_[i].fd == fd)
 			return i;
 	}
-	return static_cast<size_t>(-1); // valor maximo, para marcar error
+	return static_cast<size_t>(-1);
 }
 
 void Server::init()
@@ -189,10 +189,6 @@ void Server::run()
 
 		if (pool_count == -1)
 		{
-			// WARN: ESTO NO DEBE USARSE;
-			// if (errno == EINTR)
-			// 	continue;
-
 			throw std::runtime_error("poll failed " + std::string(std::strerror(errno)));
 		}
 
@@ -213,11 +209,9 @@ void Server::run()
 				{
 					std::cerr << "[ircserver]: Error handling client " << fd << ": " << e.what() << std::endl;
 
-					// If the throw was caused by the listener socket is probably a critical error, so we rethrow it to terminate the server.
 					if (fd == listener_)
 						throw;
 
-					// Disconnect the client abruptly to try to recover from the error and continue serving other clients.
 					disconnectClient(fd);
 				}
 			}
@@ -230,11 +224,9 @@ void Server::run()
 			}
 		}
 
-		// Limpiamos clientes toDisconnect desde mas de  TEARDOWNTIMEMAX segundos
 		if (time(NULL) > checkZombiesDate_)
 		{
 			dezombify();
-			// Programamos proximo checkeo
 			checkZombiesDate_ = time(NULL) + PERIODICCHECK;
 		}
 	}
@@ -337,8 +329,7 @@ void Server::receiveClientData(size_t client_index)
 		return;
 	}
 
-	// TODO: May be this will be deleted
-	while (client.hasCompleteCommand() && !client.getToDisconnect()) // && !client.getToDisconnect() evita seguir ejecutando comandos acumulados en buffer de salida, cuando el cliente fué marcado toDisconnect_
+	while (client.hasCompleteCommand() && !client.getToDisconnect())
 	{
 		std::string raw_cmd = client.extractCommand();
 		std::string type;
@@ -349,10 +340,9 @@ void Server::receiveClientData(size_t client_index)
 			std::cerr << "Bad command" << std::endl;
 		}
 
-		// WIP: Function to create different commands
 		CommandFactory factory;
 
-		Command *cmd = factory.createCommand(type, params); // cmd es obligatoriamente un puntero, es lo que posibilita polimorfismo.
+		Command *cmd = factory.createCommand(type, params);
 		if (!cmd)
 			continue;
 
@@ -376,7 +366,6 @@ void Server::disconnectClient(int fd)
 	{
 		Client &client = clientIt->second;
 
-		// Liberar nick
 		std::string nick = client.getNick();
 		if (!nick.empty())
 		{
@@ -421,12 +410,7 @@ void Server::disconnectClient(int fd)
 	std::cout << "[ircserver]: Client " << fd << " disconnected (The server did it)" << std::endl;
 }
 
-/*
-Si se completaron todos los pasos del registro:
-- Marca al cliente como autentificado (client.auth_ = true)
-- Envia los mensajes de vienvenida RPL_WELCOME, YOURHOST, RPL_CREATED y RPL_MYINFO
-Esta funcion debe ser llamada por los comandos USER y NICK (PASS no)
-*/
+
 void Server::requestRegistration(Client &client)
 {
 	if (client.getState() == AUTH_COMPLETE)
@@ -470,17 +454,16 @@ void Server::requestRegistration(Client &client)
 	}
 }
 
-// Retorna true si send() falló.
 bool Server::sendClientData(size_t client_index)
 {
 	int fd = connections_[client_index].fd;
 	Client &client = clients_[fd];
 	const std::string &clientWriteBuf = client.getWriteBuf();
 
-	if (clientWriteBuf.empty()) // Se supone que no llamamos a sendClientData cuando no hay nada que enviar. ¿Es solo defensivo?
+	if (clientWriteBuf.empty())
 	{
 		connections_[client_index].events &= ~POLLOUT;
-		std::cerr << "[INFO] client in shocket:" << fd << "calls sendClientData wuith writeBuff_ empthy." << std::endl;
+		std::cerr << "[INFO] client in socket:" << fd << "calls sendClientData with writeBuff_ empty." << std::endl;
 		return false;
 	}
 
@@ -491,19 +474,14 @@ bool Server::sendClientData(size_t client_index)
 		client.eraseFromWriteBuf(bytes_sent);
 		if (client.getWriteBuf().empty())
 		{
-			connections_[client_index].events &= ~POLLOUT; // "&= ~" borra el bit de POLLOUT
+			connections_[client_index].events &= ~POLLOUT;
 			if (client.getToDisconnect())
 				disconnectClient(fd);
 		}
 	}
 	else if (bytes_sent == -1)
 	{
-		//  TODO: This should not exists because the evals says so
-		//		if (errno == EAGAIN || errno == EWOULDBLOCK)
-		//		{
-		//			return false;
-		//		}
-		disconnectClient(fd); // pipe roto probablemente??
+		disconnectClient(fd);
 		return true;
 	}
 	else
@@ -520,20 +498,16 @@ void Server::signalHandler(int signal)
 	Server::signal_received_ = true;
 }
 
-// Añade datos al writeBuf_ de client.
-// Activa POLLOUT para que poll() de paso al cliente en cuanto este disponible para recibir datos
-// Si el cliente esta marcado toDisconnect_ (teardown), no escribe en su buffer.
 void Server::queueClientData(Client &client, const std::string &data)
 {
 	size_t id = findConnectionByFd(client.getFd());
 	if (id == static_cast<size_t>(-1))
 	{
 		std::cerr << "ERROR en findConnectionByFd" << std::endl;
-		// TODO no se si gestionar el error con un throw o como, pero seria grave que quedase asi
 		return;
 	}
 	connections_[id].events |= POLLOUT;
-	if (!client.getToDisconnect()) // No queremos seguir metiendo datos en el buffer de un cliente en teardown.
+	if (!client.getToDisconnect())
 		client.appendToWriteBuf(data);
 }
 
@@ -562,7 +536,6 @@ bool Server::isAchannel(const std::string &channel) const
 		return true;
 }
 
-// Necesario?
 Channel *Server::getChannel(const std::string &name)
 {
 	if (isAchannel(name))
@@ -583,22 +556,19 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 	int clientFd = client->getFd();
 	std::string clientNick = client->getNick();
 
-	if (isAchannel(nameChannel)) // Ya existe el canal
+	if (isAchannel(nameChannel))
 	{
 		channel = &(_channels_[nameChannel]);
-		// ¿Ya es miembro? Ignorar silenciosamente.
 		if (channel->getMembers().find(clientFd) != channel->getMembers().end())
 		{
 			std::cout << "[ircserver]:" << clientNick << "send JOIN->"
 					  << nameChannel << ". But he was already in the channel" << std::endl;
 			return false;
 		}
-		else // NO es miembro todavía, hacer.
+		else
 		{
-			// COMPROBACIONES RELACIONADAS CON MODE
-			if (channel->getPassword().compare(password)) // cuando no haya password estaremos comparando dos strings vacios
+			if (channel->getPassword().compare(password))
 			{
-				//<client> <channel> :Bad Channel Mask
 				sendNumericReply(client, ERR_BADCHANNELKEY, nameChannel, "Cannot join channel (+k)");
 				std::cout << "[ircserver]:" << clientNick << "send JOIN->"
 						  << nameChannel << ". But bad passkey" << std::endl;
@@ -612,7 +582,7 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 					return false;
 				}
 			}
-			if (channel->getUserLimit() != 0 && /*un userLimit == 0 implicaria que no hay limite*/
+			if (channel->getUserLimit() != 0 &&
 				channel->getUserLimit() <= channel->getMembers().size())
 			{
 				std::cout << "[ircserver]:" << clientNick << "send JOIN->"
@@ -621,8 +591,7 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 				return false;
 			}
 
-			// Limite maximo de miembros en cualquier canal (nada que ver con mode L)
-			if (channel->getMembers().size() >= MAX_CHANNEL_MEMBERS) // falta impementar el limite de MODE "L"
+			if (channel->getMembers().size() >= MAX_CHANNEL_MEMBERS)
 			{
 				std::cout << "[ircserver]:" << clientNick << "send JOIN->"
 						  << nameChannel << ". But Channel is full" << std::endl;
@@ -632,36 +601,23 @@ bool Server::joinChannel(Client *client, const std::string &nameChannel, const s
 
 			channel->addClient(client);
 			std::cout << "[ircserver]: " << clientNick << " Join to: " << nameChannel << std::endl;
-			//////////////
 		}
 	}
-	else // (El canal no existe)
+	else
 	{
-		// Crear canal
 		channel = &createChannel(nameChannel);
-		// Añadir client al canal
 		channel->addClient(client);
-		// Añadir a client como operador al canal
 		channel->addOperator(clientFd);
-		////////////
 	}
-	// WELCOME:
-	// - Broadcast :<nick>!<user>@<ip> JOIN #canal
 	channel->broadcastAll(":" + client->getPrefix() + " JOIN " + nameChannel + "\r\n", this);
-	// - RPL_TOPIC o RPL_NOTOPIC, creando y ejecutando un objeto TopicCommand
 	std::vector<std::string> topicVect;
 	topicVect.push_back(nameChannel);
 	TopicCommand topic("TOPIC", topicVect);
 	topic.execute(client, this);
-	// - Envia la lista de miembros con RPL_NAMREPLY y RPL_ENDOFNAMES
 	namreply(client, channel);
 	return true;
 }
 
-// Extrae e incluye por si mismo prefix, numeric, target.
-// params puede ser una cadena vacia si no necesitas enviar mas parametros.
-// Si trailing es un string vacío, no llamara a response.trailing() y los : al final no seran insertados,
-// es decir, esta funcion no sirve para enviar un argumento vacío.
 void Server::sendNumericReply(Client *client, int numeric, const std::string &params, const std::string &trailing)
 {
 	ResponseBuilder response;
@@ -681,7 +637,6 @@ void Server::sendNumericReply(Client *client, int numeric, const std::string &pa
 	queueClientData(*client, response.build());
 }
 
-// Lanza uno o mas RPL_NAMEREPLY y un y RPL_ENDOFNAMES al final
 void Server::namreply(Client *client, Channel *channel)
 {
 	std::istringstream nicksStream(channel->getNickList()); // la nicklist deberia incluir "@" delante de cada operador obtener el FD apartir de un nick en este punto del codigo es un dolor
@@ -698,17 +653,16 @@ void Server::namreply(Client *client, Channel *channel)
 		paqNicks << nick;
 		i++;
 
-		// ¿Por que 35 Nicks en cada RPL_NAMREPLY?
-		//	Longitud maxima de un mensaje 512
-		//	cada nick mide como maximo 9 caracteres + @ + " " = 11
+		//	Why 35 nicknames per RPL_NAMREPLY?
+		//	Maximum message length: 512
+		//	Each nickname is at most 9 characters + @ + " " = 11
 		//	(prefix + cmd + (11 * 40) + \r\n) = 512
-		//   como no hay necesidad de apurar hasta el limite del protocolo
-		//	en lugar de 40 usamos un limite de 35 nicks por respuesta
+		//	Since there is no need to push the protocol limit to the max,
+		//	we use a limit of 35 nicknames per response instead of 40.
 		if (i == 35)
 		{
 			sendNumericReply(client, RPL_NAMREPLY, "= " + channel->getName(), paqNicks.str()); // OJO!!! cuando se implementen los modos gestionar "= "
 
-			// Limpieza del stream
 			paqNicks.str("");
 			paqNicks.clear();
 			i = 0;
@@ -724,9 +678,6 @@ void Server::namreply(Client *client, Channel *channel)
 	sendNumericReply(client, RPL_ENDOFNAMES, channel->getName(), "End of /NAMES list");
 }
 
-// crea un canal, retorna referencia al canl creado
-// si el nombre del canal ya estaba en uso, no lo crea, y no falla, retorna referencia ese
-// canal.
 Channel &Server::createChannel(const std::string &name)
 {
 	if (_channels_.find(name) != _channels_.end())
@@ -734,7 +685,6 @@ Channel &Server::createChannel(const std::string &name)
 	else
 	{
 		_channels_[name] = Channel(name);
-		// TO DO: instanciar nuevo canal ¿TOPIC o algun otro campo pendiente?
 
 		std::cout << "[ircserver]: Channel " << name << " created" << std::endl;
 	}
@@ -759,14 +709,12 @@ Client *Server::findClientByNick(const std::string &nick_to_find)
 }
 
 // PART COMMMAND
-
 void Server::leaveChannel(Client *client, const std::string &nameChannel, const std::string &reason)
 {
 	ResponseBuilder response;
 	int clientFd = client->getFd();
 
-	// 1. Validar si el canal existe buscando en el std::map _channels_
-	Channel *channelPtr = getChannel(nameChannel); // Seguimos usando tu getChannel seguro
+	Channel *channelPtr = getChannel(nameChannel);
 	if (!channelPtr)
 	{
 		response.prefix(getName())
@@ -780,7 +728,6 @@ void Server::leaveChannel(Client *client, const std::string &nameChannel, const 
 
 	Channel &channel = *channelPtr;
 
-	// 2. Validar si el usuario está dentro usando isMember de la clase Channel
 	if (!channel.isMember(clientFd))
 	{
 		response.prefix(getName())
@@ -793,24 +740,19 @@ void Server::leaveChannel(Client *client, const std::string &nameChannel, const 
 		return;
 	}
 
-	// 3. Construir el mensaje de broadcast oficial de PART
 	std::string partMsg = ":" + client->getNick() + "!" + client->getUser() + "@" + client->getIp() + " PART " + nameChannel;
 	if (!reason.empty())
 		partMsg += " :" + reason;
 	partMsg += "\r\n";
 
-	// 4. Enviar el broadcast a TODOS en el canal
 	channel.broadcastAll(partMsg, this);
 
-	// 5. Sacar al cliente de la lista de miembros
 	channel.removeClient(clientFd);
 	std::cout << "[ircserver]: " << client->getNick() << " leave " << nameChannel << "reason" << reason << std::endl;
 
-	// 6. CONTROL DE MEMORIA LIMPIO CON MAPAS (Adiós al bucle for)
-	// Si el canal se queda vacío, lo borramos directamente por su clave (nombre)
 	if (channel.isEmpty())
 	{
-		_channels_.erase(nameChannel); // El mapa se encarga de todo en una sola línea
+		_channels_.erase(nameChannel);
 		std::cout << "[ircserver]: Channel " << nameChannel << " deleted de _channels_ (no members left)." << std::endl;
 	}
 }

@@ -22,7 +22,6 @@ JoinCommand::~JoinCommand() {}
 
 JoinCommand::JoinCommand(const std::string &type, const std::vector<std::string> &params) : Command(type, params) {}
 
-// Funciones auxiliares a execute()
 static bool parseChannName(const std::string name)
 {
     if (name.empty())
@@ -42,7 +41,6 @@ void JoinCommand::execute(Client *client, Server *server)
 
 	if (!client->isAuth())
 	{
-		// enviar ERR_NOTREGISTERED
 		response.prefix(server->getName())
 			.numeric(ERR_NOTREGISTERED)
 			.target(client->getNick())

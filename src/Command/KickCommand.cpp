@@ -34,7 +34,6 @@ std::string KickCommand::buildKickMessage(Client *client, const std::string &cha
 
 void KickCommand::execute(Client *client, Server *server)
 {
-	// KICK <canal> <nick> [:razon]
 	if (params_.size() < 2)
 	{
 		server->sendNumericReply(client, ERR_NEEDMOREPARAMS, "KICK", "Not enough parameters");
@@ -76,7 +75,6 @@ void KickCommand::execute(Client *client, Server *server)
 
 	std::string kickMsg = buildKickMessage(client, channelName, targetNick, reason);
 
-	// Primero se notifica a todos, luego se expulsa
 	channel->broadcastAll(kickMsg, server);
 	channel->removeClient(target->getFd());
 }

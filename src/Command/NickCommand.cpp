@@ -42,7 +42,6 @@ void NickCommand::execute(Client *client, Server *server)
 {
 	ResponseBuilder response;
 
-	
 	// ERR_NOTREGISTERED (451)
 	if (!(client->getState() & AUTH_PASS))
 	{
@@ -51,7 +50,6 @@ void NickCommand::execute(Client *client, Server *server)
 			.target(client->getNick().empty() ? "*" : client->getNick())
 			.trailing("You must authenticate with PASS first");
 
-		// Activar POLLOUT y agregar a buffer
 		server->queueClientData(*client, response.build());
 		return;
 	}
@@ -86,7 +84,6 @@ void NickCommand::execute(Client *client, Server *server)
 
 	std::string old_nick = client->getNick();
 
-	// Si intenta ponerse el mismo nick que ya tiene, no hacemos nada y tampoco devolvemos error
 	if (old_nick == new_nick)
 		return;
 
@@ -103,19 +100,16 @@ void NickCommand::execute(Client *client, Server *server)
 		return;
 	}
 
-	// Si el cliente ya tenía nick y quiere cambiar, quitar el viejo
 	if (!old_nick.empty() && old_nick != new_nick)
 	{
 		server->removeNick(old_nick);
 	}
 
-	// Actualizar nick del cliente
 	client->setNick(new_nick);
 	server->addNick(new_nick);
 
-	// AuthState current_state = client->getState();
 	client->setAuthState(AUTH_NICK);
-	if (!client->isAuth())				// NUEVO
+	if (!client->isAuth())
 		server->requestRegistration(*client);
 
 	std::cout << "[ircserver]: Client <" << client->getFd() << ", " << client->getIp()

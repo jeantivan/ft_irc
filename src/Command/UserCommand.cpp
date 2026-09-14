@@ -23,7 +23,7 @@ UserCommand::UserCommand(const std::string &type, const std::vector<std::string>
 
 void UserCommand::execute(Client *client, Server *server)
 {
-	ResponseBuilder response; 
+	ResponseBuilder response;
 	if (client->isAuth() == true)
 	{
 		response.prefix(server->getName()).numeric(ERR_ALREADYREGISTRED).target("*").trailing("Unauthorized command (already registered)");
@@ -43,8 +43,6 @@ void UserCommand::execute(Client *client, Server *server)
 		client->setAuthState(AUTH_USER);
 		ResponseBuilder response;
 		client->setUser(params_[0]);
-		//param[1] es mode, y no lo implementa irc, se ignora
-		//param[2] siempre es "*" en desuso
 		client->setRealname(params_[3]);
 		server->requestRegistration(*client);
 	}

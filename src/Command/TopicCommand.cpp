@@ -41,7 +41,6 @@ void TopicCommand::execute(Client *client, Server *server)
 	}
 
 	Channel *channel = server->getChannel(params_[0]);
-	//Verifica si el canal existe.
 	if (channel == NULL)
 	{
 		server->sendNumericReply(client, ERR_NOSUCHCHANNEL, params_[0], "No such channel");
@@ -49,7 +48,6 @@ void TopicCommand::execute(Client *client, Server *server)
 	}
 	std::string channName = channel->getName();
 
-// Consulta del Tema Actual (Un solo parámetro)
 	if (params_.size() == 1)
 	{
 		if(!channel->isMember(clientFd))
@@ -58,20 +56,17 @@ void TopicCommand::execute(Client *client, Server *server)
 			return;
 		}
 		std::string topic = channel->getTopic();
-		// Si el canal NO tiene tema: El servidor responde con RPL_NOTOPIC (331) (ej. #canal :No topic is set).
 		if (topic.empty())
 		{
 			server->sendNumericReply(client, RPL_NOTOPIC, channName, "No topic is set");
 			return;
 		}
 
-		// Si el canal tiene tema: El servidor responde con el valor numérico RPL_TOPIC (332)
 		server->sendNumericReply(client, RPL_TOPIC, channName, topic);
 		server->sendNumericReply(client, RPL_TOPICWHOTIME, channName + " " + channel->getTopicAuthor() + " " + channel->getTopicTime(), "");
 		return;
 	}
-// Modificación del Tema (Dos parámetros)
-	if (params_.size() > 1) 
+	if (params_.size() > 1)
 	{
 		if(!channel->isMember(clientFd))
 		{
@@ -79,16 +74,13 @@ void TopicCommand::execute(Client *client, Server *server)
 			return;
 		}
 
-		// Si el canal tiene el modo +t activo: Solo los operadores del canal (@) pueden cambiar el tema. Si un usuario normal lo intenta, el servidor deniega la acción y devuelve ERR_CHANOPRIVSNEEDED (482).
 		if (channel->isTopicRestricted() && !channel->isOperator(clientFd))
 		{
 			server->sendNumericReply(client, ERR_CHANOPRIVSNEEDED, channName, "You're not channel operator");
 			return;
 		}
 
-		// Aplicación del cambio: El servidor actualiza el string del tema en la memoria/base de datos, guarda el nickname del autor y el timestamp actual.
 		channel->setTopic(params_[1], client->getNick());
-		// Broadcast con nuevo topic:
 		response.prefix(client->getPrefix()).command("TOPIC").target(channName).trailing(params_[1]);
 		channel->broadcastAll(response.build(), server);
 	}
